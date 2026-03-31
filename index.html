@@ -104,6 +104,12 @@
         }
         .filter-chip:hover { border-color: #5a6f5e; }
         .filter-chip.active { background-color: #5a6f5e; color: white; border-color: #5a6f5e; }
+        .filter-chip.vibe-drink.active { background-color: #3b82f6; border-color: #3b82f6; color: white; }
+        .filter-chip.vibe-drink:hover { border-color: #3b82f6; }
+        .filter-chip.vibe-food.active { background-color: #5a6f5e; border-color: #5a6f5e; color: white; }
+        .filter-chip.vibe-food:hover { border-color: #5a6f5e; }
+        .filter-chip.vibe-special.active { background-color: #d4a017; border-color: #d4a017; color: white; }
+        .filter-chip.vibe-special:hover { border-color: #d4a017; }
         
         .hp-slider-container { min-width: 150px; }
         .hp-slider { width: 100%; accent-color: #5a6f5e; height: 6px; }
@@ -868,6 +874,15 @@
         // ==================== EXPLORATION PAGE ====================
         
         function initExplorationPage() {
+            const hps = restaurantCards.map(c => c.hp);
+            const minHp = Math.min(...hps);
+            const maxHp = Math.max(...hps);
+            const slider = document.getElementById('hpSlider');
+            slider.min = minHp;
+            slider.max = maxHp;
+            slider.value = minHp;
+            cardFilters.minHp = minHp;
+            document.getElementById('hpValue').textContent = minHp + '+';
             renderCityFilters();
             renderVibeFilters();
             applyCardFilters();
@@ -886,11 +901,15 @@
         
         function renderVibeFilters() {
             const container = document.getElementById('vibeFilters');
-            const vibes = getUniqueVibes();
+            const vibeConfig = [
+                { value: 'drink', label: 'Vibes' },
+                { value: 'food', label: 'Food' },
+                { value: 'special', label: 'Special' },
+            ];
             container.innerHTML = `
                 <button class="filter-chip ${cardFilters.vibes.length === 0 ? 'active' : ''}" onclick="toggleVibeFilter('all')">All</button>
-                ${vibes.map(vibe => `
-                    <button class="filter-chip ${cardFilters.vibes.includes(vibe) ? 'active' : ''}" onclick="toggleVibeFilter('${vibe}')">${vibe}</button>
+                ${vibeConfig.map(v => `
+                    <button class="filter-chip vibe-${v.value} ${cardFilters.vibes.includes(v.value) ? 'active' : ''}" onclick="toggleVibeFilter('${v.value}')">${v.label}</button>
                 `).join('')}
             `;
         }
