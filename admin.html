@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNF Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f7f5; color: #2d3748; min-height: 100vh; padding: 2rem; }
+        h1 { font-size: 1.5rem; color: #5a6f5e; margin-bottom: 0.25rem; }
+        .subtitle { color: #718096; font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 0.75rem 1.5rem; border: none; background: none; font-size: 0.95rem; font-weight: 600; color: #718096; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .tab:hover { color: #5a6f5e; }
+        .tab.active { color: #5a6f5e; border-bottom-color: #5a6f5e; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .setup-box { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+        .setup-box label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; display: block; margin-bottom: 0.4rem; }
+        .setup-box input { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-family: monospace; }
+
+        .main { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 900px; }
+
+        .drop-zone { background: white; border: 2px dashed #c8d5ca; border-radius: 16px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+        .drop-zone.dragover { border-color: #5a6f5e; background: #f0f5f1; }
+        .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .drop-zone .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .drop-zone p { color: #718096; font-size: 0.9rem; }
+        .drop-zone strong { color: #5a6f5e; }
+        #preview-img { width: 100%; border-radius: 12px; margin-top: 1rem; display: none; }
+
+        .fields { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+        .field { margin-bottom: 1.25rem; }
+        .field label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; display: block; margin-bottom: 0.4rem; }
+        .field input, .field select, .field textarea { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
+        .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #5a6f5e; }
+        .field textarea { resize: vertical; line-height: 1.6; }
+
+        .vibe-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .vibe-chip { padding: 0.4rem 0.9rem; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; background: white; }
+        .vibe-chip[data-vibe="food"].active { background: #5a6f5e; color: white; border-color: #5a6f5e; }
+        .vibe-chip[data-vibe="drink"].active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .vibe-chip[data-vibe="special"].active { background: #d4a017; color: white; border-color: #d4a017; }
+
+        .status { font-size: 0.85rem; padding: 0.5rem 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        .status.loading { background: #e8f0ea; color: #5a6f5e; display: block; }
+        .status.error { background: #fee2e2; color: #dc2626; display: block; }
+        .status.success { background: #d1fae5; color: #065f46; display: block; }
+
+        .btn { width: 100%; padding: 0.85rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+        .btn-analyze { background: #5a6f5e; color: white; }
+        .btn-analyze:hover { background: #4a5e4e; }
+        .btn-analyze:disabled { background: #a0aec0; cursor: not-allowed; }
+        .btn-generate { background: #2d3748; color: white; }
+        .btn-generate:hover { background: #1a202c; }
+
+        .output-box { display: none; margin-top: 2rem; max-width: 900px; }
+        .output-box h2 { font-size: 1rem; color: #5a6f5e; margin-bottom: 0.75rem; }
+        .output-box pre { background: #1a202c; color: #e2e8f0; padding: 1.25rem; border-radius: 10px; font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+        .copy-btn { background: #5a6f5e; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-top: 0.75rem; }
+        .copy-btn:hover { background: #4a5e4e; }
+
+        .instructions { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 1rem 1.25rem; margin-top: 1rem; font-size: 0.85rem; color: #92400e; line-height: 1.6; }
+        .instructions strong { display: block; margin-bottom: 0.25rem; }
+
+        /* Article editor */
+        .article-form { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); max-width: 700px; }
+        .status-toggle { display: flex; gap: 0.5rem; }
+        .status-chip { padding: 0.4rem 0.9rem; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; background: white; }
+        .status-chip.active-live { background: #5a6f5e; color: white; border-color: #5a6f5e; }
+        .status-chip.active-draft { background: #718096; color: white; border-color: #718096; }
+        .format-hint { font-size: 0.75rem; color: #a0aec0; margin-top: 0.3rem; }
+    </style>
+</head>
+<body>
+
+<h1>FNF Admin</h1>
+<p class="subtitle">Manage cards and articles for FriendnotPhoe.</p>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('cards')">Card Upload</button>
+    <button class="tab" onclick="switchTab('articles')">Article Editor</button>
+</div>
+
+<!-- ==================== CARD UPLOAD TAB ==================== -->
+<div id="tab-cards" class="tab-content active">
+    <div class="setup-box">
+        <label>Claude API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+    </div>
+
+    <div class="main">
+        <div>
+            <div class="drop-zone" id="dropZone">
+                <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" />
+                <div class="icon">&#127183;</div>
+                <p><strong>Drop your Figma card here</strong></p>
+                <p>or click to browse</p>
+            </div>
+            <img id="preview-img" />
+        </div>
+
+        <div class="fields">
+            <div id="status" class="status"></div>
+            <div class="field"><label>Restaurant Name</label><input type="text" id="name" placeholder="Auto-filled from card..." /></div>
+            <div class="field"><label>HP</label><input type="number" id="hp" placeholder="Auto-filled from card..." /></div>
+            <div class="field">
+                <label>Type</label>
+                <div class="vibe-chips">
+                    <button class="vibe-chip" data-vibe="food" onclick="toggleVibe('food')">Food</button>
+                    <button class="vibe-chip" data-vibe="drink" onclick="toggleVibe('drink')">Vibes</button>
+                    <button class="vibe-chip" data-vibe="special" onclick="toggleVibe('special')">Special</button>
+                </div>
+            </div>
+            <div class="field"><label>City</label><input type="text" id="city" placeholder="NYC, Brussels, Boston..." /></div>
+            <div class="field"><label>Address (for map pin)</label><input type="text" id="address" placeholder="123 Main St, New York, NY" /></div>
+            <button class="btn btn-analyze" id="analyzeBtn" onclick="analyzeCard()" disabled>Drop a card to analyze</button>
+            <button class="btn btn-generate" onclick="generateEntry()" style="margin-top:0.5rem;">Generate Card Entry</button>
+        </div>
+    </div>
+
+    <div class="output-box" id="outputBox">
+        <h2>Card summary</h2>
+        <pre id="outputCode"></pre>
+        <div class="instructions">
+            <strong>JSON file downloaded to your Downloads folder.</strong>
+            Just tell Claude "I have a new card ready" and drag the JSON file into the chat.
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ARTICLE EDITOR TAB ==================== -->
+<div id="tab-articles" class="tab-content">
+    <div class="article-form">
+        <div id="article-status" class="status"></div>
+
+        <div class="field"><label>Title</label><input type="text" id="art-title" placeholder="Smell The Flowers Dawg" /></div>
+        <div class="field"><label>City</label><input type="text" id="art-city" placeholder="NYC, Brussels, Boston..." /></div>
+        <div class="field"><label>Date</label><input type="text" id="art-date" placeholder="Mar 19, 2024" /></div>
+        <div class="field"><label>Image URL (optional)</label><input type="text" id="art-image" placeholder="https://... or leave blank" /></div>
+        <div class="field">
+            <label>Status</label>
+            <div class="status-toggle">
+                <button class="status-chip active-draft" id="status-draft" onclick="setArticleStatus('draft')">Draft</button>
+                <button class="status-chip" id="status-live" onclick="setArticleStatus('live')">Live</button>
+            </div>
+        </div>
+        <div class="field">
+            <label>Preview</label>
+            <textarea id="art-preview" rows="2" placeholder="Short preview shown on the card..."></textarea>
+        </div>
+        <div class="field">
+            <label>Content</label>
+            <textarea id="art-content" rows="15" placeholder="Write your article here. Use HTML for formatting:&#10;&#10;<p>Paragraph text here.</p>&#10;<h2>Section heading</h2>&#10;<strong>Bold text</strong>&#10;<em>Italic text</em>&#10;<br> for line breaks"></textarea>
+            <p class="format-hint">Use &lt;p&gt;, &lt;h2&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;br&gt; for formatting</p>
+        </div>
+
+        <button class="btn btn-analyze" onclick="generateArticle()">Generate Article Code</button>
+    </div>
+
+    <div class="output-box" id="articleOutputBox">
+        <h2>Article entry — copy into blogPosts array in index.html</h2>
+        <pre id="articleOutputCode"></pre>
+        <button class="copy-btn" onclick="copyArticleCode()">Copy to clipboard</button>
+        <div class="instructions">
+            <strong>How to add this article:</strong>
+            1. Copy the code above.<br>
+            2. Open index.html and find the <code>blogPosts</code> array.<br>
+            3. Paste it as a new entry at the top of the array.<br>
+            4. Set <code>status: 'draft'</code> to hide from the live site, or <code>'live'</code> to publish.<br>
+            5. Commit and push.
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== TABS ====================
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab-content#tab-${tab}`).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // ==================== CARD UPLOAD (existing) ====================
+    let imageBase64 = null;
+    let selectedVibes = [];
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+    });
+    fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            imageBase64 = e.target.result.split(',')[1];
+            const preview = document.getElementById('preview-img');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = false;
+            btn.textContent = 'Analyze Card with Claude';
+            setStatus('', '');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function toggleVibe(vibe) {
+        const idx = selectedVibes.indexOf(vibe);
+        if (idx > -1) selectedVibes.splice(idx, 1);
+        else selectedVibes.push(vibe);
+        document.querySelectorAll('.vibe-chip').forEach(chip => {
+            chip.classList.toggle('active', selectedVibes.includes(chip.dataset.vibe));
+        });
+    }
+
+    function setStatus(type, msg) {
+        const el = document.getElementById('status');
+        el.className = 'status ' + type;
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    async function analyzeCard() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (!apiKey) { setStatus('error', 'Enter your Claude API key first.'); return; }
+        if (!imageBase64) { setStatus('error', 'Drop a card image first.'); return; }
+        setStatus('loading', 'Analyzing card with Claude...');
+        document.getElementById('analyzeBtn').disabled = true;
+        try {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+                body: JSON.stringify({
+                    model: 'claude-opus-4-6',
+                    max_tokens: 256,
+                    messages: [{ role: 'user', content: [
+                        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: imageBase64 } },
+                        { type: 'text', text: 'This is a restaurant card. Extract the following and respond with ONLY valid JSON, no markdown:\n{\n  "name": "restaurant name",\n  "hp": 150,\n  "vibes": ["food", "drink"]\n}\nFor vibes: use "food" if there is a fork/spoon icon, "drink" if there is a martini/cocktail icon, "special" if there is a star/special icon. HP is a number shown on the card.' }
+                    ]}]
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || 'API error');
+            const parsed = JSON.parse(data.content[0].text.trim());
+            if (parsed.name) document.getElementById('name').value = parsed.name;
+            if (parsed.hp) document.getElementById('hp').value = parsed.hp;
+            if (parsed.vibes) {
+                selectedVibes = parsed.vibes;
+                document.querySelectorAll('.vibe-chip').forEach(chip => { chip.classList.toggle('active', selectedVibes.includes(chip.dataset.vibe)); });
+            }
+            setStatus('success', 'Card analyzed! Review the fields and fill in city + address.');
+        } catch (err) { setStatus('error', 'Error: ' + err.message); }
+        finally { document.getElementById('analyzeBtn').disabled = false; }
+    }
+
+    async function generateEntry() {
+        const name = document.getElementById('name').value.trim();
+        const hp = parseInt(document.getElementById('hp').value);
+        const city = document.getElementById('city').value.trim();
+        const address = document.getElementById('address').value.trim();
+        if (!name || !hp || !city) { setStatus('error', 'Fill in name, HP, and city at minimum.'); return; }
+        if (!imageBase64) { setStatus('error', 'Drop a card image first.'); return; }
+        setStatus('loading', 'Geocoding address...');
+        let lat = null, lng = null;
+        if (address) {
+            try {
+                const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const geoData = await geo.json();
+                if (geoData.length > 0) { lat = parseFloat(geoData[0].lat); lng = parseFloat(geoData[0].lon); }
+            } catch (e) {}
+        }
+        const cardData = { name, city, hp, vibes: selectedVibes, lat, lng, image: `data:image/png;base64,${imageBase64}` };
+        const blob = new Blob([JSON.stringify(cardData)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_card.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatus('success', lat ? 'Done! Saved. Now tell Claude you have a new card ready.' : 'Done! Saved (no address geocoded). Tell Claude you have a new card ready.');
+        document.getElementById('outputBox').style.display = 'block';
+        document.getElementById('outputCode').textContent = `Name: ${name}\nCity: ${city}\nHP: ${hp}\nVibes: ${selectedVibes.join(', ')}\nCoords: ${lat ? `${lat}, ${lng}` : 'none'}`;
+    }
+
+    // ==================== ARTICLE EDITOR ====================
+    let articleStatus = 'draft';
+
+    function setArticleStatus(s) {
+        articleStatus = s;
+        document.getElementById('status-draft').className = 'status-chip' + (s === 'draft' ? ' active-draft' : '');
+        document.getElementById('status-live').className = 'status-chip' + (s === 'live' ? ' active-live' : '');
+    }
+
+    function setArticleMsg(type, msg) {
+        const el = document.getElementById('article-status');
+        el.className = 'status ' + type;
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    function generateArticle() {
+        const title = document.getElementById('art-title').value.trim();
+        const city = document.getElementById('art-city').value.trim();
+        const date = document.getElementById('art-date').value.trim();
+        const image = document.getElementById('art-image').value.trim();
+        const preview = document.getElementById('art-preview').value.trim();
+        const content = document.getElementById('art-content').value.trim();
+
+        if (!title || !city || !content) {
+            setArticleMsg('error', 'Fill in title, city, and content at minimum.');
+            return;
+        }
+
+        const escaped = content.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+        const previewEscaped = preview.replace(/"/g, '\\"');
+        const titleEscaped = title.replace(/'/g, "\\'");
+
+        let code = `            {\n`;
+        code += `                id: ???,  // set to next available ID\n`;
+        code += `                status: '${articleStatus}',\n`;
+        code += `                city: '${city}',\n`;
+        code += `                date: '${date}',\n`;
+        code += `                title: '${titleEscaped}',\n`;
+        code += `                preview: "${previewEscaped}",\n`;
+        if (image) code += `                image: '${image}',\n`;
+        code += `                content: \`${escaped}\`\n`;
+        code += `            },`;
+
+        document.getElementById('articleOutputBox').style.display = 'block';
+        document.getElementById('articleOutputCode').textContent = code;
+        setArticleMsg('success', 'Article code generated! Copy it into the blogPosts array.');
+    }
+
+    function copyArticleCode() {
+        const code = document.getElementById('articleOutputCode').textContent;
+        navigator.clipboard.writeText(code);
+        const btn = event.target;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy to clipboard', 2000);
+    }
+</script>
+</body>
+</html>

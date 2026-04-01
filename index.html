@@ -353,6 +353,7 @@
         const blogPosts = [
             {
                 id: 0,
+                status: 'live',
                 city: 'NYC',
                 date: 'Jan 2025',
                 title: 'Something between us.... Friends',
@@ -392,6 +393,7 @@
             },
             {
                 id: 1,
+                status: 'live',
                 city: 'Brussels',
                 date: 'Mar 19, 2024',
                 title: 'Smell The Flowers Dawg',
@@ -541,6 +543,7 @@
             },
             {
                 id: 2,
+                status: 'live',
                 city: 'Boston',
                 date: 'Feb 14, 2024',
                 title: 'Origin Story',
@@ -734,6 +737,7 @@
             },
             {
                 id: 3,
+                status: 'live',
                 city: 'Intro',
                 date: '[Date TBD]',
                 title: 'From a Friend With Love',
@@ -852,7 +856,7 @@
         let adventureFilters = { city: 'all', sort: 'newest' };
 
         function renderAdventureFilterChips() {
-            const cities = [...new Set(blogPosts.map(p => p.city))];
+            const cities = [...new Set(blogPosts.filter(p => p.status === 'live').map(p => p.city))];
             document.getElementById('adventure-city-filters').innerHTML = `
                 <button class="filter-chip ${adventureFilters.city === 'all' ? 'active' : ''}" onclick="setAdventureCity('all')">All</button>
                 ${cities.map(city => `
@@ -871,7 +875,7 @@
         function renderBlogGrid() {
             renderAdventureFilterChips();
             const grid = document.getElementById('blog-grid');
-            let filtered = blogPosts.filter(post => adventureFilters.city === 'all' || post.city === adventureFilters.city);
+            let filtered = blogPosts.filter(post => post.status === 'live').filter(post => adventureFilters.city === 'all' || post.city === adventureFilters.city);
             if (adventureFilters.sort === 'oldest') filtered.reverse();
             grid.innerHTML = filtered.map(post => `
                 <div class="blog-card" onclick="showPost(${post.id})">
