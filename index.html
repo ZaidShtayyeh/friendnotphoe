@@ -32,9 +32,10 @@
         .home-scattered { position: relative; flex: 1; width: 100%; }
         .home-title { font-size: 2.5rem; color: #5a6f5e; position: absolute; top: 5%; left: 5%; }
         .scatter-word { position: absolute; font-weight: 600; color: #2d3748; }
-        .scatter-here { font-size: 1.8rem; top: 30%; left: 5%; color: #718096; font-style: italic; }
-        .scatter-there { font-size: 1.8rem; top: 22%; left: 35%; color: #718096; font-style: italic; }
-        .scatter-every { font-size: 1.8rem; top: 30%; right: 8%; color: #718096; font-style: italic; }
+        .scatter-here { font-size: 1.8rem; top: 30%; left: 5%; color: #718096; font-style: italic; font-weight: 400; }
+        .scatter-there { font-size: 1.8rem; top: 22%; left: 35%; color: #718096; font-style: italic; font-weight: 400; }
+        .scatter-and { font-size: 1.4rem; top: 28%; left: 55%; color: #718096; font-style: italic; font-weight: 400; }
+        .scatter-every { font-size: 1.8rem; top: 30%; right: 8%; color: #718096; font-style: italic; font-weight: 400; }
         .scatter-adventures { font-size: 2.2rem; top: 50%; left: 5%; color: #5a6f5e; cursor: pointer; transition: all 0.2s; }
         .scatter-adventures:hover { transform: translateX(8px); color: #4a5f4e; }
         .scatter-explore { font-size: 2.2rem; top: 68%; right: 10%; color: #5a6f5e; cursor: pointer; transition: all 0.2s; }
@@ -273,6 +274,7 @@
                 <h1 class="home-title">FriendnotPhoe</h1>
                 <span class="scatter-word scatter-here">Here</span>
                 <span class="scatter-word scatter-there">There</span>
+                <span class="scatter-word scatter-and">and</span>
                 <span class="scatter-word scatter-every">Everywhere</span>
                 <div class="scatter-word scatter-adventures" onclick="showPage('adventures')">Adventures</div>
                 <div class="scatter-word scatter-explore" onclick="showPage('exploration')">Explore</div>
