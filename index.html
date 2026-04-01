@@ -51,8 +51,7 @@
         .adventures-header { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 1rem; }
         .adventures-header h2 { font-size: 1.8rem; color: #5a6f5e; margin-bottom: 0.5rem; }
         .adventures-subtitle { color: #718096; font-style: italic; font-size: 1rem; }
-        .adventures-controls { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.5rem 1rem; display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
-        .filter-select { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.9rem; cursor: pointer; }
+        .adventures-controls { max-width: 1400px; margin: 0 auto; padding: 0.5rem 1.5rem 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-end; }
         
         .blog-grid { max-width: 1400px; margin: 0 auto; padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
         .blog-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
@@ -88,28 +87,30 @@
             align-items: flex-end;
         }
         
-        .filter-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .filter-group label { font-size: 0.75rem; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        .filter-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .filter-group label { font-size: 0.7rem; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .filter-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .filter-chip {
-            padding: 0.4rem 0.8rem;
-            border: 2px solid #e2e8f0;
+            padding: 0.45rem 1rem;
+            border: 1.5px solid #e2e8f0;
             background: white;
-            border-radius: 20px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             font-size: 0.85rem;
             font-weight: 500;
+            color: #4a5568;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
-        .filter-chip:hover { border-color: #5a6f5e; }
-        .filter-chip.active { background-color: #5a6f5e; color: white; border-color: #5a6f5e; }
-        .filter-chip.vibe-drink.active { background-color: #3b82f6; border-color: #3b82f6; color: white; }
-        .filter-chip.vibe-drink:hover { border-color: #3b82f6; }
+        .filter-chip:hover { border-color: #5a6f5e; color: #5a6f5e; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(90,111,94,0.12); }
+        .filter-chip.active { background-color: #5a6f5e; color: white; border-color: #5a6f5e; box-shadow: 0 2px 8px rgba(90,111,94,0.25); }
+        .filter-chip.vibe-drink.active { background-color: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 2px 8px rgba(59,130,246,0.25); }
+        .filter-chip.vibe-drink:hover { border-color: #3b82f6; color: #3b82f6; }
         .filter-chip.vibe-food.active { background-color: #5a6f5e; border-color: #5a6f5e; color: white; }
-        .filter-chip.vibe-food:hover { border-color: #5a6f5e; }
-        .filter-chip.vibe-special.active { background-color: #d4a017; border-color: #d4a017; color: white; }
-        .filter-chip.vibe-special:hover { border-color: #d4a017; }
+        .filter-chip.vibe-food:hover { border-color: #5a6f5e; color: #5a6f5e; }
+        .filter-chip.vibe-special.active { background-color: #d4a017; border-color: #d4a017; color: white; box-shadow: 0 2px 8px rgba(212,160,23,0.25); }
+        .filter-chip.vibe-special:hover { border-color: #d4a017; color: #d4a017; }
         
         .hp-slider-container { min-width: 150px; }
         .hp-slider { width: 100%; accent-color: #5a6f5e; height: 6px; }
@@ -223,6 +224,7 @@
             
             .adventures-header { padding: 3rem 2rem 1rem; }
             .adventures-header h2 { font-size: 2.5rem; }
+            .adventures-controls { padding: 1rem 2rem 2rem; gap: 2rem; }
             .blog-grid { padding: 2rem; gap: 2rem; }
             .blog-image { height: 250px; }
             .blog-content { padding: 1.5rem; }
@@ -289,17 +291,14 @@
             <p class="adventures-subtitle">A collection of my adventures from city to city</p>
         </div>
         <div class="adventures-controls">
-            <select class="filter-select" id="city-filter" onchange="filterAdventures()">
-                <option value="all">All Cities</option>
-                <option value="NYC">NYC</option>
-                <option value="Brussels">Brussels</option>
-                <option value="Boston">Boston</option>
-                <option value="Intro">Intro</option>
-            </select>
-            <select class="filter-select" id="sort-filter" onchange="filterAdventures()">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-            </select>
+            <div class="filter-group">
+                <label>City</label>
+                <div class="filter-chips" id="adventure-city-filters"></div>
+            </div>
+            <div class="filter-group">
+                <label>Sort</label>
+                <div class="filter-chips" id="adventure-sort-filters"></div>
+            </div>
         </div>
         <div id="blog-grid" class="blog-grid"></div>
         <footer>@friend_not_phoe</footer>
@@ -850,15 +849,33 @@
         // Set initial history state so first back press goes to home
         history.replaceState({ page: 'home' }, '', window.location.href);
 
+        let adventureFilters = { city: 'all', sort: 'newest' };
+
+        function renderAdventureFilterChips() {
+            const cities = [...new Set(blogPosts.map(p => p.city))];
+            document.getElementById('adventure-city-filters').innerHTML = `
+                <button class="filter-chip ${adventureFilters.city === 'all' ? 'active' : ''}" onclick="setAdventureCity('all')">All</button>
+                ${cities.map(city => `
+                    <button class="filter-chip ${adventureFilters.city === city ? 'active' : ''}" onclick="setAdventureCity('${city}')">${city}</button>
+                `).join('')}
+            `;
+            document.getElementById('adventure-sort-filters').innerHTML = `
+                <button class="filter-chip ${adventureFilters.sort === 'newest' ? 'active' : ''}" onclick="setAdventureSort('newest')">Newest</button>
+                <button class="filter-chip ${adventureFilters.sort === 'oldest' ? 'active' : ''}" onclick="setAdventureSort('oldest')">Oldest</button>
+            `;
+        }
+
+        function setAdventureCity(city) { adventureFilters.city = city; renderBlogGrid(); }
+        function setAdventureSort(sort) { adventureFilters.sort = sort; renderBlogGrid(); }
+
         function renderBlogGrid() {
+            renderAdventureFilterChips();
             const grid = document.getElementById('blog-grid');
-            const cityFilter = document.getElementById('city-filter').value;
-            const sortFilter = document.getElementById('sort-filter').value;
-            let filtered = blogPosts.filter(post => cityFilter === 'all' || post.city === cityFilter);
-            if (sortFilter === 'oldest') filtered.reverse();
+            let filtered = blogPosts.filter(post => adventureFilters.city === 'all' || post.city === adventureFilters.city);
+            if (adventureFilters.sort === 'oldest') filtered.reverse();
             grid.innerHTML = filtered.map(post => `
                 <div class="blog-card" onclick="showPost(${post.id})">
-                    ${post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">📷 ${post.title}</div></div>`}
+                    ${post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">${post.title}</div></div>`}
                     <div class="blog-content">
                         <div class="blog-meta"><span class="blog-city">${post.city}</span><span class="blog-date">${post.date}</span></div>
                         <h3 class="blog-title">${post.title}</h3>
@@ -868,8 +885,6 @@
                 </div>
             `).join('');
         }
-
-        function filterAdventures() { renderBlogGrid(); }
 
         function showPost(id, pushState = true) {
 
