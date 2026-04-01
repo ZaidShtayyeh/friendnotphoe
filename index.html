@@ -32,8 +32,8 @@
             width: 100%;
         }
         .home-title { font-size: 2.5rem; color: #5a6f5e; margin-bottom: 0.5rem; }
-        .home-subtitle { font-size: 1.2rem; color: #718096; font-style: italic; margin-bottom: 4rem; }
-        .home-options { display: flex; flex-direction: column; gap: 2.5rem; }
+        .home-subtitle { font-size: 1.2rem; color: #718096; font-style: italic; margin-bottom: 2rem; }
+        .home-options { display: flex; flex-direction: column; gap: 1.5rem; }
         .home-option { background: none; border: none; padding: 0; cursor: pointer; transition: all 0.2s; text-align: left; }
         .home-option:hover { transform: translateX(10px); }
         .home-option h2 { font-size: 2rem; color: #5a6f5e; font-weight: 600; }
@@ -49,7 +49,7 @@
         
         /* ADVENTURES PAGE */
         .adventures-header { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 1rem; }
-        .adventures-header h2 { font-size: 1.8rem; color: #2d3748; margin-bottom: 0.5rem; }
+        .adventures-header h2 { font-size: 1.8rem; color: #5a6f5e; margin-bottom: 0.5rem; }
         .adventures-subtitle { color: #718096; font-style: italic; font-size: 1rem; }
         .adventures-controls { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.5rem 1rem; display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
         .filter-select { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.9rem; cursor: pointer; }
@@ -68,7 +68,7 @@
         
         /* EXPLORATION PAGE */
         .exploration-header { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 1rem; }
-        .exploration-header h2 { font-size: 1.8rem; color: #2d3748; margin-bottom: 0.5rem; }
+        .exploration-header h2 { font-size: 1.8rem; color: #5a6f5e; margin-bottom: 0.5rem; }
         .exploration-subtitle { 
             color: #718096; 
             font-style: italic; 
@@ -217,8 +217,8 @@
             .nav-button { font-size: 1rem; padding: 0.5rem 1rem; }
             .home-container { padding: 3rem 2rem; }
             .home-title { font-size: 3.5rem; }
-            .home-subtitle { font-size: 1.8rem; margin-bottom: 6rem; }
-            .home-options { gap: 4rem; }
+            .home-subtitle { font-size: 1.8rem; margin-bottom: 3rem; }
+            .home-options { gap: 2rem; }
             .home-option h2 { font-size: 3rem; }
             
             .adventures-header { padding: 3rem 2rem 1rem; }
@@ -240,9 +240,9 @@
         /* Small phones */
         @media (max-width: 400px) {
             .home-title { font-size: 2rem; }
-            .home-subtitle { font-size: 1rem; margin-bottom: 3rem; }
+            .home-subtitle { font-size: 1rem; margin-bottom: 1.5rem; }
             .home-option h2 { font-size: 1.5rem; }
-            .home-options { gap: 2rem; }
+            .home-options { gap: 1.25rem; }
             
             .blog-grid { grid-template-columns: 1fr; }
             .cards-grid { grid-template-columns: 1fr; }
@@ -261,8 +261,6 @@
         <div class="header-content">
             <h1 onclick="showPage('home')">FriendnotPhoe</h1>
             <div class="nav-buttons">
-                <button class="nav-button" onclick="showPage('home')">Home</button>
-                
             </div>
         </div>
     </header>
@@ -821,18 +819,36 @@
             minHp: 100
         };
 
-        function showPage(page) {
+        function showPage(page, pushState = true) {
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById(page + '-page').classList.remove('hidden');
-            
+
             // Hide header on home page, show on others
             const header = document.querySelector('header');
             header.style.display = page === 'home' ? 'none' : 'block';
-            
+
             if (page === 'adventures') { renderBlogGrid();  }
             else if (page === 'exploration') { initExplorationPage(); }
             window.scrollTo(0, 0);
+
+            if (pushState) {
+                history.pushState({ page: page }, '', '#' + page);
+            }
         }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(e) {
+            if (e.state && e.state.page === 'post' && e.state.postId) {
+                showPost(e.state.postId, false);
+            } else if (e.state && e.state.page) {
+                showPage(e.state.page, false);
+            } else {
+                showPage('home', false);
+            }
+        });
+
+        // Set initial history state so first back press goes to home
+        history.replaceState({ page: 'home' }, '', window.location.href);
 
         function renderBlogGrid() {
             const grid = document.getElementById('blog-grid');
@@ -855,8 +871,8 @@
 
         function filterAdventures() { renderBlogGrid(); }
 
-        function showPost(id) {
-            
+        function showPost(id, pushState = true) {
+
             const post = blogPosts.find(p => p.id === id);
             document.getElementById('post-content').innerHTML = `
                 <div class="post-header">
@@ -869,6 +885,9 @@
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById('post-page').classList.remove('hidden');
             window.scrollTo(0, 0);
+            if (pushState) {
+                history.pushState({ page: 'post', postId: id }, '', '#post-' + id);
+            }
         }
 
         // ==================== EXPLORATION PAGE ====================
