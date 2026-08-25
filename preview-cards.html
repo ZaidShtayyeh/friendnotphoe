@@ -19,8 +19,8 @@ p.sub { text-align: center; color: #718096; font-style: italic; margin-bottom: 2
 .pokemon-card.holo-active::after { opacity: 1; }
 .pokemon-card:hover { box-shadow: 0 20px 40px rgba(0,0,0,0.18); }
 .pokemon-card img { width: 100%; height: auto; display: block; }
-.twinkle { position: absolute; pointer-events: none; color: #fff8e7; opacity: 0; z-index: 2; text-shadow: 0 0 6px rgba(255,228,160,0.9); animation: twinkle var(--tw-dur,3s) ease-in-out var(--tw-delay,0s) infinite; }
-@keyframes twinkle { 0%,100% { opacity: 0; transform: scale(0.5) rotate(0deg); } 35% { opacity: 1; transform: scale(1.15) rotate(15deg); } 65% { opacity: 1; transform: scale(1.05) rotate(30deg); } }
+.twinkle { position: absolute; pointer-events: none; color: #fff8e7; opacity: 0; z-index: 2; text-shadow: 0 0 4px rgba(255,228,160,0.55); animation: twinkle var(--tw-dur,3s) ease-in-out var(--tw-delay,0s) infinite; }
+@keyframes twinkle { 0%,100% { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(0deg); } 35% { opacity: 0.7; transform: translate(-50%,-50%) scale(1.05) rotate(15deg); } 65% { opacity: 0.7; transform: translate(-50%,-50%) scale(1) rotate(28deg); } }
 @media (prefers-reduced-motion: reduce) { .twinkle { display: none; } }
 .card-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; }
 .card-modal.active { display: flex; }
@@ -56,19 +56,25 @@ function attachHolo(card) {
   });
   card.addEventListener('pointerleave', () => { card.classList.remove('holo-active'); card.style.transform = ''; });
 }
-function attachTwinkle(card, count = 10) {
+const STAR_SPOTS = [
+  {x:55.5,y:65.3},{x:34.2,y:76.9},{x:86.2,y:58.6},{x:36.2,y:64.8},{x:58.7,y:60.0},
+  {x:72.7,y:84.0},{x:19.9,y:55.8},{x:24.9,y:6.3},{x:80.8,y:83.5},{x:62.1,y:84.2},
+  {x:67.4,y:70.4},{x:80.6,y:6.1},{x:19.5,y:65.8},{x:53.2,y:83.3},{x:72.2,y:64.9},
+  {x:42.6,y:58.0},{x:89.7,y:84.3},{x:66.8,y:79.0},{x:83.8,y:94.3},{x:7.8,y:90.9},
+  {x:31.0,y:88.4},{x:73.0,y:51.8}
+];
+function attachTwinkle(card, count = 8) {
   if (prefersReducedMotion) return;
-  for (let i = 0; i < count; i++) {
+  const spots = [...STAR_SPOTS].sort(() => Math.random() - 0.5).slice(0, count);
+  for (const spot of spots) {
     const s = document.createElement('span');
     s.className = 'twinkle';
     s.textContent = Math.random() < 0.5 ? '\u2726' : '\u2727';
-    let x, y;
-    if (Math.random() < 0.5) { x = Math.random() < 0.5 ? 1 + Math.random()*6 : 90 + Math.random()*8; y = 5 + Math.random()*90; }
-    else { x = 5 + Math.random()*88; y = Math.random() < 0.25 ? 1 + Math.random()*6 : 52 + Math.random()*44; }
-    s.style.left = x+'%'; s.style.top = y+'%';
-    s.style.fontSize = (9 + Math.random()*8)+'px';
-    s.style.setProperty('--tw-dur', (2 + Math.random()*2)+'s');
-    s.style.setProperty('--tw-delay', (Math.random()*2.5)+'s');
+    s.style.left = (spot.x + (Math.random()-0.5)*1.2)+'%';
+    s.style.top = (spot.y + (Math.random()-0.5)*1.2)+'%';
+    s.style.fontSize = (8 + Math.random()*5)+'px';
+    s.style.setProperty('--tw-dur', (2.6 + Math.random()*2.2)+'s');
+    s.style.setProperty('--tw-delay', (Math.random()*4)+'s');
     card.appendChild(s);
   }
 }
@@ -79,7 +85,7 @@ document.querySelectorAll('.pokemon-card').forEach(card => {
     document.getElementById('modalCardImage').src = card.querySelector('img').src;
     const wrap = document.getElementById('modalCardWrap');
     wrap.querySelectorAll('.twinkle').forEach(t => t.remove());
-    attachTwinkle(wrap, 14);
+    attachTwinkle(wrap, 12);
     document.getElementById('cardModal').classList.add('active');
   });
 });
