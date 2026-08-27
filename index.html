@@ -354,10 +354,10 @@
         .sbuf-track { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
         .sbuf-ch {
             position: absolute;
-            offset-path: path('M 80 42 H 920 A 38 38 0 0 1 958 80 V 920 A 38 38 0 0 1 920 958 H 80 A 38 38 0 0 1 42 920 V 80 A 38 38 0 0 1 80 42 Z');
+            offset-path: path('M 100 64 H 900 A 36 36 0 0 1 936 100 V 900 A 36 36 0 0 1 900 936 H 100 A 36 36 0 0 1 64 900 V 100 A 36 36 0 0 1 100 64 Z');
             offset-rotate: auto;
             font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
-            font-size: 72px;
+            font-size: 108px;
             line-height: 1;
             color: #4CCC76;
             -webkit-text-stroke: 4px #E4645C;
@@ -366,6 +366,26 @@
         }
         @keyframes sbufmove { from { offset-distance: 0%; } to { offset-distance: 100%; } }
         @media (prefers-reduced-motion: reduce) { .sbuf-ch { animation-play-state: paused; } }
+
+        /* heart shimmer on "From a Friend With Love" */
+        .shimmer-wrap { position: relative; overflow: hidden; }
+        .shimmer-wrap > img { display: block; }
+        .shimmer-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -60%;
+            width: 45%; height: 100%;
+            background: linear-gradient(100deg, transparent 12%, rgba(255,255,255,0.45) 50%, transparent 88%);
+            transform: skewX(-8deg);
+            animation: heartShimmer 6.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes heartShimmer {
+            0% { left: -60%; }
+            45% { left: 130%; }
+            100% { left: 130%; }
+        }
+        @media (prefers-reduced-motion: reduce) { .shimmer-wrap::after { display: none; } }
         /* twinkling star glints — pinned to the card's actual stars, soft */
         .twinkle {
             position: absolute;
@@ -1444,7 +1464,7 @@
             if (adventureFilters.sort === 'oldest') filtered.reverse();
             grid.innerHTML = filtered.map(post => `
                 <div class="blog-card" onclick="showPost(${post.id})">
-                    ${post.id === 0 && post.image ? `<div class="blog-image sbuf-thumb"><div class="sbuf-art"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">${post.title}</div></div>`}
+                    ${post.id === 0 && post.image ? `<div class="blog-image sbuf-thumb"><div class="sbuf-art"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div></div>` : post.id === 3 && post.image ? `<div class="blog-image shimmer-wrap" style="padding:0"><img src="${post.image}" alt="${post.title}" style="width:100%;height:100%;object-fit:cover"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">${post.title}</div></div>`}
                     <div class="blog-content">
                         <div class="blog-meta"><span class="blog-city">${post.city}</span><span class="blog-date">${post.date}</span></div>
                         <h3 class="blog-title">${post.title}</h3>
@@ -1464,7 +1484,7 @@
                     <div class="post-meta"><span class="blog-city">${post.city}</span><span class="blog-date">${post.date}</span></div>
                     <h1 class="post-title">${post.title}</h1>
                 </div>
-                ${post.id === 0 && post.image ? `<div class="sbuf-art post-sbuf"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="post-image">` : ''}
+                ${post.id === 0 && post.image ? `<div class="sbuf-art post-sbuf"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div>` : post.id === 3 && post.image ? `<div class="shimmer-wrap" style="border-radius:12px;margin-bottom:1.5rem"><img src="${post.image}" alt="${post.title}" class="post-image" style="margin-bottom:0"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="post-image">` : ''}
                 <div class="post-content">${post.content}</div>
             `;
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -1703,10 +1723,10 @@
                 if (window.ResizeObserver) new ResizeObserver(fit).observe(container);
                 const PHRASE = 'SOMETHING BETWEEN US...... FRIENDS    ';
                 const DUR = 50;
-                document.fonts.load("72px 'Luckiest Guy'").then(() => {
+                document.fonts.load("108px 'Luckiest Guy'").then(() => {
                     const ctx = document.createElement('canvas').getContext('2d');
-                    ctx.font = "72px 'Luckiest Guy'";
-                    const PER = 3646; // path perimeter in track units
+                    ctx.font = "108px 'Luckiest Guy'";
+                    const PER = 3426; // path perimeter in track units
                     const phraseW = ctx.measureText(PHRASE).width;
                     const reps = Math.max(1, Math.round(PER / phraseW));
                     const k = PER / (reps * phraseW); // stretch spacing to close the loop exactly
