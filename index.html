@@ -354,10 +354,10 @@
         .sbuf-track { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
         .sbuf-ch {
             position: absolute;
-            offset-path: path('M 118 84 H 882 A 34 34 0 0 1 916 118 V 882 A 34 34 0 0 1 882 916 H 118 A 34 34 0 0 1 84 882 V 118 A 34 34 0 0 1 118 84 Z');
+            offset-path: path('M 142 110 H 858 A 32 32 0 0 1 890 142 V 858 A 32 32 0 0 1 858 890 H 142 A 32 32 0 0 1 110 858 V 142 A 32 32 0 0 1 142 110 Z');
             offset-rotate: auto;
             font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
-            font-size: 150px;
+            font-size: 175px;
             line-height: 1;
             color: #4CCC76;
             -webkit-text-stroke: 4px #E4645C;
@@ -1721,12 +1721,12 @@
                 };
                 fit();
                 if (window.ResizeObserver) new ResizeObserver(fit).observe(container);
-                const PHRASE = 'SOMETHING BETWEEN US...... FRIENDS    ';
+                const PHRASE = 'SOMETHING BETWEEN US...... FRIENDS  ';
                 const DUR = 50;
-                document.fonts.load("150px 'Luckiest Guy'").then(() => {
+                document.fonts.load("175px 'Luckiest Guy'").then(() => {
                     const ctx = document.createElement('canvas').getContext('2d');
-                    ctx.font = "150px 'Luckiest Guy'";
-                    const PER = 3270; // path perimeter in track units
+                    ctx.font = "175px 'Luckiest Guy'";
+                    const PER = 3065; // path perimeter in track units
                     const phraseW = ctx.measureText(PHRASE).width;
                     const reps = Math.max(1, Math.round(PER / phraseW));
                     const k = PER / (reps * phraseW); // stretch spacing to close the loop exactly
