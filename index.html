@@ -386,6 +386,15 @@
             100% { left: 130%; }
         }
         @media (prefers-reduced-motion: reduce) { .shimmer-wrap::after { display: none; } }
+
+        /* entry splash */
+        #splash { position: fixed; inset: 0; z-index: 3000; background: #101216; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem; cursor: pointer; transition: opacity 0.5s ease 0.25s; }
+        #splash-heart { width: min(64vw, 430px); height: auto; transition: transform 0.7s cubic-bezier(0.5, 0, 0.75, 0.2), opacity 0.6s ease 0.1s; }
+        .splash-handle { color: #F4EFE6; font-size: 1rem; font-style: italic; letter-spacing: 0.02em; }
+        #splash.zooming { opacity: 0; }
+        #splash.zooming #splash-heart { transform: scale(9); opacity: 0; }
+        /* corner coin */
+        .corner-coin { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: block; }
         /* twinkling star glints — pinned to the card's actual stars, soft */
         .twinkle {
             position: absolute;
@@ -536,9 +545,15 @@
     </style>
 </head>
 <body>
+    <div id="splash" style="display: none;">
+        <img id="splash-heart" src="assets/heart-spin-480.gif" alt="Friend not Phoe">
+        <div class="splash-handle">@friend_not_phoe</div>
+    </div>
+
     <header id="site-header" style="display: none;">
         <div class="header-content">
             <h1 onclick="showPage('home')" role="link" tabindex="0" aria-label="Back to home">FriendnotPhoe</h1>
+            <img src="assets/heart-spin-160.gif" alt="" class="corner-coin" onclick="showPage('home')">
         </div>
     </header>
 
@@ -1464,7 +1479,7 @@
             if (adventureFilters.sort === 'oldest') filtered.reverse();
             grid.innerHTML = filtered.map(post => `
                 <div class="blog-card" onclick="showPost(${post.id})">
-                    ${post.id === 0 && post.image ? `<div class="blog-image sbuf-thumb"><div class="sbuf-art"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div></div>` : post.id === 3 && post.image ? `<div class="blog-image shimmer-wrap" style="padding:0"><img src="${post.image}" alt="${post.title}" style="width:100%;height:100%;object-fit:cover"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">${post.title}</div></div>`}
+                    ${post.id === 0 && post.image ? `<div class="blog-image sbuf-thumb"><div class="sbuf-art"><div class="sbuf-track"></div></div></div>` : post.id === 3 && post.image ? `<div class="blog-image shimmer-wrap" style="padding:0"><img src="${post.image}" alt="${post.title}" style="width:100%;height:100%;object-fit:cover"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-image">` : `<div class="blog-image"><div class="image-placeholder">${post.title}</div></div>`}
                     <div class="blog-content">
                         <div class="blog-meta"><span class="blog-city">${post.city}</span><span class="blog-date">${post.date}</span></div>
                         <h3 class="blog-title">${post.title}</h3>
@@ -1484,7 +1499,7 @@
                     <div class="post-meta"><span class="blog-city">${post.city}</span><span class="blog-date">${post.date}</span></div>
                     <h1 class="post-title">${post.title}</h1>
                 </div>
-                ${post.id === 0 && post.image ? `<div class="sbuf-art post-sbuf"><img class="sbuf-heart" src="${post.image}" alt="${post.title}"><div class="sbuf-track"></div></div>` : post.id === 3 && post.image ? `<div class="shimmer-wrap" style="border-radius:12px;margin-bottom:1.5rem"><img src="${post.image}" alt="${post.title}" class="post-image" style="margin-bottom:0"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="post-image">` : ''}
+                ${post.id === 0 && post.image ? `<div class="sbuf-art post-sbuf"><div class="sbuf-track"></div></div>` : post.id === 3 && post.image ? `<div class="shimmer-wrap" style="border-radius:12px;margin-bottom:1.5rem"><img src="${post.image}" alt="${post.title}" class="post-image" style="margin-bottom:0"></div>` : post.image ? `<img src="${post.image}" alt="${post.title}" class="post-image">` : ''}
                 <div class="post-content">${post.content}</div>
             `;
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -2340,6 +2355,24 @@
         };
 
         resetIdleTimer();
+
+
+        // Entry splash: spinning heart gate before the home page (once per session)
+        (function () {
+            const splash = document.getElementById('splash');
+            const freshHome = !sessionStorage.getItem('fnfSplash') && (!location.hash || location.hash === '#home');
+            if (!freshHome) return;
+            splash.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            splash.addEventListener('click', () => {
+                sessionStorage.setItem('fnfSplash', '1');
+                splash.classList.add('zooming');
+                setTimeout(() => {
+                    splash.remove();
+                    document.body.style.overflow = '';
+                }, 780);
+            }, { once: true });
+        })();
 
         showPage('home');
     </script>
