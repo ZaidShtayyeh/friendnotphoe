@@ -440,9 +440,41 @@
         .modal-card-wrap { position: relative; display: inline-block; }
         .card-modal img {
             max-width: 95vw;
-            max-height: 90vh;
+            max-height: 84vh;
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: transform 0.18s ease;
+        }
+        .modal-card-wrap.holding img { transform: scale(1.035); }
+        .modal-maps-hint {
+            position: absolute;
+            left: 50%;
+            bottom: -2.3rem;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            color: rgba(244,239,230,0.78);
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+            display: none;
+            pointer-events: none;
+        }
+        .modal-card-wrap.has-maps .modal-maps-hint { display: block; }
+        .modal-maps-hint::after {
+            content: '';
+            display: block;
+            height: 2px;
+            width: 0;
+            margin: 5px auto 0;
+            background: #4CCC76;
+            border-radius: 2px;
+            transition: width 0.05s ease;
+        }
+        .modal-card-wrap.holding .modal-maps-hint::after {
+            width: 100%;
+            transition: width 0.65s linear;
         }
         .card-modal-close {
             position: absolute;
@@ -648,6 +680,7 @@
         <button class="card-modal-close" onclick="closeCardModal(event)">×</button>
         <div class="modal-card-wrap" id="modalCardWrap">
             <img id="modalCardImage" src="" alt="Card">
+            <div class="modal-maps-hint" id="modalMapsHint">hold the card to open the spot in maps &#128205;</div>
         </div>
     </div>
 
@@ -1653,12 +1686,16 @@
         }
         
         let cardModalOpener = null; // remember focus to restore on close
+        let currentModalCard = null; // the restaurant behind the opened card
 
         function openCardModal(imageSrc) {
             cardModalOpener = document.activeElement;
             document.getElementById('modalCardImage').src = imageSrc;
+            currentModalCard = restaurantCards.find(c => c.image === imageSrc) || null;
             // fresh twinkles on the opened card too
             const wrap = document.getElementById('modalCardWrap');
+            wrap.classList.toggle('has-maps', !!currentModalCard);
+            wrap.classList.remove('holding');
             wrap.querySelectorAll('.twinkle').forEach(t => t.remove());
             attachTwinkle(wrap, 12);
             document.getElementById('cardModal').classList.add('active');
@@ -1684,6 +1721,38 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') hideCardModal();
         });
+
+        // Hold the opened card to jump to the spot in Google Maps
+        (function() {
+            const wrap = document.getElementById('modalCardWrap');
+            const img = document.getElementById('modalCardImage');
+            let holdTimer = null, startX = 0, startY = 0;
+            function cancelHold() {
+                if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+                wrap.classList.remove('holding');
+            }
+            img.addEventListener('contextmenu', e => e.preventDefault());
+            img.addEventListener('pointerdown', e => {
+                if (!currentModalCard) return;
+                startX = e.clientX; startY = e.clientY;
+                wrap.classList.add('holding');
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    wrap.classList.remove('holding');
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    const c = currentModalCard;
+                    const q = encodeURIComponent(c.name + ' ' + (c.city === 'NYC' ? 'New York' : c.city));
+                    const url = (c.lat && c.lng)
+                        ? 'https://www.google.com/maps/search/' + q + '/@' + c.lat + ',' + c.lng + ',17z'
+                        : 'https://www.google.com/maps/search/' + q;
+                    window.open(url, '_blank', 'noopener');
+                }, 650);
+            });
+            img.addEventListener('pointermove', e => {
+                if (holdTimer && Math.hypot(e.clientX - startX, e.clientY - startY) > 12) cancelHold();
+            });
+            ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => img.addEventListener(ev, cancelHold));
+        })();
 
         // Keyboard activation for cards + header home link (Enter / Space)
         document.addEventListener('keydown', (e) => {
