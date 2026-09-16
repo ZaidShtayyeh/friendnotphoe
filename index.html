@@ -449,33 +449,8 @@
             transition: transform 0.18s ease;
         }
         .modal-card-wrap.holding img { transform: scale(1.035); }
-        .modal-maps-hint {
-            position: absolute;
-            left: 50%;
-            bottom: -2.3rem;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            color: rgba(244,239,230,0.78);
-            font-size: 0.85rem;
-            letter-spacing: 0.02em;
-            display: none;
-            pointer-events: none;
-        }
-        .modal-card-wrap.has-maps .modal-maps-hint { display: block; }
-        .modal-maps-hint::after {
-            content: '';
-            display: block;
-            height: 2px;
-            width: 0;
-            margin: 5px auto 0;
-            background: #4CCC76;
-            border-radius: 2px;
-            transition: width 0.05s ease;
-        }
-        .modal-card-wrap.holding .modal-maps-hint::after {
-            width: 100%;
-            transition: width 0.65s linear;
-        }
+        .card-modal { touch-action: none; }
+        .modal-card-wrap.snap { transition: transform 0.22s ease, opacity 0.22s ease; }
         .card-modal-close {
             position: absolute;
             top: 1rem;
@@ -652,8 +627,8 @@
                 <div class="hp-value" id="hpValue">100+</div>
             </div>
             <div class="filter-group">
-                <label>Fate</label>
-                <button class="lucky-btn" id="luckyBtn" onclick="feelingLucky()">🎱 Feeling lucky</button>
+                <label>&nbsp;</label>
+                <button class="lucky-btn" id="luckyBtn" onclick="feelingLucky()">Rando</button>
             </div>
         </div>
 
@@ -680,7 +655,6 @@
         <button class="card-modal-close" onclick="closeCardModal(event)">×</button>
         <div class="modal-card-wrap" id="modalCardWrap">
             <img id="modalCardImage" src="" alt="Card">
-            <div class="modal-maps-hint" id="modalMapsHint">hold the card to open the spot in maps &#128205;</div>
         </div>
     </div>
 
@@ -1694,8 +1668,9 @@
             currentModalCard = restaurantCards.find(c => c.image === imageSrc) || null;
             // fresh twinkles on the opened card too
             const wrap = document.getElementById('modalCardWrap');
-            wrap.classList.toggle('has-maps', !!currentModalCard);
-            wrap.classList.remove('holding');
+            wrap.classList.remove('holding', 'snap');
+            wrap.style.transform = '';
+            wrap.style.opacity = '';
             wrap.querySelectorAll('.twinkle').forEach(t => t.remove());
             attachTwinkle(wrap, 12);
             document.getElementById('cardModal').classList.add('active');
@@ -1722,36 +1697,75 @@
             if (e.key === 'Escape') hideCardModal();
         });
 
-        // Hold the opened card to jump to the spot in Google Maps
+        // Hold the opened card to jump to the spot in Google Maps;
+        // swipe it up (or down) to dismiss.
         (function() {
             const wrap = document.getElementById('modalCardWrap');
             const img = document.getElementById('modalCardImage');
-            let holdTimer = null, startX = 0, startY = 0;
+            let holdTimer = null, startX = 0, startY = 0, startT = 0, dragging = false, dy = 0;
             function cancelHold() {
                 if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
                 wrap.classList.remove('holding');
             }
+            function openMaps() {
+                const c = currentModalCard;
+                if (navigator.vibrate) navigator.vibrate(30);
+                const q = encodeURIComponent(c.name + ' ' + (c.city === 'NYC' ? 'New York' : c.city));
+                // Maps URLs open the Google Maps app directly when it's installed
+                const url = 'https://www.google.com/maps/search/?api=1&query=' + q;
+                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                    window.location.href = url;
+                } else {
+                    window.open(url, '_blank', 'noopener');
+                }
+            }
+            function dismiss(direction) {
+                wrap.classList.add('snap');
+                wrap.style.transform = 'translateY(' + (direction < 0 ? '-120%' : '120%') + ')';
+                wrap.style.opacity = '0';
+                setTimeout(hideCardModal, 200);
+            }
             img.addEventListener('contextmenu', e => e.preventDefault());
             img.addEventListener('pointerdown', e => {
-                if (!currentModalCard) return;
-                startX = e.clientX; startY = e.clientY;
-                wrap.classList.add('holding');
-                holdTimer = setTimeout(() => {
-                    holdTimer = null;
-                    wrap.classList.remove('holding');
-                    if (navigator.vibrate) navigator.vibrate(30);
-                    const c = currentModalCard;
-                    const q = encodeURIComponent(c.name + ' ' + (c.city === 'NYC' ? 'New York' : c.city));
-                    const url = (c.lat && c.lng)
-                        ? 'https://www.google.com/maps/search/' + q + '/@' + c.lat + ',' + c.lng + ',17z'
-                        : 'https://www.google.com/maps/search/' + q;
-                    window.open(url, '_blank', 'noopener');
-                }, 650);
+                startX = e.clientX; startY = e.clientY; startT = Date.now();
+                dragging = false; dy = 0;
+                if (img.setPointerCapture) try { img.setPointerCapture(e.pointerId); } catch (_) {}
+                if (currentModalCard) {
+                    wrap.classList.add('holding');
+                    holdTimer = setTimeout(() => {
+                        holdTimer = null;
+                        wrap.classList.remove('holding');
+                        openMaps();
+                    }, 650);
+                }
             });
             img.addEventListener('pointermove', e => {
-                if (holdTimer && Math.hypot(e.clientX - startX, e.clientY - startY) > 12) cancelHold();
+                if (!startT) return;
+                dy = e.clientY - startY;
+                if (!dragging && (Math.abs(dy) > 12 || Math.abs(e.clientX - startX) > 12)) {
+                    cancelHold();
+                    if (Math.abs(dy) > Math.abs(e.clientX - startX)) dragging = true;
+                }
+                if (dragging) {
+                    wrap.classList.remove('snap');
+                    wrap.style.transform = 'translateY(' + dy + 'px)';
+                }
             });
-            ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => img.addEventListener(ev, cancelHold));
+            function release() {
+                cancelHold();
+                if (dragging) {
+                    const dt = Date.now() - startT;
+                    const fast = Math.abs(dy) > 45 && dt < 280;
+                    if (Math.abs(dy) > 110 || fast) {
+                        dismiss(dy);
+                    } else {
+                        wrap.classList.add('snap');
+                        wrap.style.transform = '';
+                    }
+                }
+                dragging = false; startT = 0; dy = 0;
+            }
+            ['pointerup', 'pointercancel'].forEach(ev => img.addEventListener(ev, release));
         })();
 
         // Keyboard activation for cards + header home link (Enter / Space)
