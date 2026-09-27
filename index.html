@@ -146,48 +146,61 @@
             justify-content: space-between;
         }
         
-        .exploration-filters { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            padding: 0.5rem 1.5rem 1.5rem;
+        .exploration-filters {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.25rem 1.5rem 0.5rem;
             display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            align-items: flex-end;
+            flex-direction: column;
+            gap: 0.6rem;
         }
-        
+        /* one bar: card kinds on the left, view + Rando on the right */
+        .explore-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+        .explore-bar .filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .explore-bar .filter-chips::-webkit-scrollbar { display: none; }
+        .bar-right { display: flex; align-items: center; gap: 0.5rem; }
+        .bar-divider { width: 1px; height: 20px; background: #e2e8f0; margin: 0 0.2rem; flex-shrink: 0; }
+        .exploration-filters:not(.is-list) .sort-only { display: none; }
+
         .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .filter-group label { font-size: 0.7rem; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-        .filter-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .filter-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
         .filter-chip {
-            padding: 0.45rem 1rem;
-            border: 1.5px solid #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            height: 36px;
+            padding: 0 0.95rem;
+            border: 1px solid #e4dfd6;
             background: white;
-            border-radius: 50px;
+            border-radius: 999px;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
             font-size: 0.85rem;
             font-weight: 500;
             color: #4a5568;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
-        .filter-chip:hover { border-color: #5a6f5e; color: #5a6f5e; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(90,111,94,0.12); }
-        .filter-chip.active { background-color: #5a6f5e; color: white; border-color: #5a6f5e; box-shadow: 0 2px 8px rgba(90,111,94,0.25); }
-        .filter-chip.vibe-drink.active { background-color: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 2px 8px rgba(59,130,246,0.25); }
-        .filter-chip.vibe-drink:hover { border-color: #3b82f6; color: #3b82f6; }
-        .filter-chip.vibe-food.active { background-color: #5a6f5e; border-color: #5a6f5e; color: white; }
-        .filter-chip.vibe-food:hover { border-color: #5a6f5e; color: #5a6f5e; }
-        .filter-chip.vibe-special.active { background-color: #d4a017; border-color: #d4a017; color: white; box-shadow: 0 2px 8px rgba(212,160,23,0.25); }
-        .filter-chip.vibe-special:hover { border-color: #d4a017; color: #d4a017; }
-        
+        .filter-chip:hover { border-color: #b9c4bb; color: #2d3748; }
+        .filter-chip.active { background-color: #5a6f5e; color: white; border-color: #5a6f5e; }
+        /* card-kind chips wear their card's colors: dot = card ground, active = card backing */
+        .filter-chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--kind); flex-shrink: 0; }
+        .filter-chip.vibe-food { --kind: #8FB64D; --kind-soft: #B6D08C; }
+        .filter-chip.vibe-drink { --kind: #61B7F4; --kind-soft: #95CCF7; }
+        .filter-chip.vibe-special { --kind: #E8C347; --kind-soft: #F2DA92; }
+        .filter-chip.vibe-food:hover, .filter-chip.vibe-drink:hover, .filter-chip.vibe-special:hover { border-color: var(--kind); }
+        .filter-chip.vibe-food.active, .filter-chip.vibe-drink.active, .filter-chip.vibe-special.active { background-color: var(--kind-soft); border-color: var(--kind); color: #2d3748; font-weight: 600; }
+        .filter-chip.active .dot { box-shadow: 0 0 0 2px rgba(255,255,255,0.7); }
+
         /* View toggle */
-        .view-toggle { display: flex; gap: 0; border: 1.5px solid #e2e8f0; border-radius: 50px; overflow: hidden; }
-        .view-btn { padding: 0.4rem 1rem; border: none; background: white; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #4a5568; transition: all 0.2s; }
-        .view-btn.active { background: #5a6f5e; color: white; }
+        .view-toggle { display: flex; height: 36px; padding: 3px; background: #efece6; border-radius: 999px; }
+        .view-btn { padding: 0 0.95rem; border: none; border-radius: 999px; background: transparent; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #718096; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; }
+        .view-btn.active { background: white; color: #2d3748; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
 
         /* 8-ball */
-        .lucky-btn { padding: 0.45rem 1.1rem; border: none; border-radius: 50px; background: #2d3748; color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: transform 0.15s, background 0.2s; }
+        .lucky-btn { height: 36px; padding: 0 1.1rem; border: none; border-radius: 999px; background: #2d3748; color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: transform 0.15s, background 0.2s; }
         .lucky-btn:hover { transform: translateY(-2px); background: #1a202c; }
         .lucky-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
 
@@ -283,18 +296,18 @@
         .marker-cluster-large { width: 60px !important; height: 60px !important; }
         .marker-cluster-large div { width: 46px !important; height: 46px !important; line-height: 46px !important; font-size: 16px; }
 
-        .hp-slider-container { min-width: 150px; }
-        .hp-slider { width: 100%; accent-color: #5a6f5e; height: 6px; }
-        .hp-value { font-size: 0.85rem; color: #5a6f5e; font-weight: 600; margin-top: 0.2rem; }
-        
         .city-section { max-width: 1400px; margin: 0 auto; padding: 1rem 1.5rem 2rem; }
-        .city-section h3 { 
-            font-size: 1.5rem; 
-            color: #5a6f5e; 
+        .city-section h3 {
+            font-size: 1.5rem;
+            color: #5a6f5e;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #e8f0ea;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
         }
+        .city-count { font-size: 0.85rem; font-weight: 500; font-style: italic; color: #a0aec0; }
         
         .cards-grid { 
             display: grid; 
@@ -526,7 +539,7 @@
             
             .exploration-header { padding: 3rem 2rem 1rem; }
             .exploration-header h2 { font-size: 2.5rem; }
-            .exploration-filters { padding: 1rem 2rem 2rem; gap: 2rem; }
+            .exploration-filters { padding: 0.5rem 2rem 1rem; }
             .cards-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
             
             .post-container { padding: 3rem 2rem; }
@@ -543,6 +556,10 @@
             .scatter-every { font-size: 1.4rem; top: 40%; right: 5%; }
             .scatter-adventures { font-size: 1.8rem; top: 55%; }
             .scatter-explore { font-size: 1.8rem; top: 72%; }
+
+            /* phones: view + Rando on top, card kinds underneath */
+            .bar-right { order: -1; width: 100%; justify-content: space-between; }
+            .explore-bar .filter-chips { width: 100%; }
         }
 
         /* Small phones */
@@ -560,7 +577,7 @@
             .post-title { font-size: 1.5rem; }
             
             .filter-chips { gap: 0.3rem; }
-            .filter-chip { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+            .filter-chip { padding: 0 0.7rem; font-size: 0.8rem; }
             
             .exploration-subtitle { flex-direction: column; gap: 0.25rem; }
         }
@@ -619,32 +636,20 @@
             <p class="exploration-subtitle"><span>For us.....</span><span>.....amongst Friends</span></p>
         </div>
         
-        <div class="exploration-filters">
-            <div class="filter-group">
-                <label>View</label>
-                <div class="view-toggle">
-                    <button class="view-btn active" id="view-list" onclick="switchExploreView('list')">List</button>
-                    <button class="view-btn" id="view-map" onclick="switchExploreView('map')">Map</button>
-                    <button class="view-btn" id="view-globe" onclick="switchExploreView('globe')">Globe</button>
+        <div class="exploration-filters is-list" id="explorationFilters">
+            <div class="explore-bar">
+                <div class="filter-chips" id="vibeFilters"></div>
+                <div class="bar-right">
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="view-list" onclick="switchExploreView('list')">List</button>
+                        <button class="view-btn" id="view-map" onclick="switchExploreView('map')">Map</button>
+                        <button class="view-btn" id="view-globe" onclick="switchExploreView('globe')">Globe</button>
+                    </div>
+                    <button class="lucky-btn" id="luckyBtn" onclick="feelingLucky()">Rando</button>
                 </div>
             </div>
-            <div class="filter-group">
-                <label>City</label>
-                <div class="filter-chips" id="cityFilters"></div>
-            </div>
-            <div class="filter-group">
-                <label>Vibe</label>
-                <div class="filter-chips" id="vibeFilters"></div>
-            </div>
-            <div class="filter-group hp-slider-container">
-                <label>Min HP</label>
-                <input type="range" class="hp-slider" id="hpSlider" min="100" max="500" value="100" oninput="updateHpDisplay(); applyCardFilters();">
-                <div class="hp-value" id="hpValue">100+</div>
-            </div>
-            <div class="filter-group">
-                <label>&nbsp;</label>
-                <button class="lucky-btn" id="luckyBtn" onclick="feelingLucky()">Rando</button>
-            </div>
+            <!-- only shows once cards exist in more than one city -->
+            <div class="filter-chips" id="cityFilters" hidden></div>
         </div>
 
         <div id="exploration-content"></div>
@@ -1553,7 +1558,8 @@
         let cardFilters = {
             cities: [],
             vibes: [],
-            minHp: 100
+            minHp: 0,
+            sort: 'shuffle' // or 'hp' (highest first)
         };
 
         function showPage(page, pushState = true) {
@@ -1648,31 +1654,25 @@
         // ==================== EXPLORATION PAGE ====================
         
         function initExplorationPage() {
-            const hps = restaurantCards.map(c => c.hp);
-            const minHp = Math.min(...hps);
-            const maxHp = Math.max(...hps);
-            const slider = document.getElementById('hpSlider');
-            slider.min = minHp;
-            slider.max = maxHp;
-            slider.value = minHp;
-            cardFilters.minHp = minHp;
-            document.getElementById('hpValue').textContent = minHp + '+';
             renderCityFilters();
             renderVibeFilters();
             applyCardFilters();
         }
-        
+
         function renderCityFilters() {
             const container = document.getElementById('cityFilters');
             const cities = getUniqueCities();
+            // a city picker with one city is just noise — it appears once there's a second
+            container.hidden = cities.length < 2;
+            if (container.hidden) { container.innerHTML = ''; return; }
             container.innerHTML = `
-                <button class="filter-chip ${cardFilters.cities.length === 0 ? 'active' : ''}" onclick="toggleCityFilter('all')">All</button>
+                <button class="filter-chip ${cardFilters.cities.length === 0 ? 'active' : ''}" onclick="toggleCityFilter('all')">All cities</button>
                 ${cities.map(city => `
                     <button class="filter-chip ${cardFilters.cities.includes(city) ? 'active' : ''}" onclick="toggleCityFilter('${city}')">${city}</button>
                 `).join('')}
             `;
         }
-        
+
         function renderVibeFilters() {
             const container = document.getElementById('vibeFilters');
             const vibeConfig = [
@@ -1680,12 +1680,20 @@
                 { value: 'food', label: 'Food' },
                 { value: 'special', label: 'Special' },
             ];
+            // no "All" chip: nothing picked = everything; tap a picked chip again to clear it
             container.innerHTML = `
-                <button class="filter-chip ${cardFilters.vibes.length === 0 ? 'active' : ''}" onclick="toggleVibeFilter('all')">All</button>
                 ${vibeConfig.map(v => `
-                    <button class="filter-chip vibe-${v.value} ${cardFilters.vibes.includes(v.value) ? 'active' : ''}" onclick="toggleVibeFilter('${v.value}')">${v.label}</button>
+                    <button class="filter-chip vibe-${v.value} ${cardFilters.vibes.includes(v.value) ? 'active' : ''}" aria-pressed="${cardFilters.vibes.includes(v.value)}" onclick="toggleVibeFilter('${v.value}')"><span class="dot"></span>${v.label}</button>
                 `).join('')}
+                <span class="bar-divider sort-only"></span>
+                <button class="filter-chip sort-only ${cardFilters.sort === 'hp' ? 'active' : ''}" aria-pressed="${cardFilters.sort === 'hp'}" onclick="toggleHpSort()">Top HP</button>
             `;
+        }
+
+        function toggleHpSort() {
+            cardFilters.sort = cardFilters.sort === 'hp' ? 'shuffle' : 'hp';
+            renderVibeFilters();
+            applyCardFilters();
         }
         
         function toggleCityFilter(city) {
@@ -1716,12 +1724,6 @@
             }
             renderVibeFilters();
             applyCardFilters();
-        }
-        
-        function updateHpDisplay() {
-            const slider = document.getElementById('hpSlider');
-            document.getElementById('hpValue').textContent = slider.value + '+';
-            cardFilters.minHp = parseInt(slider.value);
         }
         
         function applyCardFilters() {
@@ -1761,8 +1763,8 @@
                 return;
             }
 
-            // Shuffle cards
-            cards = shuffleArray(cards);
+            // Shuffle cards (or strongest first when Top HP is on)
+            cards = cardFilters.sort === 'hp' ? [...cards].sort((a, b) => b.hp - a.hp) : shuffleArray(cards);
 
             // Group by city
             const byCity = {};
@@ -1773,7 +1775,7 @@
             
             container.innerHTML = Object.entries(byCity).map(([city, cityCards]) => `
                 <div class="city-section">
-                    <h3>${city}</h3>
+                    <h3>${city}<span class="city-count">${cityCards.length} ${cityCards.length === 1 ? 'card' : 'cards'}</span></h3>
                     <div class="cards-grid">
                         ${cityCards.map(card => `
                             <div class="pokemon-card" role="button" tabindex="0" aria-label="View ${card.name} card" onclick="openCardModal('${card.image}')">
@@ -2043,6 +2045,7 @@
 
         function switchExploreView(view) {
             currentView = view;
+            document.getElementById('explorationFilters').classList.toggle('is-list', view === 'list');
             document.getElementById('view-list').classList.toggle('active', view === 'list');
             document.getElementById('view-map').classList.toggle('active', view === 'map');
             document.getElementById('view-globe').classList.toggle('active', view === 'globe');
