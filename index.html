@@ -451,11 +451,11 @@
             align-items: center;
             padding: 1rem;
         }
-        .card-modal.active { display: flex; }
+        .card-modal.active { display: flex; flex-direction: column; gap: 14px; }
         .modal-card-wrap { position: relative; display: inline-block; }
         .card-modal img {
             max-width: 95vw;
-            max-height: 84vh;
+            max-height: calc(84vh - 58px);
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             -webkit-touch-callout: none;
@@ -464,20 +464,65 @@
             transition: transform 0.18s ease;
         }
         .modal-card-wrap.holding img { transform: scale(1.035); }
-        .modal-maps-hint {
-            position: absolute;
-            left: 50%;
-            bottom: -1.9rem;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            font-style: italic;
-            font-size: 0.78rem;
-            color: rgba(255,255,255,0.45);
-            pointer-events: none;
-            display: none;
-        }
-        .modal-card-wrap.has-maps .modal-maps-hint { display: block; }
         .card-modal { touch-action: none; }
+
+        /* under the opened card: send it to a friend / open it in maps */
+        .modal-actions { display: flex; gap: 10px; justify-content: center; transition: opacity 0.2s ease; }
+        .modal-actions[hidden] { display: none; }
+        .card-modal.dragging .modal-actions { opacity: 0; }
+        .modal-action {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            height: 44px; padding: 0 1.2rem;
+            border-radius: 999px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease, background-color 0.2s ease;
+        }
+        .modal-action:active { transform: scale(0.96); }
+        .modal-action svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .modal-action.primary { background: #F4EFE6; color: #2d3748; border: none; }
+        .modal-action.primary:hover { background: #fff; }
+        .modal-action.ghost { background: transparent; color: #F4EFE6; border: 1px solid rgba(244,239,230,0.4); }
+        .modal-action.ghost:hover { background: rgba(244,239,230,0.1); }
+
+        /* maps chooser: a small sheet that slides up over the card */
+        .maps-backdrop { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.35); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .maps-sheet {
+            position: fixed; left: 50%; bottom: 0; z-index: 1101;
+            width: min(100%, 420px); transform: translate(-50%, 110%);
+            background: #F4EFE6; border-radius: 20px 20px 0 0;
+            padding: 1.1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .maps-open .maps-backdrop { opacity: 1; pointer-events: auto; }
+        .maps-open .maps-sheet { transform: translate(-50%, 0); }
+        .maps-sheet-title { text-align: center; font-size: 0.85rem; color: #718096; margin-bottom: 0.8rem; }
+        .maps-sheet-title strong { color: #2d3748; }
+        .maps-opt {
+            display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+            height: 52px; margin-bottom: 0.5rem; border-radius: 14px;
+            background: white; color: #2d3748; text-decoration: none;
+            font-size: 1rem; font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .maps-opt:active { background: #ebe5da; }
+        .maps-opt .maps-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .maps-cancel {
+            display: block; width: 100%; height: 48px; margin-top: 0.3rem;
+            border: none; background: transparent; color: #718096;
+            font-size: 0.95rem; font-weight: 500; font-family: inherit; cursor: pointer;
+        }
+
+        /* little "Link copied" note */
+        .fnp-toast {
+            position: fixed; left: 50%; bottom: calc(1.5rem + env(safe-area-inset-bottom)); z-index: 1200;
+            transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+            background: #F4EFE6; color: #2d3748; padding: 0.6rem 1.1rem; border-radius: 999px;
+            font-size: 0.85rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .fnp-toast.show { transform: translate(-50%, 0); opacity: 1; }
         .modal-card-wrap.snap { transition: transform 0.22s ease, opacity 0.22s ease; }
         .card-modal-close {
             position: absolute;
@@ -675,9 +720,30 @@
         <button class="card-modal-close" onclick="closeCardModal(event)">×</button>
         <div class="modal-card-wrap" id="modalCardWrap">
             <img id="modalCardImage" src="" alt="Card">
-            <div class="modal-maps-hint">hold to open in google maps</div>
+        </div>
+        <div class="modal-actions" id="modalActions" hidden>
+            <button class="modal-action primary" id="shareCardBtn" onclick="shareCurrentCard()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+                Send to a friend
+            </button>
+            <button class="modal-action ghost" id="mapsCardBtn" onclick="openMapsSheet()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+                Maps
+            </button>
         </div>
     </div>
+
+    <!-- Maps chooser (hold the card, or tap Maps) -->
+    <div id="mapsChooser">
+        <div class="maps-backdrop" onclick="closeMapsSheet()"></div>
+        <div class="maps-sheet" role="dialog" aria-label="Open in maps">
+            <div class="maps-sheet-title">Open <strong id="mapsSpotName"></strong> in</div>
+            <a class="maps-opt" id="mapsOptGoogle" href="#" onclick="return onMapsPick(event, 'google')"><span class="maps-dot" style="background:#34A853"></span>Google Maps</a>
+            <a class="maps-opt" id="mapsOptApple" href="#" onclick="return onMapsPick(event, 'apple')"><span class="maps-dot" style="background:#0A84FF"></span><span id="mapsOptAppleLabel">Apple Maps</span></a>
+            <button class="maps-cancel" onclick="closeMapsSheet()">Cancel</button>
+        </div>
+    </div>
+    <div class="fnp-toast" id="fnpToast" role="status" aria-live="polite"></div>
 
     
 
@@ -1802,12 +1868,147 @@
             wrap.style.opacity = '';
             wrap.querySelectorAll('.twinkle').forEach(t => t.remove());
             attachTwinkle(wrap, 12);
+            document.getElementById('modalActions').hidden = !currentModalCard;
+            document.getElementById('cardModal').classList.remove('dragging');
             document.getElementById('cardModal').classList.add('active');
+            if (currentModalCard) prepareShareFile(currentModalCard);
             const closeBtn = document.querySelector('.card-modal-close');
             if (closeBtn) closeBtn.focus();
         }
 
+        // ---------- Sharing a card ----------
+        // Every card has its own link: friendnotphoe.com/#card/<slug> opens the site
+        // straight onto that card.
+        function cardSlug(c) {
+            return c.name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+                .replace(/[’']/g, '').replace(/&/g, 'and')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+        function cardLink(c) {
+            return location.origin + location.pathname + '#card/' + cardSlug(c);
+        }
+        function cardFromHash(hash) {
+            const m = /^#card\/([a-z0-9-]+)$/.exec(hash || '');
+            return m ? restaurantCards.find(c => c.image && cardSlug(c) === m[1]) || null : null;
+        }
+
+        // The card picture is turned into a JPEG as soon as the card opens, so the share
+        // sheet can open instantly on tap (iPhones refuse to share after a slow wait).
+        // JPEG, not WebP: WhatsApp turns .webp files into stickers.
+        let shareFile = null;
+        function prepareShareFile(c) {
+            shareFile = null;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                canvas.toBlob(blob => {
+                    if (blob && currentModalCard === c) {
+                        shareFile = new File([blob], cardSlug(c) + '.jpg', { type: 'image/jpeg' });
+                    }
+                }, 'image/jpeg', 0.92);
+            };
+            img.src = c.image;
+        }
+
+        async function shareCurrentCard() {
+            const c = currentModalCard;
+            if (!c) return;
+            const url = cardLink(c);
+            const text = 'Let’s go to ' + c.name + '?';
+            if (navigator.share) {
+                const data = { title: c.name, text: text, url: url };
+                if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) data.files = [shareFile];
+                try {
+                    await navigator.share(data);
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return; // they closed the share sheet
+                    if (data.files) {
+                        try { await navigator.share({ title: c.name, text: text, url: url }); return; }
+                        catch (err2) { if (err2.name === 'AbortError') return; }
+                    }
+                }
+            }
+            // no share sheet (most laptops): copy the link instead
+            try {
+                await navigator.clipboard.writeText(url);
+                showToast('Link copied — send it to a friend');
+            } catch (_) {
+                window.prompt('Copy this link:', url);
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('fnpToast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+        }
+
+        // ---------- Maps chooser ----------
+        // Opening from a real tap (not a timer) is what lets the phone hand off to the app
+        // instead of loading maps in the browser.
+        const IS_ANDROID = /Android/i.test(navigator.userAgent);
+        const IS_IOS = !IS_ANDROID && (/iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)); // iPads report as Macs
+
+        function mapsLinks(c) {
+            const cityName = c.city === 'NYC' ? 'New York' : c.city;
+            const q = encodeURIComponent(c.name + ' ' + cityName);
+            const hasLL = c.lat && c.lng;
+            const ll = hasLL ? c.lat + ',' + c.lng : '';
+            return {
+                googleWeb: 'https://www.google.com/maps/search/?api=1&query=' + q,
+                googleIOSApp: 'comgooglemaps://?q=' + q + (hasLL ? '&center=' + ll + '&zoom=16' : ''),
+                apple: 'https://maps.apple.com/?q=' + encodeURIComponent(c.name) + (hasLL ? '&sll=' + ll + '&z=16' : '&near=' + encodeURIComponent(cityName)),
+                // Android has no Apple Maps: let the phone offer its own map apps instead
+                androidOther: hasLL ? 'geo:' + ll + '?q=' + q : 'geo:0,0?q=' + q,
+            };
+        }
+
+        function openMapsSheet() {
+            const c = currentModalCard;
+            if (!c) return;
+            const links = mapsLinks(c);
+            document.getElementById('mapsSpotName').textContent = c.name;
+            const g = document.getElementById('mapsOptGoogle');
+            const a = document.getElementById('mapsOptApple');
+            g.href = IS_IOS ? links.googleIOSApp : links.googleWeb;
+            a.href = IS_ANDROID ? links.androidOther : links.apple;
+            document.getElementById('mapsOptAppleLabel').textContent = IS_ANDROID ? 'Other map apps' : 'Apple Maps';
+            const desktop = !IS_IOS && !IS_ANDROID;
+            [g, a].forEach(el => {
+                if (desktop) { el.target = '_blank'; el.rel = 'noopener'; }
+                else { el.removeAttribute('target'); el.removeAttribute('rel'); }
+            });
+            document.getElementById('mapsChooser').classList.add('maps-open');
+        }
+
+        function closeMapsSheet() {
+            document.getElementById('mapsChooser').classList.remove('maps-open');
+        }
+
+        function onMapsPick(event, which) {
+            const c = currentModalCard;
+            if (which === 'google' && IS_IOS && c) {
+                // The Google Maps app opens through its own link on iPhone. If it isn't
+                // installed nothing opens, so fall back to Google Maps on the web.
+                const fallback = mapsLinks(c).googleWeb;
+                const t = setTimeout(() => { if (!document.hidden) location.href = fallback; }, 1400);
+                const cancel = () => { if (document.hidden) clearTimeout(t); };
+                document.addEventListener('visibilitychange', cancel, { once: true });
+            }
+            setTimeout(closeMapsSheet, 300);
+            return true; // let the link open
+        }
+
         function hideCardModal() {
+            closeMapsSheet();
             document.getElementById('cardModal').classList.remove('active');
             if (cardModalOpener && typeof cardModalOpener.focus === 'function') {
                 cardModalOpener.focus();
@@ -1823,10 +2024,12 @@
 
         // Close modal on escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') hideCardModal();
+            if (e.key !== 'Escape') return;
+            if (document.getElementById('mapsChooser').classList.contains('maps-open')) closeMapsSheet();
+            else hideCardModal();
         });
 
-        // Hold the opened card to jump to the spot in Google Maps;
+        // Hold the opened card to pick a maps app (Google / Apple);
         // swipe it up (or down) to dismiss.
         (function() {
             const wrap = document.getElementById('modalCardWrap');
@@ -1837,18 +2040,11 @@
                 wrap.classList.remove('holding');
             }
             function openMaps() {
-                const c = currentModalCard;
                 if (navigator.vibrate) navigator.vibrate(30);
-                const q = encodeURIComponent(c.name + ' ' + (c.city === 'NYC' ? 'New York' : c.city));
-                // Maps URLs open the Google Maps app directly when it's installed
-                const url = 'https://www.google.com/maps/search/?api=1&query=' + q;
-                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                    window.location.href = url;
-                } else {
-                    window.open(url, '_blank', 'noopener');
-                }
+                openMapsSheet();
             }
             function dismiss(direction) {
+                document.getElementById('cardModal').classList.add('dragging');
                 wrap.classList.add('snap');
                 wrap.style.transform = 'translateY(' + (direction < 0 ? '-120%' : '120%') + ')';
                 wrap.style.opacity = '0';
@@ -1878,6 +2074,7 @@
                 if (dragging) {
                     wrap.classList.remove('snap');
                     wrap.style.transform = 'translateY(' + dy + 'px)';
+                    document.getElementById('cardModal').classList.add('dragging');
                 }
             });
             function release() {
@@ -1890,6 +2087,7 @@
                     } else {
                         wrap.classList.add('snap');
                         wrap.style.transform = '';
+                        document.getElementById('cardModal').classList.remove('dragging');
                     }
                 }
                 dragging = false; startT = 0; dy = 0;
@@ -2576,7 +2774,7 @@
         (function () {
             const splash = document.getElementById('splash');
             const freshHome = !sessionStorage.getItem('fnfSplash') && (!location.hash || location.hash === '#home');
-            if (!freshHome) return;
+            if (!freshHome) return; // (a shared card link skips the splash and lands on the card)
             splash.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             splash.addEventListener('click', () => {
@@ -2589,7 +2787,15 @@
             }, { once: true });
         })();
 
-        showPage('home');
+        // A shared card link (#card/<slug>) opens Explore with that card already up;
+        // closing it leaves them browsing the rest of the deck.
+        const sharedCard = cardFromHash(location.hash);
+        if (sharedCard) {
+            showPage('exploration');
+            openCardModal(sharedCard.image);
+        } else {
+            showPage('home');
+        }
     </script>
 </body>
 </html>
