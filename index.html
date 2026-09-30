@@ -2309,11 +2309,15 @@
                 if (!exploreMap) {
                     exploreMap = L.map('exploration-map', {
                         zoomControl: true,
-                        attributionControl: false
+                        attributionControl: true
                     }).setView([40.7350, -73.9900], 13);
+                    exploreMap.attributionControl.setPrefix(false);
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                        maxZoom: 19
+                    // Esri light grey (no API key needed; CARTO's free tiles now return
+                    // "API KEY REQUIRED"). Base only: Esri's separate street-name layer
+                    // draws hairline seams between its tiles.
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                        maxNativeZoom: 16, maxZoom: 19, attribution: 'Map &copy; Esri'
                     }).addTo(exploreMap);
 
                     exploreMap.on('zoomend', function() {
