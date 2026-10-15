@@ -179,13 +179,17 @@
             width: 6%; aspect-ratio: 1;
             border-radius: 50%;
             pointer-events: none;
-            box-shadow: 0 0 10px 4px rgba(201, 20, 40, 0.65), inset 0 0 4px 1px rgba(201, 20, 40, 0.35);
-            animation: wastaPulse 2.6s ease-in-out infinite;
+            box-shadow: 0 0 8px 2px rgba(201, 20, 40, 0.45), inset 0 0 3px 1px rgba(201, 20, 40, 0.22);
+            animation: wastaPulseCard 2.6s ease-in-out infinite;
             z-index: 2;
         }
         @keyframes wastaPulse {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 0.95; }
+        }
+        @keyframes wastaPulseCard {
+            0%, 100% { opacity: 0.18; }
+            50% { opacity: 0.55; }
         }
         @media (prefers-reduced-motion: reduce) { .wasta-glow, .wasta-dot { animation: none; opacity: 0.55; } }
 
