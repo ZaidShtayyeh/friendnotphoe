@@ -179,16 +179,16 @@
         /* Wasta — a live glow breathing on the type icon */
         .wasta-glow {
             position: absolute;
-            left: 83.6%; top: 2.3%;
-            width: 11%; aspect-ratio: 1;
+            left: 85.5%; top: 3.67%;
+            width: 7.2%; aspect-ratio: 1;
             border-radius: 50%;
             pointer-events: none;
-            /* proportional ring: scales with the card, unlike px box-shadows */
+            /* a thin halo hugging the icon bubble's edge (bubble r = 79% of this element) */
             background: radial-gradient(circle,
-                transparent 50%,
-                rgba(201, 20, 40, 0.75) 60%,
-                rgba(201, 20, 40, 0.30) 72%,
-                transparent 86%);
+                transparent 77%,
+                rgba(201, 20, 40, 0.8) 84%,
+                rgba(201, 20, 40, 0.28) 93%,
+                transparent 100%);
             animation: wastaPulseCard 2.6s ease-in-out infinite;
             z-index: 2;
         }
