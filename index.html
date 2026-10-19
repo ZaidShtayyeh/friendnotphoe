@@ -441,9 +441,13 @@
             65% { opacity: 0.95; transform: translate(-50%, -50%) scale(1) rotate(28deg); }
         }
         @media (prefers-reduced-motion: reduce) { .twinkle { display: none; } }
+        .pokemon-card { background: #ece5d8; } /* quiet linen while the image streams in */
+        .pokemon-card img { opacity: 0; transition: opacity 0.35s ease; }
+        .pokemon-card img.loaded { opacity: 1; }
         .pokemon-card img {
             width: 100%;
             height: auto;
+            aspect-ratio: 5 / 7;
             display: block;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -2215,7 +2219,7 @@
                     <div class="cards-grid">
                         ${cityCards.map(card => `
                             <div class="pokemon-card" role="button" tabindex="0" aria-label="View ${card.name} card" onclick="openCardModal('${card.image}')">
-                                <img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async">
+                                <img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">
                             </div>
                         `).join('')}
                     </div>
@@ -2583,6 +2587,7 @@
         renderCards = function(cards) {
             _origRenderCards(cards);
             document.querySelectorAll('.pokemon-card').forEach(card => {
+                const im = card.querySelector('img'); if (im && im.complete && im.naturalWidth) im.classList.add('loaded');
                 attachHolo(card);
                 attachTwinkle(card);
             });
@@ -2607,7 +2612,7 @@
             return L.divIcon({
                 className: '',
                 html: `<div class="map-marker" onclick="event.stopPropagation(); openCardModal('${card.image.replace(/'/g, "\\'")}')">
-                    <img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async">
+                    <img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async" onload="this.classList.add('loaded')">
                 </div>`,
                 iconSize: [60, 60],
                 iconAnchor: [30, 30]
