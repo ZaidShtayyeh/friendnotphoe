@@ -3170,11 +3170,15 @@
         })();
 
         // A shared card link (#card/<slug>) opens Explore with that card already up;
-        // closing it leaves them browsing the rest of the deck.
+        // closing it leaves them browsing the rest of the deck. An article link
+        // (#post-<id>) opens straight onto that article.
         const sharedCard = cardFromHash(location.hash);
+        const sharedPost = location.hash.match(/^#post-(\d+)$/);
         if (sharedCard) {
             showPage('exploration');
             openCardModal(sharedCard.image);
+        } else if (sharedPost && blogPosts.some(p => p.id === +sharedPost[1] && p.status === 'live')) {
+            showPost(+sharedPost[1], false);
         } else {
             showPage('home');
         }
