@@ -1690,8 +1690,9 @@
                 city: 'NYC',
                 hp: 300,
                 vibes: ['special'],
-                lat: 40.7262,
-                lng: -73.9838,
+                place: "Crispy Burger East Village, 137 1st Ave, New York, NY 10003",
+                lat: 40.72796,
+                lng: -73.98532,
                 image: 'assets/cards/crispychicken.webp?v=5'
             },
             {
@@ -2765,6 +2766,22 @@
             exploreGlobe.htmlElementsData([...cents, JERUSALEM_HEART]);
         }
 
+        // The closest city that actually has cards, or null if the camera is
+        // nowhere near one (~800km). The map hands off to that city's center.
+        function nearestCardCity(pov) {
+            const cents = cityCentroids(globeCards());
+            let best = null, bestD = Infinity;
+            for (const c of cents) {
+                const dLat = (c.lat - pov.lat) * Math.PI / 180;
+                const dLng = (c.lng - pov.lng) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) ** 2 +
+                    Math.cos(pov.lat * Math.PI / 180) * Math.cos(c.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+                const km = 12742 * Math.asin(Math.sqrt(a));
+                if (km < bestD) { bestD = km; best = c; }
+            }
+            return bestD <= 800 ? best : null;
+        }
+
         // Tapping a city pin dives all the way down into the 2D map
         function flyGlobeToCity(cent) {
             if (!exploreGlobe) return;
@@ -2898,11 +2915,15 @@
                     })
                     .onZoom(pov => {
                         if (globeHandoffArmed && pov.altitude < HANDOFF_ALTITUDE) {
+                            // the map only exists where there are cards: diving over
+                            // open ocean or a cardless city keeps you on the globe
+                            const cent = nearestCardCity(pov);
+                            if (!cent) return;
                             globeHandoffArmed = false;
                             // mid-pinch: hold the dive until the fingers lift so the
                             // gesture never spills onto the freshly shown map
-                            if (globeActiveTouches > 0) pendingHandoffPov = pov;
-                            else globeToMapHandoff(pov);
+                            if (globeActiveTouches > 0) pendingHandoffPov = cent;
+                            else globeToMapHandoff(cent);
                         }
                     });
 
