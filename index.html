@@ -2292,7 +2292,7 @@
             const c = currentModalCard;
             if (!c) return;
             const url = cardLink(c);
-            const text = 'Let’s go to ' + c.name + '?';
+            const text = 'Friend not Phoe x ' + c.name;
             if (navigator.share) {
                 const data = { title: c.name, text: text, url: url };
                 if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) data.files = [shareFile];
