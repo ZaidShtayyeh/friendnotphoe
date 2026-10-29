@@ -260,9 +260,17 @@
             cursor: pointer;
             transition: transform 0.2s;
             background: transparent;
+            position: relative;
         }
         .map-marker:hover { transform: scale(1.3); z-index: 9999 !important; }
-        .map-marker img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* show the card's PHOTO region (x 8-92%, y 9.2-49.2% of the card),
+           not a center-crop of the whole card */
+        .map-marker img {
+            position: absolute;
+            width: 178.6%; height: 250%;
+            left: -39.3%; top: -23.1%;
+            display: block;
+        }
 
         /* Single marker dot (matches cluster style) */
         .map-single {
@@ -2621,7 +2629,7 @@
         let exploreMap = null;
         let clusterGroup = null;
         let currentView = 'list';
-        const PHOTO_ZOOM = 16;
+        const PHOTO_ZOOM = 14;
 
         function makeNumberIcon() {
             return L.divIcon({
@@ -2854,7 +2862,7 @@
                     .pointAltitude(0.02)
                     .pointRadius(0.35)
                     .pointLabel(d => `<div style="background: rgba(250,250,250,0.95); color: #2d3748; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.85rem; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">${d.name} · ${d.city}</div>`)
-                    .onPointClick(d => openCardModal(d.image))
+                    .onPointClick(d => { const cent = cityCentroids(globeCards()).find(c => c.city === d.city); if (cent) flyGlobeToCity(cent); })
                     .htmlLat('lat')
                     .htmlLng('lng')
                     .htmlAltitude(0.022)
@@ -2958,7 +2966,7 @@
         }
 
         // Zooming all the way in on the globe dives into the 2D map at that spot
-        function globeToMapHandoff(pov, zoom = 12, onLanded = null) {
+        function globeToMapHandoff(pov, zoom = 13, onLanded = null) {
             const container = document.getElementById('exploration-globe');
             const mapWrapper = document.getElementById('map-wrapper');
             container.classList.add('handing-off');
