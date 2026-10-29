@@ -2049,6 +2049,56 @@
             }
         }
 
+        // ==================== HOME SWIPE-UP -> EXPLORE ====================
+        // Scrolling down (or swiping up) on the home screen sends the scattered
+        // words flying off the top and lands on Explore. Clicking Explore still works.
+        let homeExitBusy = false;
+        let homeScrollIntent = 0;
+        let homeScrollReset = null;
+
+        function homeGestureActive() {
+            const sp = document.getElementById('splash');
+            if (sp && sp.style.display !== 'none') return false; // still behind the heart gate
+            return !document.getElementById('home-page').classList.contains('hidden');
+        }
+
+        function homeToExplore() {
+            if (homeExitBusy) return;
+            homeExitBusy = true;
+            const home = document.getElementById('home-page');
+            const pieces = home.querySelectorAll('.home-title, .scatter-word, .home-footer');
+            if (prefersReducedMotion) {
+                showPage('exploration');
+                homeExitBusy = false;
+                return;
+            }
+            pieces.forEach((el, i) => {
+                el.style.transition = `transform 0.6s cubic-bezier(0.45, 0, 0.7, 1) ${i * 0.045}s, opacity 0.45s ease ${i * 0.045}s`;
+                el.style.transform = 'translateY(-115vh)';
+                el.style.opacity = '0';
+            });
+            setTimeout(() => {
+                showPage('exploration');
+                pieces.forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; });
+                homeExitBusy = false;
+            }, 600 + pieces.length * 45);
+        }
+
+        window.addEventListener('wheel', e => {
+            if (!homeGestureActive() || homeExitBusy || e.deltaY <= 0) return;
+            homeScrollIntent += e.deltaY;
+            if (homeScrollReset) clearTimeout(homeScrollReset);
+            homeScrollReset = setTimeout(() => { homeScrollIntent = 0; }, 400);
+            if (homeScrollIntent > 60) { homeScrollIntent = 0; homeToExplore(); }
+        }, { passive: true });
+
+        let homeTouchY = null;
+        window.addEventListener('touchstart', e => { homeTouchY = e.touches[0].clientY; }, { passive: true });
+        window.addEventListener('touchmove', e => {
+            if (!homeGestureActive() || homeExitBusy || homeTouchY === null) return;
+            if (homeTouchY - e.touches[0].clientY > 60) { homeTouchY = null; homeToExplore(); }
+        }, { passive: true });
+
         // Handle browser back/forward buttons
         window.addEventListener('popstate', function(e) {
             if (e.state && e.state.page === 'post' && e.state.postId) {
