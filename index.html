@@ -2823,78 +2823,12 @@
         let luckyInProgress = false;
 
         function feelingLucky() {
-            if (luckyInProgress) return;
             // respect whatever filters are set; if they exclude everything, fate ignores them
             let pool = globeCards();
             if (!pool.length) pool = restaurantCards.filter(c => c.lat && c.lng && c.image);
             if (!pool.length) return;
             const card = pool[Math.floor(Math.random() * pool.length)];
-
-            luckyInProgress = true;
-            const btn = document.getElementById('luckyBtn');
-            if (btn) btn.disabled = true;
-
-            if (currentView !== 'globe') switchExploreView('globe');
-            if (exploreGlobe) {
-                spinAndReveal(card);
-            } else {
-                // globe library still loading — start as soon as it's ready
-                const waiter = setInterval(() => {
-                    if (exploreGlobe) { clearInterval(waiter); clearTimeout(bail); spinAndReveal(card); }
-                }, 100);
-                const bail = setTimeout(() => { clearInterval(waiter); finishLucky(); }, 15000);
-            }
-        }
-
-        function spinAndReveal(card) {
-            const controls = exploreGlobe.controls();
-            globeHandoffArmed = false;  // the 8-ball drives the ending
-            controls.enabled = false;   // hands off the wheel while fate decides
-            controls.autoRotate = true;
-
-            if (prefersReducedMotion) { diveToCard(card); return; }
-
-            exploreGlobe.pointOfView({ altitude: 2.4 }, 500); // pull back for the drama
-
-            const SPIN_MS = 2400, PEAK = 40, BASE = 0.55;
-            const t0 = performance.now();
-            (function step() {
-                const t = (performance.now() - t0) / SPIN_MS;
-                if (t >= 1) {
-                    controls.autoRotateSpeed = BASE;
-                    diveToCard(card);
-                    return;
-                }
-                let s;
-                if (t < 0.3) { const k = t / 0.3; s = BASE + (PEAK - BASE) * k * k; }                       // wind up
-                else if (t < 0.6) { s = PEAK; }                                                              // full tilt
-                else { const k = (t - 0.6) / 0.4; s = BASE + (PEAK - BASE) * (1 - k) * (1 - k); }            // brake
-                controls.autoRotateSpeed = s;
-                requestAnimationFrame(step);
-            })();
-        }
-
-        function diveToCard(card) {
-            exploreGlobe.pointOfView({ lat: card.lat, lng: card.lng, altitude: 0.32 }, 1700);
-            setTimeout(() => {
-                globeToMapHandoff({ lat: card.lat, lng: card.lng }, PHOTO_ZOOM, () => {
-                    openCardModal(card.image);
-                    finishLucky();
-                });
-            }, 1750);
-        }
-
-        function finishLucky() {
-            luckyInProgress = false;
-            if (exploreGlobe) {
-                const controls = exploreGlobe.controls();
-                controls.enabled = true;
-                controls.autoRotate = true;
-                controls.autoRotateSpeed = 0.55;
-            }
-            globeHandoffArmed = true;
-            const btn = document.getElementById('luckyBtn');
-            if (btn) btn.disabled = false;
+            openCardModal(card.image);
         }
 
         function initGlobe() {
