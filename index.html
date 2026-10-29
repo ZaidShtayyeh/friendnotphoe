@@ -33,7 +33,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background-color: #fafafa; color: #2d3748; }
         
-        header { background-color: white; padding: 1rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        header { background-color: white; padding: 0.6rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         h1 { font-size: 1.5rem; color: #5a6f5e; font-weight: 600; }
         header h1 { cursor: pointer; }
@@ -55,7 +55,7 @@
             margin: 0 auto;
         }
         .home-scattered { position: relative; flex: 1; width: 100%; }
-        .home-title { font-size: 2.5rem; color: #5a6f5e; position: absolute; top: 5%; left: 5%; }
+        .home-title { position: absolute; top: 5%; left: 5%; width: 210px; height: auto; }
         .scatter-word { position: absolute; font-weight: 600; color: #2d3748; cursor: default; }
         .scatter-word.falling {
             animation: fallOff 1.2s cubic-bezier(0.4, 0, 1, 0.6) forwards !important;
@@ -431,7 +431,8 @@
         #splash.zooming { opacity: 0; }
         #splash.zooming #splash-heart { transform: scale(9); opacity: 0; }
         /* corner coin */
-        .corner-coin { width: 52px; height: 52px; cursor: pointer; display: block; }
+        .corner-coin { width: 72px; height: 72px; cursor: pointer; display: block; }
+        .corner-coin:focus-visible { outline: 3px solid #5a6f5e; outline-offset: 3px; border-radius: 50%; }
         /* twinkling star glints — pinned to the card's actual stars, soft */
         .twinkle {
             position: absolute;
@@ -597,7 +598,7 @@
             header { padding: 1.5rem 2rem; }
             h1 { font-size: 2rem; }
             .home-container { padding: 3rem 2rem; }
-            .home-title { font-size: 3.5rem; }
+            .home-title { width: 290px; }
             .scatter-here, .scatter-there, .scatter-every { font-size: 2.5rem; }
             .scatter-adventures, .scatter-explore { font-size: 3rem; }
             
@@ -620,7 +621,7 @@
         
         /* Phones */
         @media (max-width: 500px) {
-            .home-title { font-size: 2rem; }
+            .home-title { width: 160px; }
             .scatter-here { font-size: 1.4rem; top: 28%; left: 5%; }
             .scatter-there { font-size: 1.4rem; top: 20%; left: 30%; }
             .scatter-and { font-size: 1.1rem; top: 35%; left: 45%; }
@@ -662,15 +663,14 @@
 
     <header id="site-header" style="display: none;">
         <div class="header-content">
-            <h1 onclick="showPage('home')" role="link" tabindex="0" aria-label="Back to home">FriendnotPhoe</h1>
-            <img src="assets/heart-spin-160.webp" alt="" class="corner-coin" onclick="showPage('home')">
+            <img src="assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin" onclick="showPage('home')" role="link" tabindex="0">
         </div>
     </header>
 
     <div id="home-page" class="page">
         <div class="home-container">
             <div class="home-scattered">
-                <h1 class="home-title">FriendnotPhoe</h1>
+                <img class="home-title" src="assets/logo-lockup.webp" alt="Friend not Phoe">
                 <span class="scatter-word scatter-here">Here</span>
                 <span class="scatter-word scatter-there">There</span>
                 <span class="scatter-word scatter-and">and</span>
@@ -2557,7 +2557,7 @@
         // Keyboard activation for cards + header home link (Enter / Space)
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter' && e.key !== ' ') return;
-            const target = e.target.closest('.pokemon-card, #site-header h1');
+            const target = e.target.closest('.pokemon-card, #site-header .corner-coin');
             if (target) { e.preventDefault(); target.click(); }
         });
 
