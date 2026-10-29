@@ -47,32 +47,61 @@
             padding: 2rem 1.5rem;
             overflow: visible;
         }
-        .home-scattered {
+        .home-center {
             flex: 1;
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.6rem;
         }
-        .home-scattered { position: relative; flex: 1; width: 100%; }
-        .home-title { position: absolute; top: 5%; left: 5%; width: 210px; height: auto; }
-        .scatter-word { position: absolute; font-weight: 600; color: #2d3748; cursor: default; }
-        .scatter-word.falling {
-            animation: fallOff 1.2s cubic-bezier(0.4, 0, 1, 0.6) forwards !important;
-            pointer-events: none;
-            z-index: 999;
+        .home-title {
+            width: min(430px, 80vw);
+            height: auto;
+            animation: boomIn 0.75s cubic-bezier(0.2, 0.8, 0.3, 1.18) both;
         }
-        .scatter-word.reappearing {
-            animation: fadeBack 0.5s ease forwards !important;
+        .home-nav { display: flex; gap: 2.4rem; animation: riseIn 0.5s ease 0.55s both; }
+        .home-link {
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #5a6f5e;
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
         }
-        @keyframes fallOff {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            30% { transform: translateY(15vh) rotate(2deg); opacity: 0.9; }
-            100% { transform: translateY(110vh) rotate(6deg); opacity: 0; }
+        .home-link:hover { transform: translateY(-3px); color: #4a5f4e; }
+        .home-link:focus-visible { outline: 3px solid #5a6f5e; outline-offset: 3px; border-radius: 4px; }
+        .home-tagline {
+            text-align: center;
+            margin-bottom: 9vh;
+            color: #718096;
+            font-style: italic;
+            font-size: 1.2rem;
         }
-        @keyframes fadeBack {
-            0% { opacity: 0; transform: translateY(-8px); }
-            100% { opacity: 1; transform: translateY(0); }
+        .home-tagline span {
+            display: inline-block;
+            margin: 0 0.3rem;
+            opacity: 0;
+            animation: popWord 0.45s ease forwards;
+        }
+        .home-tagline span:nth-child(1) { animation-delay: 0.85s; }
+        .home-tagline span:nth-child(2) { animation-delay: 1.1s; }
+        .home-tagline span:nth-child(3) { animation-delay: 1.35s; }
+        .home-tagline span:nth-child(4) { animation-delay: 1.6s; }
+        @keyframes boomIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            70% { transform: scale(1.07); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popWord {
+            from { opacity: 0; transform: translateY(10px) scale(0.85); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .home-title, .home-nav, .home-tagline span { animation: none; opacity: 1; }
         }
         /* Idle floating cards */
         .idle-card {
@@ -98,14 +127,6 @@
             height: auto;
             border-radius: 10px;
         }
-        .scatter-here { font-size: 1.8rem; top: 30%; left: 5%; color: #718096; font-style: italic; font-weight: 400; padding: 0.3rem 0.5rem; cursor: pointer; }
-        .scatter-there { font-size: 1.8rem; top: 22%; left: 35%; color: #718096; font-style: italic; font-weight: 400; padding: 0.3rem 0.5rem; cursor: pointer; }
-        .scatter-and { font-size: 1.4rem; top: 28%; left: 55%; color: #718096; font-style: italic; font-weight: 400; padding: 0.3rem 0.5rem; cursor: pointer; }
-        .scatter-every { font-size: 1.8rem; top: 30%; right: 8%; color: #718096; font-style: italic; font-weight: 400; padding: 0.3rem 0.5rem; cursor: pointer; }
-        .scatter-adventures { font-size: 2.2rem; top: 50%; left: 5%; color: #5a6f5e; cursor: pointer; transition: all 0.2s; }
-        .scatter-adventures:hover { transform: translateX(8px); color: #4a5f4e; }
-        .scatter-explore { font-size: 2.2rem; top: 68%; right: 10%; color: #5a6f5e; cursor: pointer; transition: all 0.2s; }
-        .scatter-explore:hover { transform: translateX(-8px); color: #4a5f4e; }
         .home-footer { 
             text-align: left; 
             color: #718096; 
@@ -598,9 +619,6 @@
             header { padding: 1.5rem 2rem; }
             h1 { font-size: 2rem; }
             .home-container { padding: 3rem 2rem; }
-            .home-title { width: 290px; }
-            .scatter-here, .scatter-there, .scatter-every { font-size: 2.5rem; }
-            .scatter-adventures, .scatter-explore { font-size: 3rem; }
             
             .adventures-header { padding: 3rem 2rem 1rem; }
             .adventures-header h2 { font-size: 2.5rem; }
@@ -621,13 +639,6 @@
         
         /* Phones */
         @media (max-width: 500px) {
-            .home-title { width: 160px; }
-            .scatter-here { font-size: 1.4rem; top: 28%; left: 5%; }
-            .scatter-there { font-size: 1.4rem; top: 20%; left: 30%; }
-            .scatter-and { font-size: 1.1rem; top: 35%; left: 45%; }
-            .scatter-every { font-size: 1.4rem; top: 40%; right: 5%; }
-            .scatter-adventures { font-size: 1.8rem; top: 55%; }
-            .scatter-explore { font-size: 1.8rem; top: 72%; }
 
             /* phones: view + Rando on top, card kinds underneath */
             .bar-right { order: -1; width: 100%; justify-content: space-between; }
@@ -637,11 +648,6 @@
         /* Small phones */
         @media (max-width: 400px) {
             .home-title { font-size: 1.8rem; }
-            .scatter-here { font-size: 1.2rem; }
-            .scatter-there { font-size: 1.2rem; }
-            .scatter-and { font-size: 1rem; }
-            .scatter-every { font-size: 1.2rem; }
-            .scatter-adventures, .scatter-explore { font-size: 1.6rem; }
             
             .blog-grid { grid-template-columns: 1fr; }
             .cards-grid { grid-template-columns: 1fr; }
@@ -669,14 +675,18 @@
 
     <div id="home-page" class="page">
         <div class="home-container">
-            <div class="home-scattered">
+            <div class="home-center">
                 <img class="home-title" src="assets/logo-lockup.webp" alt="Friend not Phoe">
-                <span class="scatter-word scatter-here">Here</span>
-                <span class="scatter-word scatter-there">There</span>
-                <span class="scatter-word scatter-and">and</span>
-                <span class="scatter-word scatter-every">Everywhere</span>
-                <div class="scatter-word scatter-adventures" onclick="showPage('adventures')">Adventures</div>
-                <div class="scatter-word scatter-explore" onclick="showPage('exploration')">Explore</div>
+                <div class="home-nav">
+                    <div class="home-link" onclick="showPage('adventures')" role="link" tabindex="0">Adventures</div>
+                    <div class="home-link" onclick="showPage('exploration')" role="link" tabindex="0">Explore</div>
+                </div>
+            </div>
+            <div class="home-tagline" aria-label="Here There and Everywhere">
+                <span>Here</span>
+                <span>There</span>
+                <span>and</span>
+                <span>Everywhere</span>
             </div>
             <div class="home-footer"><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener" style="color: #718096; text-decoration: none;">@friend_not_phoe</a></div>
         </div>
@@ -2066,20 +2076,21 @@
             if (homeExitBusy) return;
             homeExitBusy = true;
             const home = document.getElementById('home-page');
-            const pieces = home.querySelectorAll('.home-title, .scatter-word, .home-footer');
+            const pieces = home.querySelectorAll('.home-title, .home-link, .home-tagline span, .home-footer');
             if (prefersReducedMotion) {
                 showPage('exploration');
                 homeExitBusy = false;
                 return;
             }
             pieces.forEach((el, i) => {
+                el.style.animation = 'none';
                 el.style.transition = `transform 0.6s cubic-bezier(0.45, 0, 0.7, 1) ${i * 0.045}s, opacity 0.45s ease ${i * 0.045}s`;
                 el.style.transform = 'translateY(-115vh)';
                 el.style.opacity = '0';
             });
             setTimeout(() => {
                 showPage('exploration');
-                pieces.forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; });
+                pieces.forEach(el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; el.style.animation = ''; });
                 homeExitBusy = false;
             }, 600 + pieces.length * 45);
         }
@@ -2557,7 +2568,7 @@
         // Keyboard activation for cards + header home link (Enter / Space)
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter' && e.key !== ' ') return;
-            const target = e.target.closest('.pokemon-card, #site-header .corner-coin');
+            const target = e.target.closest('.pokemon-card, #site-header .corner-coin, .home-link');
             if (target) { e.preventDefault(); target.click(); }
         });
 
@@ -3064,22 +3075,7 @@
             if (currentView === 'globe') updateGlobeMarkers();
         };
 
-        // ==================== SCATTER WORD FALL EFFECT ====================
-        document.querySelectorAll('.scatter-here, .scatter-there, .scatter-and, .scatter-every').forEach(word => {
-            function triggerFall() {
-                if (word.classList.contains('falling') || word.classList.contains('reappearing')) return;
-                word.classList.add('falling');
-                setTimeout(() => {
-                    word.classList.remove('falling');
-                    word.classList.add('reappearing');
-                    setTimeout(() => {
-                        word.classList.remove('reappearing');
-                    }, 600);
-                }, 2500);
-            }
-            word.addEventListener('mouseenter', triggerFall);
-            word.addEventListener('click', triggerFall);
-        });
+
 
 
         // ==================== IDLE CARD SCATTER ====================
