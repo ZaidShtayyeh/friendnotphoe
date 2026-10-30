@@ -85,11 +85,25 @@
             margin: 0 0.3rem;
             opacity: 0;
         }
-        body.entered .home-tagline span { animation: popWord 0.45s ease forwards; }
-        .home-tagline span:nth-child(1) { animation-delay: 0.85s; }
-        .home-tagline span:nth-child(2) { animation-delay: 1.1s; }
-        .home-tagline span:nth-child(3) { animation-delay: 1.35s; }
-        .home-tagline span:nth-child(4) { animation-delay: 1.6s; }
+        body.entered .home-tagline span { animation: flyDown 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) forwards; }
+        body.entered .home-tagline span:nth-child(1) { animation-delay: 1.15s; }
+        body.entered .home-tagline span:nth-child(2) { animation-delay: 1.45s; }
+        body.entered .home-tagline span:nth-child(3) { animation-delay: 1.75s; }
+        body.entered .home-tagline span:nth-child(4) { animation-delay: 2.05s; }
+        /* click (or brush) a word and it drops off the page, then sneaks back */
+        .home-tagline span { cursor: pointer; }
+        .home-tagline span.landed { animation: none !important; opacity: 1 !important; }
+        .home-tagline span.falling { animation: fallOff 1.2s cubic-bezier(0.4, 0, 1, 0.6) forwards !important; pointer-events: none; }
+        .home-tagline span.reappearing { animation: fadeBack 0.5s ease forwards !important; }
+        @keyframes fallOff {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            30% { opacity: 0.9; transform: translateY(15vh) rotate(4deg); }
+            100% { opacity: 0; transform: translateY(80vh) rotate(10deg); }
+        }
+        @keyframes fadeBack {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         @keyframes boomIn {
             0% { transform: scale(0.1); opacity: 0; }
             70% { transform: scale(1.07); opacity: 1; }
@@ -99,9 +113,11 @@
             from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes popWord {
-            from { opacity: 0; transform: translateY(10px) scale(0.85); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes flyDown {
+            0% { opacity: 0; transform: translateY(-78vh); }
+            60% { opacity: 1; }
+            85% { transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
         @media (prefers-reduced-motion: reduce) {
             .home-title, .home-nav, .home-tagline span { animation: none !important; opacity: 1 !important; }
@@ -2056,12 +2072,34 @@
 
             if (page === 'adventures') { renderBlogGrid();  }
             else if (page === 'exploration') { initExplorationPage(); }
+            else if (page === 'home') {
+                document.querySelectorAll('.home-tagline span').forEach(s =>
+                    s.classList.remove('landed', 'falling', 'reappearing'));
+            }
             window.scrollTo(0, 0);
 
             if (pushState) {
                 history.pushState({ page: page }, '', '#' + page);
             }
         }
+
+        // ==================== TAGLINE WORD DROP (easter egg) ====================
+        document.querySelectorAll('.home-tagline span').forEach(word => {
+            function triggerFall() {
+                if (word.classList.contains('falling') || word.classList.contains('reappearing')) return;
+                word.classList.add('falling');
+                setTimeout(() => {
+                    word.classList.remove('falling');
+                    word.classList.add('reappearing');
+                    setTimeout(() => {
+                        word.classList.remove('reappearing');
+                        word.classList.add('landed');   // keeps it from replaying its entrance
+                    }, 550);
+                }, 2500);
+            }
+            word.addEventListener('mouseenter', triggerFall);
+            word.addEventListener('click', triggerFall);
+        });
 
         // ==================== HOME SWIPE-UP -> EXPLORE ====================
         // Scrolling down (or swiping up) on the home screen sends the scattered
