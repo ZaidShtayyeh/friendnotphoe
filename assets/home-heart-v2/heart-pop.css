@@ -1,0 +1,24 @@
+.heart-egg { display:block; position:relative; width:min(430px,80vw); padding:0; border:0; border-radius:24px; background:transparent; line-height:0; cursor:pointer; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; isolation:isolate; }
+.heart-egg:focus-visible { outline:2px solid #5a6f5e; outline-offset:16px; }
+.heart-egg .home-title { display:block; position:relative; width:100%; pointer-events:none; }
+.heart-original { display:block; width:100%; height:auto; }
+.heart-layers, .heart-inflator, .letter-whole, .letter-pieces, .heart-burst { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.heart-layers { opacity:1; }
+.heart-inflator { display:block; transform-origin:50% 48%; will-change:transform,opacity; }
+.heart-letter { position:absolute; display:block; will-change:transform; transform-origin:50% 50%; }
+.heart-letter svg { display:block; width:100%; height:100%; overflow:hidden; }
+.sprite-preload { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.letter-whole { opacity:1; }
+.letter-pieces { opacity:0; }
+.heart-egg:is([data-state="popped"],[data-state="returning"]) .letter-whole { opacity:0; }
+.heart-egg:is([data-state="popped"],[data-state="returning"]) .letter-pieces { opacity:1; }
+.heart-egg[data-rejoin="true"] .letter-whole { opacity:1; transition:opacity 140ms ease; }
+.heart-egg[data-rejoin="true"] .letter-pieces { opacity:0; transition:opacity 140ms ease; }
+.heart-original { opacity:0; }
+.heart-egg[data-state="idle"] .heart-original { opacity:1; }
+.heart-egg[data-state="idle"] .heart-layers { opacity:0; }
+.heart-egg[data-state="holding"] { cursor:grabbing; }
+.heart-particle { position:absolute; left:50%; top:40%; width:18px; height:18px; }
+.heart-particle svg { width:100%; height:100%; display:block; overflow:visible; }
+.heart-egg-help { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+@media(prefers-reduced-motion:reduce) { .heart-inflator { will-change:opacity; } .heart-letter { will-change:auto; } }

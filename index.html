@@ -668,6 +668,7 @@
             
         }
     </style>
+    <link rel="stylesheet" href="assets/home-heart-v2/heart-pop.css">
 </head>
 <body>
     <div id="splash" style="display: none;">
@@ -684,7 +685,31 @@
     <div id="home-page" class="page">
         <div class="home-container">
             <div class="home-center">
-                <img class="home-title" src="assets/logo-lockup.webp" alt="Friend not Phoe">
+                <button class="heart-egg" id="home-heart" data-state="idle" type="button" aria-label="Friend not Phoe. Hold for a surprise." aria-describedby="heart-egg-help">
+ <span class="home-title">
+  <img class="heart-original" src="assets/logo-lockup.webp" alt="" draggable="false">
+  <span class="heart-layers" aria-hidden="true">
+   <img class="heart-inflator" src="assets/home-heart-v2/heart-only.png" alt="" draggable="false">
+   <img class="letter-whole" src="assets/home-heart-v2/letters-only.png" alt="" draggable="false">
+   <span class="letter-pieces"><span class="heart-letter" style="left:3.507610853739246%;top:44.764649375600385%;width:7.677035076108537%;height:17.86743515850144%"><svg viewBox="29 360 104 191" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:9.463931171409662%;top:49.08741594620557%;width:8.272667107875579%;height:20.26897214217099%"><svg viewBox="151 363 126 204" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:16.479152878888154%;top:49.75984630163304%;width:4.2356055592322965%;height:22.76657060518732%"><svg viewBox="293 362 75 213" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:20.11912640635341%;top:49.85590778097983%;width:7.5446724023825285%;height:25.360230547550433%"><svg viewBox="389 357 109 212" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:26.406353408338852%;top:50.816522574447646%;width:10.589013898080742%;height:28.24207492795389%"><svg viewBox="512 358 127 219" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:35.53937789543349%;top:51.29682997118156%;width:7.743216412971542%;height:29.586935638808836%"><svg viewBox="664 355 128 222" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:44.80476505625413%;top:55.71565802113353%;width:8.206485771012574%;height:25.552353506243996%"><svg viewBox="825 360 117 214" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:52.21707478491066%;top:55.71565802113353%;width:7.279947054930509%;height:24.78386167146974%"><svg viewBox="961 360 121 209" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:58.10721376571807%;top:55.04322766570605%;width:6.41958967571145%;height:25.360230547550433%"><svg viewBox="1089 359 106 214" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:65.78424884182661%;top:45.821325648414984%;width:11.846459298477829%;height:32.564841498559076%"><svg viewBox="1224 334 151 260" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:74.85109199205824%;top:49.85590778097983%;width:8.934480476505625%;height:24.87992315081652%"><svg viewBox="1374 360 124 216" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:82.19722038385176%;top:48.89529298751201%;width:8.007941760423561%;height:20.172910662824208%"><svg viewBox="1505 357 122 211" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span>
+   <span class="heart-letter" style="left:89.08007941760424%;top:46.68587896253602%;width:8.14030443414957%;height:18.251681075888566%"><svg viewBox="1635 354 114 214" preserveAspectRatio="none" aria-hidden="true"><image href="assets/home-heart-v2/letter-sprites.png" width="1774" height="887"/></svg></span></span>
+   <img class="sprite-preload" src="assets/home-heart-v2/letter-sprites.png" alt="" draggable="false">
+  </span>
+  <span class="heart-burst" aria-hidden="true"></span>
+ </span>
+</button>
+<span id="heart-egg-help" class="heart-egg-help">Hold the heart, or hold Space or Enter. Release early to let it settle.</span>
                 <div class="home-nav">
                     <div class="home-link" onclick="showPage('adventures')" role="link" tabindex="0">Adventures</div>
                     <div class="home-link" onclick="showPage('exploration')" role="link" tabindex="0">Explore</div>
@@ -2085,6 +2110,7 @@
         let homeScrollReset = null;
 
         function homeGestureActive() {
+            if (window.homeHeartEgg && window.homeHeartEgg.state !== 'idle') return false;
             const sp = document.getElementById('splash');
             if (sp && sp.style.display !== 'none') return false; // still behind the heart gate
             return !document.getElementById('home-page').classList.contains('hidden');
@@ -3241,5 +3267,6 @@
             showPage('home');
         }
     </script>
+    <script src="assets/home-heart-v2/heart-pop.js"></script>
 </body>
 </html>
