@@ -176,8 +176,14 @@
         
         /* EXPLORATION PAGE */
         .exploration-header { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 1rem; container-type: inline-size; }
-        .exploration-header h2 { display: flex; flex-wrap: nowrap; align-items: baseline; gap: clamp(8px, 2cqi, 14px); white-space: nowrap; color: #5a6f5e; margin-bottom: .5rem; font-size: clamp(24px, 7.5cqi, 40px); }
-        .explore-context { color: #4a5568; font-style: italic; font-weight: 400; font-size: clamp(11px, 3.3cqi, 17.6px); }
+        .exploration-header h2 { color: #5a6f5e; margin-bottom: .5rem; font-size: clamp(24px, 7.5cqi, 40px); }
+        .exploration-subtitle {
+            display: flex;
+            justify-content: space-between;
+            color: #4a5568;
+            font-style: italic;
+            font-size: clamp(12px, 3.3cqi, 17.6px);
+        }
         
         .exploration-filters {
             max-width: 1400px;
@@ -735,7 +741,8 @@
 
     <div id="exploration-page" class="page hidden">
         <div class="exploration-header">
-            <h2><span>Explore</span> <span class="explore-context">For us, amongst friends.</span></h2>
+            <h2>Explore</h2>
+            <p class="exploration-subtitle"><span>For us...</span><span>... amongst friends</span></p>
         </div>
         
         <div class="exploration-filters is-list" id="explorationFilters">
