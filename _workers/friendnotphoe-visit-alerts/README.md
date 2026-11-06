@@ -1,10 +1,16 @@
-# friendnotphoe-visit-alerts (prepared, not deployed)
+# friendnotphoe-visit-alerts
 
-A small Cloudflare Worker. It receives at most one anonymous "visit" note per browser tab session from friendnotphoe.com, checks it, rate-limits it, and forwards it to the Friend Grok Bot routine webhook.
+A small Cloudflare Worker. It receives at most one anonymous "visit" attempt per browser tab session from friendnotphoe.com, checks it, rate-limits it, and forwards it to the Friend Grok Bot routine webhook.
 
-Status: **prepare-only.** Nothing here is deployed, no Cloudflare resources exist, and the site does not load the client. As shipped the Worker sends nothing upstream: forwarding is off and the secrets are absent.
+## Owner-reported deployment vs these tests
 
-The folder starts with `_`, so the GitHub Pages (Jekyll) build does not publish it. The only file this adds to the public site is `assets/visit-note.js`, and no page references it.
+**Owner-reported, not re-checked here.** Friend says an inactive Worker is deployed at `https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit`. Secret setup is not finished. Nothing in this repository deployed that Worker, called that URL, or sent a routine webhook. Do not treat the code tests below as proof the deployment exists.
+
+**Still true in this code.** `FORWARDING_ENABLED` and `FORWARD_TEST_EVENTS` are both `"false"`. Until the owner sets both secrets and turns forwarding on, the Worker returns 503 and does not call upstream. No step changes DNS, the zone, or GitHub Pages hosting. friendnotphoe.com stays where it is; the Worker is only a `workers.dev` hostname.
+
+**This PR does not publish the site.** `index.html` includes the visit-note script pointed at that owner-reported URL, but the live site loads it only after the owner merges this PR and Pages publishes. A 503 from the inactive Worker is not a delivery: the client records `not-delivered`, shows nothing, and still makes at most one attempt per tab session.
+
+The `_workers/` folder starts with `_`, so the Jekyll build does not publish the Worker.
 
 ## Data flow and payload
 
@@ -49,7 +55,8 @@ The adapter uses only the documented contract: Bearer key, JSON body, 200 means 
 
 ## Honest limits
 
-- **Session throttling is best effort.** `sessionStorage` is per tab, so new tabs, private windows, and cleared storage send again. If storage throws or doesn't persist, the client sends nothing. This does not count unique people.
+- **Session throttling is best effort.** `sessionStorage` is per tab, so new tabs, private windows, and cleared storage send again. If storage throws or doesn't persist, the client sends nothing. A second attempt in the same tab is skipped whether the first one was noted, still in flight, or a 503 / network failure. This does not count unique people.
+- **A 503 is not a delivery.** The client returns `attempted` as soon as it hands the request to the browser, then records `not-delivered` when the Worker answers 503 (secrets unset or forwarding off), on any other non-200, or when `fetch` rejects. HTTP 200 is recorded as `noted`: the Worker accepted the attempt. The routine run, if any, is not finished. The page never says the visit was delivered.
 - **Rate limit binding counters are approximate and per Cloudflare location** (eventually consistent). They are not global and not durable.
 - **Dedupe is short-lived and per location.** It is the 60 s `EVENT_DEDUPE_LIMITER` window plus random per-session ids. The routine should still ignore repeated `event_id`s.
 - **Delivery is not exhaustive:**
@@ -96,10 +103,17 @@ The secrets are not listed under `secrets.required` in `wrangler.jsonc`. With th
   - The `observability.logs.invocation_logs` and `traces` field names were taken from the Wrangler config docs. Check them against the API schema before using this path.
 - **Build and verify locally**, with no account access needed: `npm ci && npm run check`. This runs type checks, the Worker tests in workerd, the client and config tests, and `wrangler deploy --dry-run --outdir dist`.
 
-## Capability reads needed before any mutation (parent)
+## Capability reads
 
-1. **Done:** `GET /accounts/f14daa94046d3566349a188a313553c1/workers/scripts` returned an empty list, so there is no name conflict.
-2. **Done:** `GET /accounts/f14daa94046d3566349a188a313553c1/workers/subdomain` returned 404 with code 10007, so no workers.dev subdomain exists yet.
+These were true when this PR was first prepared. They are history, not a fresh account read:
+
+1. `GET /accounts/f14daa94046d3566349a188a313553c1/workers/scripts` returned an empty list.
+2. `GET /accounts/f14daa94046d3566349a188a313553c1/workers/subdomain` returned 404 with code 10007, so no workers.dev subdomain existed yet.
+
+Friend later reported the subdomain and the inactive Worker above. This repo has not repeated those reads.
+
+Still worth confirming before the next mutation:
+
 3. Token permissions for the executing credential:
    - Account › Workers Scripts: **Edit**, for the upload, the workers.dev toggle, and the account subdomain.
    - Read access to Workers observability, to read logs during smoke tests.
@@ -107,39 +121,31 @@ The secrets are not listed under `secrets.required` in `wrangler.jsonc`. With th
 4. Confirm the account plan (Free versus Paid) and that `ratelimit` bindings are accepted on it. Earlier read-only checks confirmed the upload schema, not plan availability. If they are rejected, the fallback needs a design change; report it rather than improvising.
 5. Optional: only if a strict global hourly cap is required, confirm Durable Objects (SQLite-backed) availability on the plan. They are not used now.
 
-## Ordered activation (each mutation needs explicit user approval)
+## Ordered steps still open
 
-1. **Approve and create the workers.dev subdomain.** The user approves the name; `friendnotphoe` is proposed, and its **availability is untested**. Then run `PUT /accounts/{account_id}/workers/subdomain` with `{"subdomain":"friendnotphoe"}`.
-   - The resulting endpoint would be `https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit`. Use the actual URL returned; do not assume it.
-   - Changing the subdomain later changes every workers.dev URL on the account.
-2. **Deploy the inert Worker** from this folder: `npm ci && npx wrangler deploy`. Forwarding is off and there are no secrets.
-3. **Smoke test with no upstream contact.** Use `curl` from an operator machine, sending `Origin: https://friendnotphoe.com`:
-   - `OPTIONS /v1/visit` returns 204, and `Access-Control-Allow-Origin` echoes the origin.
-   - `POST` with an `Origin` of `https://evil.test` returns 403.
-   - `POST` a valid body with `test:true` returns 200 `reason:"test"`.
-   - `POST` a valid body with `test:false` returns 503 `not_configured`.
-   - Workers Logs shows only `visit_note` JSON lines and no invocation logs.
-4. **The user sets both secrets** (see above). Re-run the `test:false` POST; it should return 503 `disabled`.
-5. **Optional end-to-end test.** This spends one routine run, which does real work, and needs user approval.
-   - Deploy with `npx wrangler deploy --var FORWARDING_ENABLED:true --var FORWARD_TEST_EVENTS:true`.
-   - POST one valid `test:true` event. Expect 200 `forwarded:true`, meaning the routine accepted a run. The routine should ignore `test:true`.
-   - Then run `npx wrangler deploy` to restore both vars to `"false"`.
-   - Note that `--var` values last only until the next deploy.
-6. **Enable forwarding** with a reviewed follow-up PR that sets `FORWARDING_ENABLED` to `"true"` in `wrangler.jsonc`. Deploy from it. Real `test:false` events now forward.
-7. **Activate the client** with a separate reviewed site PR. It adds one tag to `index.html` next to the existing `heart-pop.js` script, using the actual endpoint:
+No step changes DNS. The site stays on GitHub Pages. Each remaining mutation needs the owner's approval. Code tests do not perform them.
+
+1. **Secrets (not finished).** The owner sets `ROUTINE_WEBHOOK_URL` and `ROUTINE_WEBHOOK_BEARER` with `wrangler secret put` or the dashboard (see above). Values stay out of chat, files, and this PR. Forwarding is still `"false"`, so a `test:false` POST then returns 503 `disabled` and nothing is forwarded.
+2. **End-to-end check (optional, spends a real routine run).** Only with explicit approval:
+   - `npx wrangler deploy --var FORWARDING_ENABLED:true --var FORWARD_TEST_EVENTS:true`
+   - POST one valid body with `test:true` to the owner-reported `/v1/visit`. HTTP 200 `forwarded:true` means the routine accepted a run, not that it finished. The routine should ignore `test:true`.
+   - `npx wrangler deploy` from this config to put both vars back to `"false"`. `--var` lasts only until the next deploy.
+3. **Turn forwarding on** with a reviewed change that sets `FORWARDING_ENABLED` to `"true"` in `wrangler.jsonc`, then deploy that. `FORWARD_TEST_EVENTS` stays `"false"`. Real visits can then be forwarded. Still no DNS change.
+4. **Publish the client by merging this PR.** The tag is already in `index.html`, after `heart-pop.js` and before the analytics snippet:
 
    ```html
-   <script src="assets/visit-note.js" data-endpoint="https://<actual-worker-host>/v1/visit" defer></script>
+   <script src="assets/visit-note.js" data-endpoint="https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit" defer></script>
    ```
 
-   - The Cloudflare Web Analytics snippet, the stars, and the C + B card stay as they are.
-   - `admin.html` must not get this tag.
-   - After the Pages deploy, verify on https://friendnotphoe.com that a fresh tab sends one POST, a reload sends none, and the routine receives the note.
+   - Until that merge, production does not load the script.
+   - Merging while the Worker is still inactive is safe: browsers get 503, the client records `not-delivered`, and no webhook is sent. Notes start only after step 3 as well.
+   - `admin.html` does not get this tag. Analytics, the star counts, and the C + B card stay as they are.
+   - After Pages publishes, a fresh tab on https://friendnotphoe.com sends one POST and a reload sends none.
 
 ## Rollback (fastest first; none touch DNS, Pages hosting, or analytics)
 
 1. **Stop forwarding:** run `npx wrangler deploy --var FORWARDING_ENABLED:false`, or a plain `npx wrangler deploy` from a commit where it is `"false"`. Requests then get 503 `disabled` and nothing reaches the routine.
-2. **Stop browser sends:** revert the site PR that added the script tag. Cached pages may keep sending until caches expire; step 1 covers that period.
+2. **Stop browser sends:** revert this PR's script tag (or the merge that published it). Cached pages may keep sending until caches expire; step 1 covers that period.
 3. **Remove the credentials:** `npx wrangler secret delete ROUTINE_WEBHOOK_BEARER` and `npx wrangler secret delete ROUTINE_WEBHOOK_URL`. The Worker fails closed with `not_configured`.
 4. **Roll back the code:** `npx wrangler rollback` returns to a previous Worker version.
 5. **Remove the endpoint:** set `workers_dev` to `false` and redeploy, or run `npx wrangler delete`. Only if the user approves, remove the account workers.dev subdomain.
