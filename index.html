@@ -2408,7 +2408,7 @@
             wrap.style.transform = '';
             wrap.style.opacity = '';
             wrap.querySelectorAll('.twinkle').forEach(t => t.remove());
-            attachTwinkle(wrap, 12);
+            attachTwinkle(wrap, 7);
             document.getElementById('modalActions').hidden = !currentModalCard;
             document.getElementById('cardModal').classList.remove('dragging');
             document.getElementById('cardModal').classList.add('active');
@@ -2681,9 +2681,6 @@
             card.addEventListener('pointercancel', () => holoReset(card));
         }
 
-        // Twinkling star glints — pinned to the template's actual star positions
-        // (extracted from the card art's star mask; never on the border or photo)
-
         // Animate "SOMETHING BETWEEN US...... FRIENDS" clockwise around the border art
         function initSbufArt() {
             document.querySelectorAll('.sbuf-art').forEach(container => {
@@ -2723,8 +2720,9 @@
             });
         }
 
-        // Fully random placement each load; the photo gets at most a couple
-        function attachTwinkle(card, count = 10) {
+        // Fully random placement each load; the photo gets at most a couple.
+        // Grid cards keep 6 of the old 10 glints. The opened card keeps 7 of 12 (round(12 * 0.6)).
+        function attachTwinkle(card, count = 6) {
             if (prefersReducedMotion) return;
             const PHOTO = { x0: 8, x1: 92, y0: 9, y1: 49 };
             const maxPhoto = 2;
