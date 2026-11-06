@@ -7,6 +7,16 @@ const stripComments = (s) => s.replace(/^\s*\/\/.*$/gm, "");
 const config = JSON.parse(stripComments(read("../wrangler.jsonc")));
 const metadata = JSON.parse(read("../deploy/upload-metadata.json"));
 
+test("the public page points at the owner-reported endpoint once", () => {
+  const index = read("../../../index.html");
+  const admin = read("../../../admin.html");
+  const tag = '<script src="assets/visit-note.js" data-endpoint="https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit" defer></script>';
+  assert.equal(index.split(tag).length - 1, 1);
+  assert.equal(admin.includes("visit-note"), false);
+  assert.equal(config.vars.FORWARDING_ENABLED, "false");
+  assert.equal(config.vars.FORWARD_TEST_EVENTS, "false");
+});
+
 test("wrangler config is inert and privacy-safe as shipped", () => {
   assert.equal(config.name, "friendnotphoe-visit-alerts");
   assert.equal(config.compatibility_date, "2026-11-06");

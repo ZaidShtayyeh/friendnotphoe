@@ -33,7 +33,7 @@ function browser({ endpoint = ENDPOINT, href = "https://friendnotphoe.com/#card/
 
 const { run, safePath } = load();
 
-test("does nothing without an endpoint (shipped default)", () => {
+test("does nothing without an https endpoint", () => {
   for (const endpoint of [null, "", "http://insecure.test/v1/visit", "not a url", `${ENDPOINT}?x=1`]) {
     const { g, calls } = browser({ endpoint });
     assert.equal(run(g), "off");
@@ -41,10 +41,10 @@ test("does nothing without an endpoint (shipped default)", () => {
   }
 });
 
-test("sends exactly one minimal payload per session", () => {
+test("sends exactly one minimal payload per session", async () => {
   const storage = memoryStorage();
   const first = browser({ storage });
-  assert.equal(run(first.g), "sent");
+  assert.equal(run(first.g), "attempted");
   assert.equal(first.calls.length, 1);
 
   const [url, init] = first.calls[0];
@@ -65,6 +65,11 @@ test("sends exactly one minimal payload per session", () => {
   const second = browser({ storage });
   assert.equal(run(second.g), "throttled");
   assert.equal(second.calls.length, 0);
+
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(storage.getItem("fnp_visit_note_v1"), "noted");
+  assert.notEqual(storage.getItem("fnp_visit_note_v1"), "delivered");
+  assert.equal(run(browser({ storage }).g), "throttled");
 });
 
 test("fails safe (no send) when sessionStorage throws or does not persist", () => {
@@ -87,7 +92,7 @@ test("only runs on the public https site", () => {
     assert.equal(run(g), "wrong-host");
     assert.equal(calls.length, 0);
   }
-  assert.equal(run(browser({ href: "https://www.friendnotphoe.com/" }).g), "sent");
+  assert.equal(run(browser({ href: "https://www.friendnotphoe.com/" }).g), "attempted");
 });
 
 test("honors Global Privacy Control and Do Not Track", () => {
@@ -98,11 +103,33 @@ test("honors Global Privacy Control and Do Not Track", () => {
   }
 });
 
-test("network failures are swallowed", async () => {
-  const { g } = browser();
+test("network failures are swallowed and not delivered", async () => {
+  const storage = memoryStorage();
+  const { g, calls } = browser({ storage });
   g.fetch = () => Promise.reject(new TypeError("offline"));
-  assert.equal(run(g), "sent");
+  assert.equal(run(g), "attempted");
   await new Promise((r) => setTimeout(r, 0));
+  assert.equal(storage.getItem("fnp_visit_note_v1"), "not-delivered");
+  assert.equal(run(g), "throttled");
+  assert.equal(calls.length, 0);
+});
+
+test("inactive worker 503 is not delivered and still throttles the session", async () => {
+  const storage = memoryStorage();
+  const calls = [];
+  const { g } = browser({ storage });
+  g.fetch = (u, init) => {
+    calls.push([u, init]);
+    return Promise.resolve({ status: 503, ok: false });
+  };
+  assert.equal(run(g), "attempted");
+  assert.equal(run(g), "throttled");
+  assert.equal(calls.length, 1);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(storage.getItem("fnp_visit_note_v1"), "not-delivered");
+  assert.equal(run(g), "throttled");
+  assert.equal(calls.length, 1);
+  assert.equal(JSON.parse(calls[0][1].body).test, false);
 });
 
 test("path sanitizer keeps bare pathnames only", () => {

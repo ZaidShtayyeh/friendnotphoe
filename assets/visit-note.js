@@ -1,8 +1,9 @@
 /*
- * Sends at most one anonymous "visit" note per browser tab session.
- * Inert unless loaded with an explicit endpoint, e.g.
- *   <script src="assets/visit-note.js" data-endpoint="https://<worker>.workers.dev/v1/visit" defer></script>
- * Best effort only: it does not count unique people and delivery is not guaranteed.
+ * At most one anonymous "visit" attempt per browser tab session.
+ * Loaded from index.html with the owner-reported endpoint. While that Worker is
+ * inactive it answers 503; this script treats that as not delivered and shows nothing.
+ * Best effort only: it does not count unique people, and a 200 only means the Worker
+ * accepted the attempt, not that a routine run finished.
  */
 (function () {
   var STORAGE_KEY = 'fnp_visit_note_v1';
@@ -30,11 +31,17 @@
     try {
       var storage = g.sessionStorage;
       if (storage.getItem(STORAGE_KEY)) return false;
-      storage.setItem(STORAGE_KEY, '1');
-      return storage.getItem(STORAGE_KEY) === '1';
+      storage.setItem(STORAGE_KEY, 'pending');
+      return storage.getItem(STORAGE_KEY) === 'pending';
     } catch (e) {
       return false;
     }
+  }
+
+  function remember(g, outcome) {
+    try {
+      g.sessionStorage.setItem(STORAGE_KEY, outcome);
+    } catch (e) {}
   }
 
   function run(g) {
@@ -64,8 +71,15 @@
         keepalive: true,
         headers: { 'Content-Type': 'application/json' },
         body: body
-      }).catch(function () {});
-      return 'sent';
+      }).then(function (res) {
+        var status = res && typeof res.status === 'number' ? res.status : 0;
+        // 503: secrets unset or forwarding off. Any other non-200 is also not a delivery.
+        // 200 is only Worker acceptance, so it is recorded as "noted", never "delivered".
+        remember(g, status === 200 ? 'noted' : 'not-delivered');
+      }).catch(function () {
+        remember(g, 'not-delivered');
+      });
+      return 'attempted';
     } catch (e) {
       return 'error';
     }
