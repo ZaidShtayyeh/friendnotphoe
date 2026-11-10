@@ -1825,7 +1825,7 @@
         $('maps').value = fields.maps;
         $('city').value = fields.city;
         $('area').value = fields.area;
-        place.dispatchEvent(new Event('input', { bubbles: true }));
+        form.dispatchEvent(new Event('input', { bubbles: true }));
       }
 
       function choose(index) {

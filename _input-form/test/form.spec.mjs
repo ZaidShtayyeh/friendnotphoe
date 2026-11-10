@@ -846,6 +846,12 @@ async function placesFlow(page, label, base) {
   assert.equal(await page.inputValue("#area"), "East Village");
   assert.equal(await page.locator("#card-name").textContent(), "C + B");
   assert.equal(await page.locator("#card-area").textContent(), "East Village, New York");
+  // The pick refreshes the card. It must not look like more typing, or the list opens again.
+  await page.waitForTimeout(600);
+  assert.equal(await page.locator("#place-list").isHidden(), true, `${label} suggestion list stays closed after a pick`);
+  assert.equal(await page.locator("#place").getAttribute("aria-expanded"), "false");
+  assert.equal(await page.evaluate(() => window.__placesLog.requests.length), 1, `${label} a pick does not search again`);
+  await page.screenshot({ path: path.join(ARTIFACTS, `places_closed_${label}.png`) });
   const fields = await page.evaluate(() => window.__placesLog.fields);
   assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents"]);
   await page.fill("#area", "Lower East Side");
