@@ -18,12 +18,12 @@ var SHARED_TOKEN = '';
  * No secrets live here. The optional page token is not a secret either.
  */
 var NoBallValidate = (function () {
-  // Edit sheet colors here. Vibes first stays blank until Zaid picks one.
+  // Edit sheet colors here. Vibes first and Drinks first are both Blue.
   var CATEGORY_COLORS = {
     'Food first': 'Green',
     'Drinks first': 'Blue',
     'Legendary': 'Gold',
-    'Vibes first': ''
+    'Vibes first': 'Blue'
   };
 
   var CATEGORIES = ['Vibes first', 'Drinks first', 'Food first', 'Legendary'];

@@ -117,12 +117,12 @@ test("rankings are whole numbers from 0 to 100", () => {
   }
 });
 
-test("category colors are the confirmed mapping and vibes first is blank", () => {
+test("category colors are the confirmed mapping and vibes first is blue", () => {
   assert.deepEqual(v.CATEGORY_COLORS, {
     "Food first": "Green",
     "Drinks first": "Blue",
     "Legendary": "Gold",
-    "Vibes first": "",
+    "Vibes first": "Blue",
   });
   for (const category of v.CATEGORIES) {
     const result = v.validateSubmission(valid({ category }));

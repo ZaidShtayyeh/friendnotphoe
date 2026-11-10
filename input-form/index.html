@@ -38,15 +38,14 @@
     input, textarea, button { font: inherit; color: inherit; }
 
     header { background-color: white; padding: 0.6rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-    .header-content { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; }
-    .corner-coin { width: 72px; height: 72px; display: block; }
-    .coin-link { display: block; border-radius: 50%; }
-    .coin-link:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+    .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .corner-coin { width: 72px; height: 72px; cursor: pointer; display: block; }
+    .coin-link { display: contents; }
+    .coin-link:focus-visible .corner-coin { outline: 3px solid #5a6f5e; outline-offset: 3px; border-radius: 50%; }
 
     main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; animation: riseIn 0.5s ease both; }
     .page-header { padding: 2rem 1.5rem 0.5rem; container-type: inline-size; }
-    .page-header h1 { color: var(--sage); margin-bottom: .5rem; font-size: clamp(24px, 7.5cqi, 40px); line-height: 1.2; }
-    .subtitle { display: flex; justify-content: space-between; gap: 1rem; color: var(--body); font-style: italic; font-size: clamp(12px, 3.3cqi, 17.6px); }
+    .page-header h1 { color: var(--sage); margin-bottom: 0; font-size: clamp(24px, 7.5cqi, 40px); line-height: 1.2; }
 
     form { display: grid; gap: 0 2.5rem; padding: 0 1.5rem; grid-template-columns: 1fr; }
     .fields { min-width: 0; }
@@ -133,17 +132,12 @@
       white-space: nowrap;
     }
     .chip span::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--kind); flex-shrink: 0; }
-    .chip.kind-vibes { --kind: transparent; --kind-soft: var(--sage); }
-    .chip.kind-vibes span::before { box-shadow: inset 0 0 0 1.5px var(--faint); }
-    .chip.kind-drink { --kind: #61B7F4; --kind-soft: #95CCF7; }
+    .chip.kind-vibes, .chip.kind-drink { --kind: #61B7F4; --kind-soft: #95CCF7; }
     .chip.kind-food { --kind: #8FB64D; --kind-soft: #B6D08C; }
     .chip.kind-gold { --kind: #E8C347; --kind-soft: #F2DA92; }
     .chip:hover span { border-color: var(--kind); color: var(--ink); }
-    .chip.kind-vibes:hover span { border-color: var(--line-hover); }
     .chip input:checked + span { background-color: var(--kind-soft); border-color: var(--kind); color: var(--ink); font-weight: 600; }
     .chip input:checked + span::before { box-shadow: 0 0 0 2px rgba(255,255,255,0.7); }
-    .chip.kind-vibes input:checked + span { border-color: var(--sage); color: white; }
-    .chip.kind-vibes input:checked + span::before { box-shadow: inset 0 0 0 1.5px white; }
     .chip input:focus-visible + span { outline: 3px solid var(--sage); outline-offset: 2px; }
 
     .counter { margin-top: 0.4rem; font-size: 0.8rem; font-style: italic; color: var(--faint); font-variant-numeric: tabular-nums; text-align: right; }
@@ -222,7 +216,8 @@
       color: #111;
     }
     .np-card[data-kind="Food first"] { --ground: #bcd596; --panel: #d3e5b4; --kind: #8FB64D; }
-    .np-card[data-kind="Drinks first"] { --ground: #8fc2ec; --panel: #bddaf2; --kind: #61B7F4; }
+    .np-card[data-kind="Drinks first"],
+    .np-card[data-kind="Vibes first"] { --ground: #8fc2ec; --panel: #bddaf2; --kind: #61B7F4; }
     .np-card[data-kind="Legendary"] { --ground: #f1c65c; --panel: #f7e6b4; --kind: #E8C347; }
     /* cross-stitch band: two hatch layers make the Xs, the panel's ground-colored ring trims the inside edge */
     .np-card::before {
@@ -251,7 +246,7 @@
     .np-hp small { font-size: 2.9cqi; }
     .np-hp b { font-size: 6.4cqi; font-weight: 800; letter-spacing: -0.02em; }
     .np-icon { flex-shrink: 0; width: 6.6cqi; height: 6.6cqi; border-radius: 50%; background: var(--kind); box-shadow: inset 0 0 0 0.4cqi rgba(0,0,0,0.12); opacity: 0.85; }
-    .np-card:not([data-kind]) .np-icon, .np-card[data-kind="Vibes first"] .np-icon { background: transparent; box-shadow: inset 0 0 0 0.4cqi rgba(0,0,0,0.25); }
+    .np-card:not([data-kind]) .np-icon { background: transparent; box-shadow: inset 0 0 0 0.4cqi rgba(0,0,0,0.25); }
     .np-photo {
       flex: 1 1 37%;
       min-height: 20%;
@@ -297,8 +292,10 @@
     footer { padding: 2rem 1.5rem; margin-top: 3rem; color: var(--muted); font-size: 0.95rem; }
     footer a { color: var(--muted); text-decoration: none; }
 
-    @media (min-width: 900px) {
+    @media (min-width: 768px) {
       header { padding: 1.5rem 2rem; }
+    }
+    @media (min-width: 900px) {
       .page-header { padding: 3rem 2rem 0.5rem; }
       form { padding: 0 2rem; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "fields preview" "actions preview"; align-items: start; }
       .fields { grid-area: fields; }
@@ -325,14 +322,13 @@
 <body>
   <header>
     <div class="header-content">
-      <a class="coin-link" href="/"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin" width="72" height="72"></a>
+      <a class="coin-link" href="/"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin"></a>
     </div>
   </header>
 
   <main>
     <div class="page-header">
       <h1>For us amongst friends</h1>
-      <div class="subtitle"><span>You found a spot…</span><span>… we make it a card</span></div>
     </div>
 
     <form id="entry" novalidate>

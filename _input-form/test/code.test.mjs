@@ -145,7 +145,7 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
   }
 });
 
-test("colors follow the single mapping, including a blank vibes-first cell", () => {
+test("colors follow the single mapping, with vibes first blue like drinks first", () => {
   const realNow = Date.now;
   Date.now = () => now;
   try {
@@ -154,7 +154,7 @@ test("colors follow the single mapping, including a blank vibes-first cell", () 
       "Food first": "Green",
       "Drinks first": "Blue",
       Legendary: "Gold",
-      "Vibes first": "",
+      "Vibes first": "Blue",
     };
     for (const category of Object.keys(expected)) {
       assert.equal(reply(context.doPost(event(entry({ category })))).ok, true);

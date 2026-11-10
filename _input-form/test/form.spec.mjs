@@ -90,14 +90,19 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
   assert.equal(await page.title(), "For us amongst friends");
   assert.equal(await page.locator("h1").textContent(), "For us amongst friends");
+  assert.equal(await page.locator(".subtitle").count(), 0);
+  const coin = await page.locator(".corner-coin").boundingBox();
+  const pad = label === "desktop" ? { x: 32, y: 24 } : { x: 24, y: 9.6 };
+  assert.ok(coin && Math.abs(coin.width - 72) < 0.6 && Math.abs(coin.height - 72) < 0.6, `${label} coin is 72px`);
+  assert.ok(Math.abs(coin.x - pad.x) < 1 && Math.abs(coin.y - pad.y) < 1, `${label} coin sits at ${coin && coin.x},${coin && coin.y}`);
   const box = await page.locator("#send").boundingBox();
   assert.ok(box && box.height >= 48, `${label} send button tap size`);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   assert.equal(overflow, true, `${label} horizontal overflow`);
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   await settle(page);
-  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v2_${label}.png`) });
-  await fullShot(page, `input_form_v2_${label}_full.png`);
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v3_${label}.png`) });
+  await fullShot(page, `input_form_v3_${label}_full.png`);
 
   await page.locator('.stat[data-stat="food"] .bar').fill("35");
   assert.equal(await page.inputValue("#food"), "35", `${label} slider writes the number`);
@@ -116,7 +121,17 @@ async function exercise(page, label, base) {
     return track > 0 && Math.abs(fill / track - 0.8) < 0.02;
   });
   await page.waitForFunction(() => getComputedStyle(document.getElementById("card")).backgroundColor === "rgb(188, 213, 150)");
-  await fullShot(page, `input_form_v2_filled_${label}.png`);
+  await page.locator('input[value="Vibes first"]').check();
+  await page.waitForFunction(() => getComputedStyle(document.getElementById("card")).backgroundColor === "rgb(143, 194, 236)");
+  const dots = await page.evaluate(() => ({
+    vibes: getComputedStyle(document.querySelector(".chip.kind-vibes span"), "::before").backgroundColor,
+    drinks: getComputedStyle(document.querySelector(".chip.kind-drink span"), "::before").backgroundColor,
+  }));
+  assert.equal(dots.vibes, "rgb(97, 183, 244)");
+  assert.equal(dots.vibes, dots.drinks);
+  await page.locator('input[value="Food first"]').check();
+  await page.waitForFunction(() => getComputedStyle(document.getElementById("card")).backgroundColor === "rgb(188, 213, 150)");
+  await fullShot(page, `input_form_v3_filled_${label}.png`);
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
   await page.waitForFunction(() => document.getElementById("status").textContent === "Not hooked up yet, nothing got sent. Hang on to this one.");
@@ -194,7 +209,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
   await page.evaluate(() => window.scrollTo(0, 0));
   await settle(page);
-  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v2_success_${label}.png`) });
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v3_success_${label}.png`) });
 
   mode = "error";
   await fill(page);

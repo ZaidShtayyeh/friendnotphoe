@@ -23,7 +23,7 @@ Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **n
 
 Changing the script later: **Deploy → Manage deployments → pencil → Version: New version → Deploy**. An old deployment keeps running the old code until you do that.
 
-To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drinks first = Blue, Legendary = Gold, Vibes first = blank) and deploy a new version. That object is the only color mapping.
+To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drinks first = Blue, Legendary = Gold, Vibes first = Blue) and deploy a new version. That object is the only color mapping.
 
 ## What the script does
 
