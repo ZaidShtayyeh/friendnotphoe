@@ -91,6 +91,7 @@
     }
     .label-row { align-items: center; }
     .hint { font-size: 0.8rem; font-weight: 500; font-style: italic; color: var(--muted); text-align: right; }
+    .field > label.inline-hint { justify-content: flex-start; gap: 0.4rem; }
     .pair { display: grid; gap: 0 0.9rem; grid-template-columns: 1fr 1fr; }
 
     .text {
@@ -604,7 +605,7 @@
           <h2>The card <span class="aside">how it plays</span></h2>
 
           <div class="field" id="shot-field">
-            <label for="photo">The shot <span class="hint">it's half the card</span></label>
+            <label for="photo">The shot</label>
             <input id="photo" class="sr-only" name="photo" type="file" accept="image/*" required>
             <label for="photo" class="drop" id="drop">
               <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
@@ -632,13 +633,13 @@
           </div>
 
           <div class="field">
-            <label for="score">HP <span class="hint">1 to 300, save the big ones</span></label>
+            <label class="inline-hint" for="score">HP <span class="hint">300 max</span></label>
             <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next" placeholder="280"></span></div>
             <p class="error" id="err-hp"></p>
           </div>
 
           <fieldset class="field">
-            <legend>What's it for <span class="hint">pick one, it sets the color</span></legend>
+            <legend>What's it for</legend>
             <div class="chips">
               <label class="chip kind-vibes"><input type="radio" name="category" value="Vibes first"><span>Vibes first</span></label>
               <label class="chip kind-drink"><input type="radio" name="category" value="Drinks first"><span>Drinks first</span></label>
@@ -651,7 +652,7 @@
           <div class="field">
             <div class="label-row"><label for="vibes">Vibes</label><button type="button" class="inspo-btn" data-inspo><span class="spark" aria-hidden="true">✦</span>Need inspo?</button></div>
             <textarea id="vibes" name="vibes" maxlength="250" required placeholder="Say it like you'd text the group chat. What it is, who it's for, when to go."></textarea>
-            <p class="counter" id="counter">0/4 lines · 0/250</p>
+            <p class="counter" id="counter">0/250</p>
             <p class="error" id="err-vibes"></p>
           </div>
         </section>
@@ -1541,10 +1542,7 @@
       var words = NoBallValidate.wordCount(vibes.value);
       var lines = cardFit.vibes;
       var over = lines > CARD.vibes.maxLines || words > limits.vibesWords || chars > limits.vibesChars;
-      var text = lines + '/4 lines · ' + chars + '/' + limits.vibesChars;
-      if (words > limits.vibesWords) text += ' · ' + words + '/50 words';
-      if (over) text += ' · too long for the card';
-      counter.textContent = text;
+      counter.textContent = chars + '/' + limits.vibesChars;
       counter.classList.toggle('over', over);
     }
 

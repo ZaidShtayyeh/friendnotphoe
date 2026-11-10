@@ -196,6 +196,13 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator(".subtitle").count(), 0);
   assert.equal(await page.locator("text=300 = undefeated").count(), 0, `${label} no "300 = undefeated"`);
   assert.equal(await page.locator("text=Change the shot").count(), 0, `${label} no "Change the shot"`);
+  assert.equal(await page.locator("text=it's half the card").count(), 0, `${label} no shot hint`);
+  assert.equal(await page.locator("text=1 to 300, save the big ones").count(), 0, `${label} no HP hint on the right`);
+  assert.equal(await page.locator("text=pick one, it sets the color").count(), 0, `${label} no category hint`);
+  assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
+  const hpLabel = await page.locator('label[for="score"]').boundingBox();
+  const hpHint = await page.locator('label[for="score"] .hint').boundingBox();
+  assert.ok(hpHint.x - hpLabel.x < 50, `${label} 300 max sits next to HP (${Math.round(hpHint.x - hpLabel.x)}px in)`);
   await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "failed");
   assert.equal(await page.locator("#place-list").isHidden(), true);
   const coin = await page.locator(".corner-coin").boundingBox();
@@ -244,7 +251,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('.stat[data-stat="drink"] .bar').inputValue(), "64", `${label} number moves the slider`);
 
   await fill(page);
-  assert.equal(await page.locator("#counter").textContent(), "2/4 lines · 102/250");
+  assert.equal(await page.locator("#counter").textContent(), "102/250");
   assert.equal(await page.locator("#card-name").textContent(), "C + B");
   assert.equal(await page.locator("#card-name").evaluate((el) => el.classList.contains("ghost")), false);
   assert.equal(await page.locator("#card-hp").textContent(), "270");
@@ -443,7 +450,7 @@ async function exercise(page, label, base) {
   // the card has four lines for vibes, and a name has to fit at the smallest size
   const wide = Array.from({ length: 24 }, () => "WWWWWWWWW").join(" ");
   await page.fill("#vibes", wide);
-  assert.match(await page.locator("#counter").textContent(), /^\d+\/4 lines · 239\/250 · too long for the card$/);
+  assert.equal(await page.locator("#counter").textContent(), "239/250");
   assert.equal(await page.locator("#counter").evaluate((el) => el.classList.contains("over")), true);
   assert.equal((await cardText(page, "card-vibes")).length, 4);
   await page.click("#send");
@@ -464,7 +471,8 @@ async function exercise(page, label, base) {
 
   const tooMany = Array.from({ length: 51 }, () => "a").join(" ");
   await page.fill("#vibes", tooMany);
-  assert.equal(await page.locator("#counter").textContent(), "2/4 lines · 101/250 · 51/50 words · too long for the card");
+  assert.equal(await page.locator("#counter").textContent(), "101/250");
+  assert.equal(await page.locator("#counter").evaluate((el) => el.classList.contains("over")), true);
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
   await page.waitForFunction(() => /50 words/.test(document.getElementById("err-vibes").textContent));
