@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#5a6f5e">
+  <title>Add a No Ball</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&amp;display=swap" rel="stylesheet">
+  <style>
+    /* Colors and Luckiest Guy are borrowed from the public site. This page does not use its stylesheet. */
+    :root {
+      --sage: #5a6f5e;
+      --sage-dark: #4a5f4e;
+      --ink: #2d3748;
+      --muted: #718096;
+      --line: #e4dfd6;
+      --paper: #fafafa;
+      --card: #ffffff;
+      --soft: #e8f0ea;
+      --food: #8FB64D;
+      --drink: #61B7F4;
+      --gold: #E8C347;
+      --danger: #8f3d3d;
+      --danger-bg: #f8ecec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    main {
+      width: min(100%, 40rem);
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3rem;
+    }
+    h1 {
+      margin: 0.25rem 0 0.35rem;
+      font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
+      font-weight: 400;
+      font-size: clamp(2.4rem, 10vw, 3.4rem);
+      letter-spacing: 0.02em;
+      color: var(--sage);
+      line-height: 1;
+    }
+    .lede { margin: 0 0 1.25rem; color: var(--muted); }
+    form {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+    legend, label { display: block; font-size: 0.92rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .hint { color: var(--muted); font-weight: 500; }
+    .field { margin-bottom: 0.95rem; }
+    .grid-2, .grid-3 { display: grid; gap: 0.75rem; }
+    input, textarea, button { font: inherit; color: inherit; }
+    input, textarea {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 16px;
+    }
+    textarea { min-height: 8.5rem; resize: vertical; line-height: 1.4; }
+    input:focus-visible, textarea:focus-visible, .choice input:focus-visible + span {
+      outline: 3px solid var(--sage);
+      outline-offset: 2px;
+    }
+    .choices { display: grid; gap: 0.5rem; }
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-height: 48px;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+    }
+    .choice input { width: 1.15rem; height: 1.15rem; min-height: 0; accent-color: var(--sage); }
+    .swatch { width: 0.85rem; height: 0.85rem; border-radius: 50%; flex: none; border: 1px solid rgba(0,0,0,0.12); }
+    .swatch.food { background: var(--food); }
+    .swatch.drink { background: var(--drink); }
+    .swatch.gold { background: var(--gold); }
+    .swatch.plain { background: transparent; border-style: dashed; border-color: var(--muted); }
+    .counter { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+    .counter.over { color: var(--danger); font-weight: 650; }
+    .error { min-height: 0; margin: 0.3rem 0 0; color: var(--danger); font-size: 0.9rem; }
+    .status {
+      margin: 0 0 0.9rem;
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.ok { background: var(--soft); color: var(--sage-dark); }
+    .status.bad { background: var(--danger-bg); color: var(--danger); }
+    button {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--sage);
+      color: #fff;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    button:hover { background: var(--sage-dark); }
+    button:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+    button:disabled { opacity: 0.65; cursor: progress; }
+    .hp-field {
+      position: absolute;
+      left: -10000px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    @media (min-width: 700px) {
+      main { padding-top: 2.5rem; }
+      form { padding: 1.25rem 1.35rem 1.35rem; }
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .choices { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>No Ball</h1>
+    <p class="lede">Send a place for a card. It goes on Zaid’s sheet, then the form clears for the next place. Your name stays filled.</p>
+    <form id="entry" novalidate>
+      <p id="status" class="status" role="status"></p>
+
+      <div class="field">
+        <label for="friend">Your name</label>
+        <input id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next">
+        <p class="error" id="err-submittedBy"></p>
+      </div>
+
+      <div class="field">
+        <label for="place">Place name</label>
+        <input id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next">
+        <p class="error" id="err-restaurant"></p>
+      </div>
+
+      <div class="field">
+        <label for="maps">Google Maps link <span class="hint">(optional)</span></label>
+        <input id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://maps.google.com/…" enterkeyhint="next">
+        <p class="error" id="err-maps"></p>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="city">City</label>
+          <input id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next">
+          <p class="error" id="err-city"></p>
+        </div>
+        <div class="field">
+          <label for="area">Area of that city</label>
+          <input id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next">
+          <p class="error" id="err-area"></p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="score">Score <span class="hint">(1–300)</span></label>
+        <input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next">
+        <p class="error" id="err-hp"></p>
+      </div>
+
+      <fieldset class="field">
+        <legend>Category</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="category" value="Vibes first"><span class="swatch plain" aria-hidden="true"></span><span>Vibes first</span></label>
+          <label class="choice"><input type="radio" name="category" value="Drinks first"><span class="swatch drink" aria-hidden="true"></span><span>Drinks first</span></label>
+          <label class="choice"><input type="radio" name="category" value="Food first"><span class="swatch food" aria-hidden="true"></span><span>Food first</span></label>
+          <label class="choice"><input type="radio" name="category" value="Legendary"><span class="swatch gold" aria-hidden="true"></span><span>Legendary</span></label>
+        </div>
+        <p class="error" id="err-category"></p>
+      </fieldset>
+
+      <div class="field">
+        <label for="vibes">Vibes</label>
+        <textarea id="vibes" name="vibes" maxlength="250" required></textarea>
+        <p class="counter" id="counter">0 / 50 words · 0 / 250 characters</p>
+        <p class="error" id="err-vibes"></p>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label for="food">Food <span class="hint">(0–100)</span></label>
+          <input id="food" name="food" inputmode="numeric" maxlength="3" required autocomplete="off">
+          <p class="error" id="err-food"></p>
+        </div>
+        <div class="field">
+          <label for="drinks">Drinks <span class="hint">(0–100)</span></label>
+          <input id="drinks" name="drink" inputmode="numeric" maxlength="3" required autocomplete="off">
+          <p class="error" id="err-drink"></p>
+        </div>
+        <div class="field">
+          <label for="scene">Scene <span class="hint">(0–100)</span></label>
+          <input id="scene" name="scene" inputmode="numeric" maxlength="3" required autocomplete="off">
+          <p class="error" id="err-scene"></p>
+        </div>
+      </div>
+
+      <div class="hp-field" aria-hidden="true">
+        <label for="company">Company website</label>
+        <input id="company" name="company_website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <button type="submit" id="send">Send</button>
+    </form>
+  </main>
+  <script src="validate.js"></script>
+  <script>
+    // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
+    var FORM_ENDPOINT = '';
+    // Optional speed bump. Not a secret: anyone who can open this page can read it.
+    // If you set it, set the same value on SHARED_TOKEN in Code.gs.
+    var SHARED_TOKEN = '';
+
+    var form = document.getElementById('entry');
+    var statusEl = document.getElementById('status');
+    var sendBtn = document.getElementById('send');
+    var place = document.getElementById('place');
+    var vibes = document.getElementById('vibes');
+    var counter = document.getElementById('counter');
+    var limits = NoBallValidate.LIMITS;
+    var fields = ['submittedBy', 'restaurant', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
+    window.formStartedAt = Date.now();
+
+    function selectedCategory() {
+      var picked = form.querySelector('input[name="category"]:checked');
+      return picked ? picked.value : '';
+    }
+
+    function payload() {
+      return {
+        submittedBy: document.getElementById('friend').value,
+        restaurant: place.value,
+        maps: document.getElementById('maps').value,
+        city: document.getElementById('city').value,
+        area: document.getElementById('area').value,
+        hp: document.getElementById('score').value,
+        category: selectedCategory(),
+        vibes: vibes.value,
+        food: document.getElementById('food').value,
+        drink: document.getElementById('drinks').value,
+        scene: document.getElementById('scene').value,
+        company: document.getElementById('company').value,
+        startedAt: window.formStartedAt,
+        token: SHARED_TOKEN
+      };
+    }
+
+    function updateCounter() {
+      var words = NoBallValidate.wordCount(vibes.value);
+      var chars = vibes.value.trim().length;
+      counter.textContent = words + ' / ' + limits.vibesWords + ' words · ' + chars + ' / ' + limits.vibesChars + ' characters';
+      counter.classList.toggle('over', words > limits.vibesWords || chars > limits.vibesChars);
+    }
+
+    function clearFieldErrors() {
+      fields.forEach(function (key) {
+        var el = document.getElementById('err-' + key);
+        if (el) el.textContent = '';
+      });
+    }
+
+    function showStatus(message, kind) {
+      statusEl.textContent = message;
+      statusEl.className = 'status show ' + (kind === 'ok' ? 'ok' : 'bad');
+    }
+
+    function clearStatus() {
+      statusEl.textContent = '';
+      statusEl.className = 'status';
+    }
+
+    function showErrors(errors) {
+      var first = null;
+      fields.forEach(function (key) {
+        var el = document.getElementById('err-' + key);
+        if (!el) return;
+        el.textContent = errors[key] || '';
+        if (errors[key] && !first) first = key;
+      });
+      if (first === 'category') form.querySelector('input[name="category"]').focus();
+      else if (first === 'submittedBy') document.getElementById('friend').focus();
+      else if (first === 'restaurant') place.focus();
+      else if (first === 'hp') document.getElementById('score').focus();
+      else if (first === 'drink') document.getElementById('drinks').focus();
+      else if (first) document.getElementById(first).focus();
+    }
+
+    function setBusy(busy) {
+      sendBtn.disabled = busy;
+      sendBtn.textContent = busy ? 'Sending…' : 'Send';
+    }
+
+    vibes.addEventListener('input', updateCounter);
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      clearStatus();
+      clearFieldErrors();
+      setBusy(true);
+      var body = payload();
+      var checked = NoBallValidate.validateSubmission(body);
+      if (!checked.ok) {
+        setBusy(false);
+        showErrors(checked.errors);
+        showStatus('Fix the highlighted fields and try again.', 'bad');
+        return;
+      }
+      if (!FORM_ENDPOINT) {
+        setBusy(false);
+        showStatus('Form not connected yet', 'bad');
+        return;
+      }
+      var spam = NoBallValidate.checkSpam(body, Date.now());
+      if (!spam.ok) {
+        setBusy(false);
+        showStatus(spam.error, 'bad');
+        return;
+      }
+      fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        redirect: 'follow',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body)
+      }).then(function (res) {
+        if (res.type === 'opaque' || res.status === 0) return NoBallValidate.interpretReply({ type: 'opaque', status: res.status });
+        return res.text().then(function (text) {
+          return NoBallValidate.interpretReply({ status: res.status, body: text, type: res.type });
+        });
+      }).then(function (reply) {
+        if (reply.kind === 'success') {
+          var friendName = document.getElementById('friend').value;
+          form.reset();
+          document.getElementById('friend').value = friendName;
+          updateCounter();
+          clearFieldErrors();
+          window.formStartedAt = Date.now() - limits.minFillMs;
+          showStatus('Saved. Add another whenever you want.', 'ok');
+          place.focus();
+          return;
+        }
+        if (reply.kind === 'opaque') {
+          showStatus("Couldn't read a reply from the sheet. Nothing was cleared — check Friend Submissions before sending again.", 'bad');
+          return;
+        }
+        showStatus(reply.error || 'The sheet rejected that.', 'bad');
+      }).catch(function () {
+        showStatus("Couldn't reach the sheet. Check your connection and try again.", 'bad');
+      }).then(function () {
+        setBusy(false);
+      });
+    });
+  </script>
+  <noscript><p style="max-width:40rem;margin:1rem auto;padding:0 1rem;">This form needs JavaScript.</p></noscript>
+</body>
+</html>
