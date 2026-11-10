@@ -271,6 +271,25 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
   }
 });
 
+test("a post with no area still saves, with an empty Area cell", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets } = boot();
+    for (const blank of ["", "   "]) {
+      assert.deepEqual(reply(context.doPost(event(entry({ area: blank })))), { ok: true });
+    }
+    const rows = sheets.get("Friend Submissions").rows;
+    assert.equal(rows.length, 3);
+    assert.equal(rows[0][7], "Area");
+    assert.equal(rows[1][6], "NYC");
+    assert.equal(rows[1][7], "");
+    assert.equal(rows[2][7], "");
+  } finally {
+    Date.now = realNow;
+  }
+});
+
 test("colors follow the single mapping, with vibes first blue like drinks first", () => {
   const realNow = Date.now;
   Date.now = () => now;

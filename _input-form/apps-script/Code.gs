@@ -164,8 +164,8 @@ var NoBallValidate = (function () {
     if (!city) errors.city = 'City is required.';
     else if (city.length > LIMITS.city) errors.city = 'City must be 80 characters or fewer.';
 
-    if (!area) errors.area = 'Area is required.';
-    else if (area.length > LIMITS.area) errors.area = 'Area must be 80 characters or fewer.';
+    // Area is optional. The page fills it from Google when it can.
+    if (area.length > LIMITS.area) errors.area = 'Area must be 80 characters or fewer.';
 
     var hp = wholeNumber(input.hp, LIMITS.scoreMin, LIMITS.scoreMax);
     if (hp === null) errors.hp = 'Score must be a whole number from 1 to 300.';

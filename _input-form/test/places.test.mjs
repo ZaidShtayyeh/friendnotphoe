@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
 
 const require = createRequire(import.meta.url);
 const places = require("../../betweenusfriends/places.js");
@@ -51,76 +52,204 @@ test("city falls back to postal town, then the admin area", () => {
   })).city, "California");
 });
 
-test("neighborhood wins, otherwise the first sublocality", () => {
+const within = (name) => ({ containment: "WITHIN", place: { displayName: name } });
+const outskirts = (name) => ({ containment: "OUTSKIRTS", place: { displayName: name } });
+const near = (name) => ({ containment: "NEAR", place: { displayName: name } });
+const manhattan = { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] };
+const nycLocality = { longText: "New York", types: ["locality", "political"] };
+
+function nyc(areas, extra) {
+  return places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [manhattan, nycLocality].concat(extra || []),
+    addressDescriptor: { areas },
+  });
+}
+
+test("a neighborhood component beats a borough, and a lone borough is never an Area", () => {
   assert.equal(places.fromPlace(place()).area, "East Village");
   assert.equal(places.fromPlace(place({
     addressComponents: [
       { longText: "Brooklyn", types: ["sublocality_level_1", "sublocality", "political"] },
       { longText: "New York", types: ["locality", "political"] },
     ],
-  })).area, "Brooklyn");
+  })).area, "");
+  assert.equal(nyc([within("Lower Manhattan"), within("Manhattan")]).area, "");
+  assert.equal(nyc([]).area, "");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [manhattan, nycLocality],
+  }).area, "");
 });
 
-test("area uses a containing descriptor area, then a neighborhood, then the outskirts", () => {
-  const manhattan = { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] };
-  const within = (name) => ({ containment: "WITHIN", place: { displayName: name } });
-  const outskirts = (name) => ({ containment: "OUTSKIRTS", place: { displayName: name } });
+test("a NYC area snaps to Zaid's list, checking every candidate until one fits", () => {
+  assert.equal(nyc([within("Chinatown"), outskirts("Lower East Side"), within("Lower Manhattan")]).area, "Chinatown");
+  assert.equal(nyc([within("Ukrainian Village"), within("East Village"), within("Lower Manhattan")]).area, "East Village");
+  assert.equal(nyc([outskirts("Lower East Side"), within("Lower Manhattan"), within("Manhattan")]).area, "Lower East Side");
+  assert.equal(nyc([within("Chelsea"), near("Nassau Av"), outskirts("Greenwich Village")]).area, "Greenwich Village");
+  assert.equal(nyc([within("Chelsea")], [{ longText: "Noho", types: ["neighborhood"] }]).area, "Noho");
+  assert.equal(nyc([within("Chelsea")], [{ longText: "Williamsburg", types: ["neighborhood"] }]).area, "Williamsburg");
   assert.equal(places.fromPlace({
-    displayName: "TIME AGAIN",
-    addressComponents: [manhattan, { longText: "New York", types: ["locality"] }],
-    addressDescriptor: { areas: [within("Chinatown"), outskirts("Lower East Side"), within("Lower Manhattan")] },
+    displayName: "Spot",
+    addressComponents: [manhattan, nycLocality, { longText: "Chinatown", types: ["neighborhood"] }],
+  }).area, "Chinatown");
+});
+
+test("NYC aliases land on the canonical spelling", () => {
+  const cases = {
+    "LES": "Lower East Side",
+    "Lower East Side": "Lower East Side",
+    "lower east side": "Lower East Side",
+    "SoHo": "Soho",
+    "NoHo": "Noho",
+    "NoLita": "Nolita",
+    "Meatpacking District": "Meatpacking",
+    "Flatiron District": "Flatiron",
+    "Gramercy Park": "Gramercy",
+    "Korea Town": "Koreatown",
+    "Koreatown": "Koreatown",
+    "Midtown Manhattan": "Midtown",
+    "Midtown East": "Midtown",
+    "Midtown West": "Midtown",
+    "Upper East Side": "Upper East Side",
+    "UES": "Upper East Side",
+    "Little Italy": "Little Italy",
+    "TriBeCa": "Tribeca",
+    "The Bowery": "Bowery",
+    "Bowery": "Bowery",
+    "Columbus Circle": "Columbus Circle",
+    "Union Square": "Union Square",
+    "Park Slope": "Park Slope",
+    "Cobble Hill": "Cobble Hill",
+    "Clinton Hill": "Clinton Hill",
+    "Greenpoint": "Greenpoint",
+    "Jackson Heights": "Jackson Heights",
+  };
+  for (const [google, want] of Object.entries(cases)) {
+    const got = nyc([within(google)]).area;
+    assert.equal(got, want, google);
+  }
+});
+
+test("a specific neighborhood beats the Midtown Manhattan umbrella", () => {
+  assert.equal(nyc([within("Midtown Manhattan"), within("Manhattan"), outskirts("Flatiron District")]).area, "Flatiron");
+  assert.equal(nyc([outskirts("Gramercy Park"), within("Midtown Manhattan")]).area, "Gramercy");
+  assert.equal(nyc([outskirts("Midtown East"), within("Midtown Manhattan")]).area, "Midtown");
+  assert.equal(nyc([within("Mandarin Oriental, New York"), outskirts("Midtown Manhattan")]).area, "Midtown");
+});
+
+test("a NYC spot in the Bronx is always Bronx, even when Google names a Manhattan neighborhood", () => {
+  const got = places.fromPlace({
+    displayName: "Roberto's",
+    addressComponents: [
+      { longText: "Little Italy", types: ["neighborhood"] },
+      { longText: "The Bronx", types: ["sublocality_level_1", "sublocality"] },
+      { longText: "Bronx County", types: ["administrative_area_level_2"] },
+      { longText: "New York", types: ["administrative_area_level_1"] },
+    ],
+    addressDescriptor: { areas: [within("Little Italy"), within("Belmont"), within("West Bronx")] },
+  });
+  assert.equal(got.city, "NYC");
+  assert.equal(got.area, "Bronx");
+});
+
+test("a NYC area that is not on the list keeps Google's own neighborhood name", () => {
+  assert.equal(nyc([within("Bushwick"), outskirts("Brooklyn")]).area, "Bushwick");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [
+      { longText: "East Williamsburg", types: ["neighborhood"] },
+      { longText: "Brooklyn", types: ["sublocality_level_1", "sublocality"] },
+      { longText: "New York", types: ["administrative_area_level_1"] },
+    ],
+  }).area, "East Williamsburg");
+  assert.equal(nyc([within("Lower Manhattan"), outskirts("Carroll Gardens")]).area, "Carroll Gardens");
+  assert.equal(nyc([within("Lower Manhattan"), within("Manhattan")], [{ longText: "Brooklyn Heights", types: ["neighborhood"] }]).area, "Brooklyn Heights");
+});
+
+test("outside NYC the area is Google's own: containing, neighborhood, outskirts or near, then sublocality", () => {
+  const dubai = [
+    { longText: "Umm Suqeim 2", types: ["neighborhood"] },
+    { longText: "Umm Suqeim Second", types: ["sublocality_level_1", "sublocality"] },
+    { longText: "Dubai", types: ["locality"] },
+  ];
+  assert.equal(places.fromPlace({
+    displayName: "Bu Qtair",
+    addressComponents: dubai,
+    addressDescriptor: { areas: [outskirts("Umm Suqeim 2"), outskirts("Umm Suqeim")] },
+  }).area, "Umm Suqeim 2");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: dubai,
+    addressDescriptor: { areas: [within("Jumeirah"), outskirts("Umm Suqeim 2")] },
+  }).area, "Jumeirah");
+  const london = [{ longText: "Soho", types: ["sublocality_level_1", "sublocality"] }, { longText: "London", types: ["locality"] }];
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: london,
+    addressDescriptor: { areas: [outskirts("Fitzrovia")] },
+  }).area, "Fitzrovia");
+  assert.equal(places.fromPlace({ displayName: "Spot", addressComponents: london }).area, "Soho");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: dubai.slice(2),
+    addressDescriptor: { areas: [near("Two Bridges")] },
+  }).area, "Two Bridges");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [{ longText: "Philadelphia", types: ["locality"] }, { longText: "Chinatown", types: ["neighborhood"] }],
   }).area, "Chinatown");
   assert.equal(places.fromPlace({
-    displayName: "Bar",
-    addressComponents: [{ longText: "East Village", types: ["neighborhood"] }, manhattan],
-    addressDescriptor: { areas: [outskirts("Lower East Side")] },
-  }).area, "East Village");
-  assert.equal(places.fromPlace({
-    displayName: "Bar",
-    addressComponents: [manhattan],
-    addressDescriptor: { areas: [outskirts("Lower East Side"), { containment: "NEAR", displayName: "Two Bridges" }] },
-  }).area, "Lower East Side");
-  assert.equal(places.fromPlace({
-    displayName: "Bar",
-    addressComponents: [manhattan],
-    addressDescriptor: { areas: [{ containment: "NEAR", displayName: "Two Bridges" }, outskirts("Lower East Side")] },
-  }).area, "Two Bridges");
-  assert.equal(places.fromPlace({
-    displayName: "Bar",
-    addressComponents: [manhattan],
-    addressDescriptor: { areas: [{ containment: "NEAR", displayName: "Two Bridges" }] },
-  }).area, "Two Bridges");
-  assert.equal(places.fromPlace({
     displayName: "Spot",
-    addressComponents: [manhattan],
-  }).area, "Manhattan");
-  assert.equal(places.fromPlace({
-    displayName: "Spot",
-    addressComponents: [manhattan],
-    addressDescriptor: { areas: [] },
-  }).area, "Manhattan");
+    addressComponents: [{ longText: "Philadelphia", types: ["locality"] }],
+  }).area, "");
 });
 
-test("area prefers neighborhood, then sublocality level, then sublocality", () => {
-  assert.equal(places.fromPlace(place({
-    addressComponents: [
-      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] },
-      { longText: "Chinatown", types: ["sublocality", "political"] },
-      { longText: "Lower East Side", types: ["neighborhood", "political"] },
-    ],
-  })).area, "Lower East Side");
-  assert.equal(places.fromPlace(place({
-    addressComponents: [
-      { longText: "Chinatown", types: ["sublocality", "political"] },
-      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] },
-    ],
-  })).area, "Manhattan");
-  assert.equal(places.fromPlace(place({
-    addressComponents: [
-      { longText: "New York", types: ["locality", "political"] },
-      { longText: "Chinatown", types: ["sublocality", "political"] },
-    ],
-  })).area, "Chinatown");
+test("real Places responses give the area we expect", () => {
+  const expected = {
+    "Time Again New York": ["NYC", "Chinatown"],
+    "Katz's Delicatessen New York": ["NYC", "Lower East Side"],
+    "Via Carota New York": ["NYC", "West Village"],
+    "Veselka New York": ["NYC", "East Village"],
+    "Peter Luger Steak House Brooklyn": ["NYC", "Williamsburg"],
+    "Cafe Mogador Williamsburg Brooklyn": ["NYC", "Williamsburg"],
+    "Roberta's Pizza Brooklyn": ["NYC", "Bushwick"],
+    "Roberto's Restaurant Bronx": ["NYC", "Bronx"],
+    "Bu Qtair Dubai": ["Dubai", "Umm Suqeim 2"],
+    "Kalaya Philadelphia": ["Philadelphia", "North Philadelphia"],
+    "Nom Wah Tea Parlor New York": ["NYC", "Chinatown"],
+    "Joe's Shanghai New York": ["NYC", "Chinatown"],
+    "Lucali Brooklyn": ["NYC", "Carroll Gardens"],
+    "Cho Dang Gol New York": ["NYC", "Midtown"],
+    "Gramercy Tavern New York": ["NYC", "Flatiron"],
+    "Eataly Flatiron New York": ["NYC", "Flatiron"],
+    "Union Square Cafe New York": ["NYC", "Gramercy"],
+    "Balthazar New York": ["NYC", "Soho"],
+    "Carbone New York": ["NYC", "Greenwich Village"],
+    "Pastis New York": ["NYC", "Greenwich Village"],
+    "Peter Pan Donut Brooklyn": ["NYC", "Greenpoint"],
+    "Per Se New York": ["NYC", "Midtown"],
+    "Sushi Yasuda New York": ["NYC", "Midtown"],
+    "Jackson Diner Queens": ["NYC", "Jackson Heights"],
+    "Al Di La Trattoria Brooklyn": ["NYC", "Park Slope"],
+    "Speedy Romeo Brooklyn": ["NYC", "Clinton Hill"],
+    "Odeon Tribeca New York": ["NYC", "Tribeca"],
+    "Rubirosa New York": ["NYC", "Nolita"],
+    "Il Cortile New York": ["NYC", "Little Italy"],
+    "Sant Ambroeus Madison Avenue New York": ["NYC", "Upper East Side"],
+    "Cobble Hill Brooklyn Chez Moi": ["NYC", "Brooklyn Heights"],
+  };
+  const fixtures = JSON.parse(readFileSync(new URL("./fixtures/places-real.json", import.meta.url), "utf8"));
+  assert.equal(fixtures.length, Object.keys(expected).length);
+  for (const fixture of fixtures) {
+    const got = places.fromPlace({
+      displayName: fixture.displayName,
+      googleMapsURI: "https://maps.google.com/?cid=1",
+      addressComponents: fixture.components,
+      addressDescriptor: { areas: fixture.areas.map((a) => ({ containment: a.containment, place: { displayName: a.name } })) },
+    });
+    assert.deepEqual([got.city, got.area], expected[fixture.query], fixture.query);
+  }
 });
 
 test("displayName objects and legacy component names still read", () => {
@@ -186,6 +315,7 @@ test("a rejected address descriptor still fills from the address components", as
         displayName: "TIME AGAIN",
         googleMapsURI: "https://maps.google.com/?cid=1",
         addressComponents: [
+          { longText: "Chinatown", types: ["neighborhood"] },
           { longText: "Manhattan", types: ["sublocality_level_1", "sublocality"] },
           { longText: "New York", types: ["locality"] },
         ],
@@ -202,7 +332,7 @@ test("a rejected address descriptor still fills from the address components", as
     ["displayName", "googleMapsURI", "addressComponents", "addressDescriptor"],
     ["displayName", "googleMapsURI", "addressComponents"],
   ]);
-  assert.equal(got.area, "Manhattan");
+  assert.equal(got.area, "Chinatown");
   assert.equal(got.city, "NYC");
   assert.equal(got.name, "TIME AGAIN");
 });

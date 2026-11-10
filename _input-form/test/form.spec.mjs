@@ -127,12 +127,8 @@ async function crop(page) {
   return (await page.locator("#card").getAttribute("data-crop")).split(",").map(Number);
 }
 
-async function fill(page, { name = "Sam", score = "270", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
+async function fillDetails(page, { name = "Sam", score = "270", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
   await page.fill("#friend", name);
-  await page.fill("#place", "C + B");
-  await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
-  await page.fill("#city", "NYC");
-  await page.fill("#area", "East Village");
   await page.fill("#score", score);
   await page.locator('input[value="Food first"]').check();
   await page.fill("#vibes", vibes);
@@ -144,6 +140,14 @@ async function fill(page, { name = "Sam", score = "270", vibes = VIBES, moves = 
     await page.setInputFiles("#photo", shot);
     await waitForShot(page);
   }
+}
+
+async function fill(page, options = {}) {
+  await page.fill("#place", "C + B");
+  await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
+  await page.fill("#city", "NYC");
+  await page.fill("#area", "East Village");
+  await fillDetails(page, options);
 }
 
 async function settle(page) {
@@ -876,6 +880,195 @@ async function placesFlow(page, label, base) {
   assert.equal(mapsCalls.length, 0, `${label} mock must not call Google`);
 }
 
+function installAreaMock(fixtures) {
+  const samples = fixtures.map((item, index) => ({
+    name: item.displayName,
+    uri: `https://maps.google.com/?cid=${index + 1}`,
+    components: item.components,
+    areas: item.areas,
+  }));
+  window.__areaPicks = [];
+  function Token() {}
+  window.google = {
+    maps: {
+      importLibrary() {
+        return Promise.resolve({
+          AutocompleteSessionToken: Token,
+          AutocompleteSuggestion: {
+            fetchAutocompleteSuggestions(body) {
+              const typed = body.input.toLowerCase();
+              const hits = samples.filter((sample) => sample.name.toLowerCase().includes(typed));
+              return Promise.resolve({
+                suggestions: hits.map((sample) => ({
+                  placePrediction: {
+                    mainText: { toString() { return sample.name; } },
+                    secondaryText: { toString() { return "Somewhere"; } },
+                    text: { toString() { return sample.name; } },
+                    toPlace() {
+                      return {
+                        displayName: sample.name,
+                        googleMapsURI: sample.uri,
+                        addressComponents: sample.components,
+                        addressDescriptor: { areas: sample.areas.map((a) => ({ containment: a.containment, place: { displayName: a.name } })) },
+                        fetchFields() { return Promise.resolve(); },
+                      };
+                    },
+                  },
+                })),
+              });
+            },
+          },
+        });
+      },
+    },
+  };
+}
+
+const AREA_SPOTS = [
+  ["Time Again", "TIME AGAIN", "NYC", "Chinatown"],
+  ["Katz", "Katz's Delicatessen", "NYC", "Lower East Side"],
+  ["Via Carota", "Via Carota", "NYC", "West Village"],
+  ["Veselka", "Veselka", "NYC", "East Village"],
+  ["Peter Luger", "Peter Luger Steak House", "NYC", "Williamsburg"],
+  ["Roberta", "Roberta's", "NYC", "Bushwick"],
+  ["Roberto", "Roberto's", "NYC", "Bronx"],
+  ["Bu Qtair", "Bu Qtair Restaurant", "Dubai", "Umm Suqeim 2"],
+];
+
+async function areaFlow(page, label, base) {
+  const posts = [];
+  await page.route("https://sheet.test/**", async (route) => {
+    posts.push(JSON.parse(route.request().postData()));
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.route("https://maps.googleapis.com/**", (route) => route.abort());
+  const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, "_input-form/test/fixtures/places-real.json"), "utf8"));
+  fixtures.push({
+    query: "Nameless",
+    displayName: "Nameless Spot",
+    components: [
+      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality"] },
+      { longText: "New York", types: ["locality"] },
+    ],
+    areas: [{ containment: "WITHIN", name: "Manhattan" }],
+  });
+  await page.addInitScript(installAreaMock, fixtures);
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  await page.goto(`${base}/betweenusfriends/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "on");
+  await page.evaluate((endpoint) => { FORM_ENDPOINT = endpoint; }, ENDPOINT);
+
+  const required = await page.evaluate(() => ({
+    attr: document.getElementById("area").required,
+    ariaRequired: document.getElementById("area").getAttribute("aria-required"),
+    label: document.querySelector('label[for="area"]').textContent,
+  }));
+  assert.equal(required.attr, false, `${label} area is not required`);
+  assert.equal(required.ariaRequired, null);
+  assert.equal(/\*/.test(required.label), false, `${label} no asterisk on area`);
+
+  async function pick(typed, name) {
+    await page.fill("#place", typed);
+    await page.locator(".place-option").first().waitFor();
+    await page.locator(".place-option").first().click();
+    await page.waitForFunction((want) => document.getElementById("place").value === want, name);
+    await page.waitForTimeout(150);
+  }
+
+  async function send() {
+    await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
+    await page.click("#send");
+    await page.waitForFunction(() => {
+      const status = document.getElementById("status").textContent;
+      return status.startsWith("Locked in.") && !document.getElementById("send").disabled;
+    });
+    return posts[posts.length - 1];
+  }
+
+  const results = [];
+  for (const [typed, name, city, want] of AREA_SPOTS) {
+    await pick(typed, name);
+    const got = await page.inputValue("#area");
+    assert.equal(await page.inputValue("#city"), city, `${name} city`);
+    assert.equal(got, want, `${label} ${name} fills ${want}`);
+    assert.equal(await page.locator("#area").isEditable(), true);
+    assert.equal(await page.locator("#err-area").textContent(), "");
+    results.push([name, got]);
+    if (name === "TIME AGAIN") {
+      assert.equal(await page.locator("#card-area").textContent(), `Chinatown, New York`);
+      await page.waitForTimeout(500);
+      assert.equal(await page.locator("#place-list").isHidden(), true);
+      await page.mouse.move(2, 300);
+      if (label === "mobile") await page.locator("#area").scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(ARTIFACTS, `area_filled_${label}.png`) });
+    }
+  }
+
+  // Something they typed is never replaced, by a pick or a later pick.
+  await page.fill("#area", "Tompkins");
+  await pick("Katz", "Katz's Delicatessen");
+  assert.equal(await page.inputValue("#area"), "Tompkins", `${label} typed area survives a pick`);
+  await pick("Veselka", "Veselka");
+  assert.equal(await page.inputValue("#area"), "Tompkins");
+  // Clearing it lets the next pick fill, and an autofilled one is replaced by the next pick.
+  await page.fill("#area", "");
+  await pick("Katz", "Katz's Delicatessen");
+  assert.equal(await page.inputValue("#area"), "Lower East Side");
+  await pick("Veselka", "Veselka");
+  assert.equal(await page.inputValue("#area"), "East Village", `${label} an autofilled area follows the next pick`);
+
+  // Typed area goes out as typed.
+  await fillDetails(page);
+  await page.fill("#area", "Tompkins");
+  assert.equal((await send()).area, "Tompkins");
+
+  // Blank at submit, spot still the one they picked: Google's area goes out and shows.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#area", "");
+  assert.equal(await page.locator("#card-area").textContent(), "New York");
+  assert.equal((await send()).area, "Chinatown", `${label} a blank area sends Google's area`);
+
+  // They renamed the spot, so the old pick's area no longer applies.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#place", "Totally different spot");
+  await page.fill("#area", "");
+  assert.equal((await send()).area, "", `${label} a renamed spot does not borrow the old area`);
+
+  // Only the casing of the name changed: still the same pick.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#place", "Time Again");
+  await page.fill("#area", "");
+  assert.equal((await send()).area, "Chinatown");
+
+  // Google had nothing but a borough: blank, and it submits.
+  await fillDetails(page);
+  await pick("Nameless", "Nameless Spot");
+  assert.equal(await page.inputValue("#area"), "");
+  const nameless = await send();
+  assert.equal(nameless.area, "");
+  assert.equal(nameless.restaurant, "Nameless Spot");
+
+  // Never picked anything: blank and it submits.
+  await fillDetails(page);
+  await page.fill("#place", "Typed by hand");
+  await page.fill("#city", "NYC");
+  assert.equal(await page.inputValue("#area"), "");
+  assert.equal((await send()).area, "");
+
+  assert.equal(posts.length, 6);
+  assert.deepEqual(errors, []);
+  return results;
+}
+
 async function placesLoadFailure(page, base) {
   await page.addInitScript(() => {
     window.google = { maps: { importLibrary: () => Promise.reject(new Error("could not load")) } };
@@ -919,6 +1112,8 @@ try {
   await exercise(desktop, "desktop", base);
   const placesDesktop = await desktopContext.newPage();
   await placesFlow(placesDesktop, "desktop", base);
+  const areaDesktop = await desktopContext.newPage();
+  for (const [name, area] of await areaFlow(areaDesktop, "desktop", base)) console.log(`area (desktop mock of real response): ${name} -> ${area}`);
   const placesFailed = await desktopContext.newPage();
   await placesLoadFailure(placesFailed, base);
   await desktopContext.close();
@@ -930,6 +1125,8 @@ try {
   await exercise(mobile, "mobile", base);
   const placesMobile = await mobileContext.newPage();
   await placesFlow(placesMobile, "mobile", base);
+  const areaMobile = await mobileContext.newPage();
+  await areaFlow(areaMobile, "mobile", base);
   await mobileContext.close();
 
   assert.equal(appsScriptHits.length, 0, "script.google.com was contacted");

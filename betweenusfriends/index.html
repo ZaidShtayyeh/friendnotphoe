@@ -595,7 +595,7 @@
             </div>
             <div class="field">
               <label for="area">Neighborhood</label>
-              <input class="text" id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Lower East Side">
+              <input class="text" id="area" name="area" maxlength="80" autocomplete="off" enterkeyhint="next" placeholder="Lower East Side">
               <p class="error" id="err-area"></p>
             </div>
           </div>
@@ -827,7 +827,7 @@
           return long ? 'Keep it under 80 characters.' : "What's the spot called?";
         case 'maps': return "That's not a Google Maps link. Paste one or leave it blank.";
         case 'city': return long ? 'Keep it under 80 characters.' : 'Which city?';
-        case 'area': return long ? 'Keep it under 80 characters.' : 'Which part of town?';
+        case 'area': return 'Keep it under 80 characters.';
         case 'hp': return 'HP is a whole number, 1 to 300.';
         case 'category': return "Pick one. Can't be everything.";
         case 'vibes':
@@ -1774,8 +1774,25 @@
       });
     }
 
-    var areaTouched = false;
-    $('area').addEventListener('input', function () { areaTouched = true; });
+    // The area Google gave the last pick, and the one we typed in for them.
+    var pickedArea = '';
+    var pickedName = '';
+    var autoArea = '';
+
+    function forgetPick() {
+      pickedArea = '';
+      pickedName = '';
+      autoArea = '';
+    }
+
+    // A blank Area goes out with Google's answer for the spot they picked.
+    function fillBlankArea() {
+      if (clean($('area').value) || !pickedArea) return;
+      if (clean(place.value).toLowerCase() !== pickedName) return;
+      $('area').value = pickedArea;
+      autoArea = pickedArea;
+      refresh();
+    }
 
     function bindPlaces(lib) {
       var list = $('place-list');
@@ -1827,8 +1844,13 @@
         if (fields.name) place.value = fields.name;
         $('maps').value = fields.maps;
         $('city').value = fields.city;
+        pickedArea = fields.area;
+        pickedName = clean(place.value).toLowerCase();
         // A neighborhood they typed or changed stays. Autofill only fills a blank one.
-        if (!areaTouched) $('area').value = fields.area;
+        if (!clean($('area').value) || $('area').value === autoArea) {
+          $('area').value = fields.area;
+          autoArea = fields.area;
+        }
         form.dispatchEvent(new Event('input', { bubbles: true }));
       }
 
@@ -1977,6 +1999,7 @@
         if (reply.kind === 'success') {
           var friendName = $('friend').value;
           form.reset();
+          forgetPick();
           clearShot();
           $('friend').value = friendName;
           Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
@@ -2009,6 +2032,7 @@
         showStatus(COPY.squishing, 'bad');
         return;
       }
+      fillBlankArea();
       setBusy(true);
       exportShot().then(function (shot) {
         photoState = shot;
