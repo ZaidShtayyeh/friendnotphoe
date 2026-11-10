@@ -53,7 +53,11 @@ var NoBallPlaces = (function () {
       component(components, 'postal_town') ||
       component(components, 'administrative_area_level_1')
     );
-    var area = component(components, 'neighborhood') || component(components, 'sublocality_level_1');
+    // Neighborhood first. A borough is only a fallback, and only when Google
+    // sent no neighborhood component at all.
+    var area = component(components, 'neighborhood')
+      || component(components, 'sublocality_level_1')
+      || component(components, 'sublocality');
     return {
       name: asText(place && place.displayName).replace(/^\s+|\s+$/g, ''),
       maps: (place && (place.googleMapsURI || place.googleMapsUri)) || '',

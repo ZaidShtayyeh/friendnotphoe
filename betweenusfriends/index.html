@@ -567,13 +567,13 @@
           <h2>The spot <span class="aside">who, what, where</span></h2>
 
           <div class="field">
-            <label for="friend">Your name <span class="hint">so we know who to thank</span></label>
+            <label for="friend">Your name</label>
             <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Zaid">
             <p class="error" id="err-submittedBy"></p>
           </div>
 
           <div class="field">
-            <label for="place">What's it called <span class="hint">how it reads on the card</span></label>
+            <label for="place">What's it called</label>
             <div class="place-combo">
               <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Time Again" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
               <ul id="place-list" class="place-list" role="listbox" hidden></ul>
@@ -582,7 +582,7 @@
           </div>
 
           <div class="field">
-            <label for="maps">Google Maps link <span class="hint">optional, saves a search</span></label>
+            <label for="maps">Google Maps link</label>
             <input class="text" id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="Paste the share link" enterkeyhint="next">
             <p class="error" id="err-maps"></p>
           </div>
@@ -1774,6 +1774,9 @@
       });
     }
 
+    var areaTouched = false;
+    $('area').addEventListener('input', function () { areaTouched = true; });
+
     function bindPlaces(lib) {
       var list = $('place-list');
       var token = null;
@@ -1824,7 +1827,8 @@
         if (fields.name) place.value = fields.name;
         $('maps').value = fields.maps;
         $('city').value = fields.city;
-        $('area').value = fields.area;
+        // A neighborhood they typed or changed stays. Autofill only fills a blank one.
+        if (!areaTouched) $('area').value = fields.area;
         form.dispatchEvent(new Event('input', { bubbles: true }));
       }
 

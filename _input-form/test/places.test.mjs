@@ -61,6 +61,28 @@ test("neighborhood wins, otherwise the first sublocality", () => {
   })).area, "Brooklyn");
 });
 
+test("area prefers neighborhood, then sublocality level, then sublocality", () => {
+  assert.equal(places.fromPlace(place({
+    addressComponents: [
+      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] },
+      { longText: "Chinatown", types: ["sublocality", "political"] },
+      { longText: "Lower East Side", types: ["neighborhood", "political"] },
+    ],
+  })).area, "Lower East Side");
+  assert.equal(places.fromPlace(place({
+    addressComponents: [
+      { longText: "Chinatown", types: ["sublocality", "political"] },
+      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] },
+    ],
+  })).area, "Manhattan");
+  assert.equal(places.fromPlace(place({
+    addressComponents: [
+      { longText: "New York", types: ["locality", "political"] },
+      { longText: "Chinatown", types: ["sublocality", "political"] },
+    ],
+  })).area, "Chinatown");
+});
+
 test("displayName objects and legacy component names still read", () => {
   const got = places.fromPlace({
     displayName: { text: "Bar Oliver" },

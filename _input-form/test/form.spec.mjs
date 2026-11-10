@@ -234,6 +234,10 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("text=it's half the card").count(), 0, `${label} no shot hint`);
   assert.equal(await page.locator("text=1 to 300, save the big ones").count(), 0, `${label} no HP hint on the right`);
   assert.equal(await page.locator("text=pick one, it sets the color").count(), 0, `${label} no category hint`);
+  assert.equal(await page.locator("text=so we know who to thank").count(), 0, `${label} no name hint`);
+  assert.equal(await page.locator("text=how it reads on the card").count(), 0, `${label} no place hint`);
+  assert.equal(await page.locator("text=optional, saves a search").count(), 0, `${label} no maps hint`);
+  assert.equal(await page.locator('label[for="friend"] .hint, label[for="place"] .hint, label[for="maps"] .hint').count(), 0);
   assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
   const hpLabel = await page.locator('label[for="score"]').boundingBox();
   const hpHint = await page.locator('label[for="score"] .hint').boundingBox();
@@ -249,6 +253,7 @@ async function exercise(page, label, base) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   assert.equal(overflow, true, `${label} horizontal overflow`);
   await waitForFonts(page);
+  await page.locator("section.block").first().screenshot({ path: path.join(ARTIFACTS, `hints_removed_${label}.png`) });
 
   // Empty card: the real chassis, with placeholders where their stuff goes.
   assert.equal(await page.locator("#card").getAttribute("data-color"), "neutral");
@@ -855,10 +860,17 @@ async function placesFlow(page, label, base) {
   const fields = await page.evaluate(() => window.__placesLog.fields);
   assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents"]);
   await page.fill("#area", "Lower East Side");
+  assert.equal(await page.locator("#area").isEditable(), true, `${label} neighborhood stays editable`);
   assert.equal(await page.inputValue("#area"), "Lower East Side");
   assert.equal(await page.locator("#card-area").textContent(), "Lower East Side, New York");
   await page.fill("#place", "Smor");
   await page.locator(".place-option").first().waitFor();
+  await page.locator(".place-option").first().click();
+  await page.waitForFunction(() => document.getElementById("place").value === "C + B");
+  await page.waitForTimeout(400);
+  assert.equal(await page.inputValue("#area"), "Lower East Side", `${label} a typed neighborhood is not replaced`);
+  assert.equal(await page.locator("#area").isEditable(), true);
+  assert.equal(await page.locator("#place-list").isHidden(), true);
   const after = await page.evaluate(() => window.__placesLog.requests.map((item) => item.token));
   assert.deepEqual(after, [1, 2]);
   assert.equal(mapsCalls.length, 0, `${label} mock must not call Google`);
