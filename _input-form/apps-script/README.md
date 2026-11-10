@@ -1,6 +1,6 @@
 # No Ball submissions (Apps Script)
 
-The public page is `input-form/index.html`. It is not linked from the site. Until `FORM_ENDPOINT` in that file is filled in, the page says “Form not connected yet” and does not send anything.
+The public page is `input-form/index.html`. It is not linked from the site. `FORM_ENDPOINT` in that file is the web app URL this script is deployed at. Until that constant is set, the page says it is not hooked up and does not send anything.
 
 GitHub Pages serves the folder as `https://friendnotphoe.com/input-form/` and redirects `/input-form` (no slash) to that address. There is no `robots.txt` in the repo; the page itself sends `noindex, nofollow`.
 
@@ -15,11 +15,11 @@ Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **n
 5. **Deploy → New deployment → type: Web app**.
    - Execute as: **Me**
    - Who has access: **Anyone**
-6. Authorize the spreadsheet permission when Google asks. The script only creates **Friend Submissions** (if it is missing) and appends rows there.
+6. Authorize when Google asks. The script needs the spreadsheet and Drive. It only creates **Friend Submissions** (if that tab is missing) and appends rows there. The photo goes in a Drive folder named **FNF Friend Photos** (created in your Drive the first time, then remembered). The script does not share those files.
 7. Copy the web app URL. It ends in `/exec`.
 8. Open that URL once. The browser should show `{"ok":true,"ready":true}` and the sheet should gain no row.
-9. Paste the URL into `input-form/index.html` as `FORM_ENDPOINT` (it ships as an empty string). That edit is what connects the form. Publish it only when you want friends to send entries.
-10. After the site update is live, submit one test from `https://friendnotphoe.com/input-form/`. Confirm the row is on **Friend Submissions** and that Master Reference and Sheet1 did not change.
+9. Put that URL in `input-form/index.html` as `FORM_ENDPOINT` if it is not already the one there. That constant is what connects the form.
+10. After you replace `Code.gs`, use **Deploy → Manage deployments → pencil → Version: New version → Deploy** so the existing URL runs this version. Then submit one test from `https://friendnotphoe.com/input-form/` with a photo. Confirm the row is on **Friend Submissions**, the **Photo** cell is a Drive link you can open, the file is in **FNF Friend Photos** and is not shared publicly, and that Master Reference and Sheet1 did not change.
 
 Changing the script later: **Deploy → Manage deployments → pencil → Version: New version → Deploy**. An old deployment keeps running the old code until you do that.
 
@@ -27,11 +27,17 @@ To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drink
 
 ## What the script does
 
-`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a bad body, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, the maps link is blank or an https Google Maps URL).
+`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page shrinks a shot to a jpeg around 2000 px on the long edge before sending.
 
-It then takes a script lock and appends one row:
+It then takes a script lock, saves the photo, and appends one row.
 
-`Submitted at` (America/New_York), `Submitted by`, `Restaurant`, `HP`, `Category`, `Color`, `City`, `Area`, `Vibes`, `Food`, `Drink`, `Scene`, `Google Maps link`.
+The Drive file is named `yyyy-MM-dd HHmm - Restaurant - Submitted by.ext` in America/New_York, for example `2026-11-10 1649 - C + B - Sam.jpg`. The folder id is stored in Script Properties as `FNF_FRIEND_PHOTOS_FOLDER_ID` after the first save. Nothing calls `setSharing`, so the file stays private to the account that owns the script.
+
+The row is:
+
+`Submitted at` (America/New_York), `Submitted by`, `Restaurant`, `HP`, `Category`, `Color`, `City`, `Area`, `Vibes`, `Food`, `Drink`, `Scene`, `Google Maps link`, `Photo`.
+
+`Photo` is the last column. On a sheet that already has the older header, the script writes `Photo` into that last header cell and does not insert a column, so the existing columns stay where they are. The cell is the Drive file URL.
 
 `Submitted by` is the friend’s name from the form (required, 60 characters or fewer). After a successful send the page keeps that name and clears the rest, so the same person can add another place.
 

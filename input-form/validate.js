@@ -24,7 +24,16 @@ var NoBallValidate = (function () {
     scoreMax: 300,
     rankMin: 0,
     rankMax: 100,
-    minFillMs: 3000
+    minFillMs: 3000,
+    photoBytes: 5 * 1024 * 1024,
+    photoName: 180
+  };
+
+  var PHOTO_TYPES = {
+    'image/jpeg': true,
+    'image/png': true,
+    'image/webp': true,
+    'image/heic': true
   };
 
   var RANK_FIELDS = [
@@ -67,6 +76,35 @@ var NoBallValidate = (function () {
     return value == null ? '' : String(value).trim();
   }
 
+  // Decoded byte length of a base64 payload. -1 when the string is not base64.
+  function photoBytes(data) {
+    var raw = String(data || '');
+    if (!raw || raw.length % 4 !== 0) return -1;
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) return -1;
+    var pad = 0;
+    if (raw.charAt(raw.length - 1) === '=') pad += 1;
+    if (raw.charAt(raw.length - 2) === '=') pad += 1;
+    return (raw.length / 4) * 3 - pad;
+  }
+
+  function readPhoto(input) {
+    var type = trimmed(input, 'photoType').toLowerCase();
+    if (type === 'image/jpg') type = 'image/jpeg';
+    if (type === 'image/heif') type = 'image/heic';
+    var name = trimmed(input, 'photoName');
+    var raw = input && input.photoData != null ? String(input.photoData) : '';
+    raw = raw.replace(/\s+/g, '');
+    var marker = raw.indexOf('base64,');
+    if (raw.indexOf('data:') === 0 && marker !== -1) raw = raw.slice(marker + 7);
+    if (!raw) return { error: 'A photo is required.' };
+    if (!PHOTO_TYPES[type]) return { error: 'Photo must be a jpeg, png, webp, or heic image.' };
+    var bytes = photoBytes(raw);
+    if (bytes < 0) return { error: 'Photo could not be read.' };
+    if (bytes > LIMITS.photoBytes) return { error: 'Photo must be 5 MB or smaller.' };
+    if (name.length > LIMITS.photoName) name = name.slice(0, LIMITS.photoName);
+    return { data: raw, name: name, type: type };
+  }
+
   function wholeNumber(value, min, max) {
     var text = String(value == null ? '' : value).trim();
     if (!/^(?:0|-?[1-9]\d*)$/.test(text)) return null;
@@ -85,12 +123,15 @@ var NoBallValidate = (function () {
     var area = trimmed(input, 'area');
     var vibes = trimmed(input, 'vibes');
     var category = trimmed(input, 'category');
+    var photo = readPhoto(input);
 
     if (!submittedBy) errors.submittedBy = 'Your name is required.';
     else if (submittedBy.length > LIMITS.friend) errors.submittedBy = 'Your name must be 60 characters or fewer.';
 
     if (!restaurant) errors.restaurant = 'Place name is required.';
     else if (restaurant.length > LIMITS.name) errors.restaurant = 'Place name must be 80 characters or fewer.';
+
+    if (photo.error) errors.photo = photo.error;
 
     if (maps && !isMapsUrl(maps)) {
       errors.maps = 'Maps link must be an https Google Maps URL, or left blank.';
@@ -138,6 +179,9 @@ var NoBallValidate = (function () {
       value: {
         submittedBy: submittedBy,
         restaurant: restaurant,
+        photoData: photo.data,
+        photoName: photo.name,
+        photoType: photo.type,
         maps: maps,
         city: city,
         area: area,

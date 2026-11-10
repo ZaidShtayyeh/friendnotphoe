@@ -5,6 +5,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 
 const ROOT = path.resolve(new URL("../..", import.meta.url).pathname);
+const SHOT = path.join(ROOT, "_input-form/test/fixtures/spot.jpg");
 const ARTIFACTS = "/opt/cursor/artifacts";
 const ENDPOINT = "https://sheet.test/exec";
 const VIBES = "Killer sandwich menu, kind of worth it if you're chilling. Sandwich, then Tompkins. Shoutout the lads.";
@@ -52,6 +53,14 @@ async function fill(page, { name = "Sam", score = "270", vibes = VIBES } = {}) {
   await page.fill("#food", "80");
   await page.fill("#drinks", "50");
   await page.fill("#scene", "60");
+  await page.setInputFiles("#photo", SHOT);
+  await page.waitForFunction(() => {
+    const thumb = document.getElementById("shot-thumb");
+    const card = document.getElementById("card-photo");
+    const img = card && card.querySelector("img");
+    return thumb && !thumb.hidden && thumb.src.startsWith("blob:")
+      && img && img.src.startsWith("blob:");
+  });
 }
 
 async function settle(page) {
@@ -136,6 +145,18 @@ async function exercise(page, label, base) {
   assert.equal(dots.vibes, dots.drinks);
   await page.locator('input[value="Food first"]').check();
   await page.waitForFunction(() => getComputedStyle(document.getElementById("card")).backgroundColor === "rgb(188, 213, 150)");
+  assert.equal(await page.locator("#photo").getAttribute("accept"), "image/*");
+  assert.equal(await page.locator("#photo").getAttribute("capture"), null);
+  assert.equal(await page.locator("#shot-thumb").isVisible(), true);
+  assert.equal(await page.locator("#card-photo img").count(), 1);
+  await page.evaluate(() => {
+    const field = document.getElementById("shot-field");
+    const header = document.querySelector("header").getBoundingClientRect().height;
+    const top = field.getBoundingClientRect().top + window.scrollY - header - 20;
+    window.scrollTo(0, Math.max(0, top));
+  });
+  await settle(page);
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v4_photo_${label}.png`) });
   await fullShot(page, `input_form_v3_filled_${label}.png`);
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
@@ -198,6 +219,12 @@ async function exercise(page, label, base) {
   assert.equal(sent.food, "80");
   assert.equal(sent.drink, "50");
   assert.equal(sent.scene, "60");
+  assert.equal(sent.photoType, "image/jpeg");
+  assert.equal(sent.photoName, "spot.jpg");
+  assert.match(sent.photoData, /^[A-Za-z0-9+/]+={0,2}$/);
+  assert.ok(sent.photoData.length > 100);
+  const decoded = Buffer.from(sent.photoData, "base64").length;
+  assert.ok(decoded > 0 && decoded <= 4 * 1024 * 1024);
   assert.equal(sent.company, "");
   assert.equal(sent.token, "");
   assert.equal(typeof sent.startedAt, "number");
@@ -210,6 +237,9 @@ async function exercise(page, label, base) {
   assert.equal(await page.evaluate(() => document.activeElement.id), "place");
   assert.equal(await page.locator("#send").isEnabled(), true);
   assert.equal(await page.locator("#card-name").textContent(), "The spot");
+  assert.equal(await page.locator("#shot-thumb").isHidden(), true);
+  assert.equal(await page.locator("#card-photo").textContent(), "photo goes here");
+  assert.equal(await page.locator("#card-photo img").count(), 0);
   assert.equal(await page.locator("#card").getAttribute("data-kind"), null);
   assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
   await page.evaluate(() => window.scrollTo(0, 0));

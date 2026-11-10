@@ -139,7 +139,44 @@
       resize: vertical;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .invalid .text, .invalid textarea, .invalid .hp-box, .invalid .num { border-color: var(--wasta); }
+    .invalid .text, .invalid textarea, .invalid .hp-box, .invalid .num, .invalid .shot-btn { border-color: var(--wasta); }
+
+    .shot-row { display: flex; align-items: center; gap: 0.75rem; }
+    .shot-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .shot-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .shot-btn:hover { border-color: var(--line-hover); }
+    .shot-file:focus-visible + .shot-btn { outline: 3px solid var(--sage); outline-offset: 3px; }
+    .shot-thumb {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+    }
 
     /* HP: same "HP 270" lockup the cards use */
     .hp-box {
@@ -294,7 +331,10 @@
       background: repeating-linear-gradient(135deg, rgba(255,255,255,0.5) 0 2cqi, rgba(255,255,255,0.32) 2cqi 4cqi);
       box-shadow: inset 0 0 0 0.6cqi rgba(255,255,255,0.85), 0 0.4cqi 1.4cqi rgba(0,0,0,0.12);
       font-size: 3.1cqi; font-style: italic; color: rgba(17,17,17,0.45);
+      overflow: hidden;
     }
+    .np-photo.has-shot { position: relative; padding: 0; background: #111; }
+    .np-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
     .np-area { align-self: center; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.3cqi 2.4cqi; border: 0.3cqi solid #111; border-radius: 999px; font-size: 2.8cqi; font-style: italic; background: rgba(255,255,255,0.55); }
     .np-h { font-size: 3.3cqi; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
     .np-vibes { margin-top: -1.4cqi; font-size: 3.15cqi; line-height: 1.32; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; min-height: 4em; }
@@ -415,6 +455,16 @@
         <section class="block">
           <h2>The card <span class="aside">how it plays</span></h2>
 
+          <div class="field" id="shot-field">
+            <label for="photo">The shot <span class="hint">the card is this photo</span></label>
+            <div class="shot-row">
+              <input id="photo" class="shot-file" name="photo" type="file" accept="image/*" required>
+              <label for="photo" class="shot-btn" id="shot-btn">Add the shot</label>
+              <img id="shot-thumb" class="shot-thumb" alt="" hidden>
+            </div>
+            <p class="error" id="err-photo"></p>
+          </div>
+
           <div class="field">
             <label for="score">HP <span class="hint">1 to 300, save the big numbers</span></label>
             <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next" placeholder="270"></span><span class="hp-scale">300 = undefeated</span></div>
@@ -472,7 +522,7 @@
       </div>
 
       <aside class="preview" aria-label="Card preview">
-        <div class="preview-label"><span>Your card, live</span><span>photo's on us</span></div>
+        <div class="preview-label"><span>Your card, live</span><span>your shot</span></div>
         <div class="np-card" id="card" aria-hidden="true">
           <span class="twinkle" style="left: 14%; top: 9%; --tw-dur: 3.2s;">✦</span>
           <span class="twinkle" style="left: 86%; top: 47%; --tw-dur: 2.6s; --tw-delay: 1.1s;">✦</span>
@@ -484,7 +534,7 @@
               <span class="np-hp"><small>HP</small><b id="card-hp">—</b></span>
               <span class="np-icon"></span>
             </div>
-            <div class="np-photo">photo goes here</div>
+            <div class="np-photo" id="card-photo">photo goes here</div>
             <span class="np-area" id="card-area">Neighborhood, City</span>
             <div class="np-h">Vibes</div>
             <p class="np-vibes" id="card-vibes">The vibes go here…</p>
@@ -532,7 +582,8 @@
       offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
       bounced: 'The sheet bounced that. Try again.',
       tooFast: 'Easy, give it a few seconds, then send.',
-      blocked: "That didn't go through. Try again."
+      blocked: "That didn't go through. Try again.",
+      squishing: 'Still squishing the shot.'
     };
 
     // validate.js keeps the plain wording the Apps Script also uses; this page says it in the site's voice.
@@ -554,12 +605,17 @@
         case 'food': return 'Food is 0 to 100, whole numbers.';
         case 'drink': return 'Drink is 0 to 100, whole numbers.';
         case 'scene': return 'Scene is 0 to 100, whole numbers.';
+        case 'photo':
+          if (/5 MB/.test(message)) return "That shot's too heavy. 5 MB max.";
+          if (/could not be read/.test(message)) return "Couldn't read that shot.";
+          if (/jpeg/.test(message)) return 'Needs to be a photo. jpg, png, webp, or heic.';
+          return 'Need the shot. The card is the photo.';
       }
       return message;
     }
 
     var SERVER_KEYS = [
-      [/^Your name/, 'submittedBy'], [/^Place name/, 'restaurant'], [/^Maps link/, 'maps'],
+      [/^Your name/, 'submittedBy'], [/^Place name/, 'restaurant'], [/^A photo|^Photo/, 'photo'], [/^Maps link/, 'maps'],
       [/^City/, 'city'], [/^Area/, 'area'], [/^Score/, 'hp'], [/category/, 'category'],
       [/^Vibes/, 'vibes'], [/^Food/, 'food'], [/^Drinks/, 'drink'], [/^Scene/, 'scene']
     ];
@@ -581,7 +637,7 @@
     var counter = document.getElementById('counter');
     var card = document.getElementById('card');
     var limits = NoBallValidate.LIMITS;
-    var fields = ['submittedBy', 'restaurant', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
+    var fields = ['submittedBy', 'restaurant', 'photo', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
     var statInputs = { food: 'food', drink: 'drinks', scene: 'scene' };
     window.formStartedAt = Date.now();
 
@@ -590,10 +646,22 @@
       return picked ? picked.value : '';
     }
 
+    var SHOT_EDGE = 2000;
+    var SHOT_QUALITY = 0.85;
+    var SHOT_TARGET = 4 * 1024 * 1024;
+    var photoInput = document.getElementById('photo');
+    var photoState = { data: '', name: '', type: '' };
+    var photoBusy = false;
+    var previewUrl = '';
+    var shotToken = 0;
+
     function payload() {
       return {
         submittedBy: document.getElementById('friend').value,
         restaurant: place.value,
+        photoData: photoState.data,
+        photoName: photoState.name,
+        photoType: photoState.type,
         maps: document.getElementById('maps').value,
         city: document.getElementById('city').value,
         area: document.getElementById('area').value,
@@ -608,6 +676,160 @@
         token: SHARED_TOKEN
       };
     }
+
+    function sniffType(file) {
+      var type = String(file.type || '').toLowerCase();
+      if (type === 'image/jpg') type = 'image/jpeg';
+      if (type === 'image/heif') type = 'image/heic';
+      if (type === 'image/jpeg' || type === 'image/png' || type === 'image/webp' || type === 'image/heic') return type;
+      var name = String(file.name || '').toLowerCase();
+      if (/\.jpe?g$/.test(name)) return 'image/jpeg';
+      if (/\.png$/.test(name)) return 'image/png';
+      if (/\.webp$/.test(name)) return 'image/webp';
+      if (/\.heic$/.test(name) || /\.heif$/.test(name)) return 'image/heic';
+      return '';
+    }
+
+    function blobToBase64(blob) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var result = String(reader.result || '');
+          var comma = result.indexOf(',');
+          resolve(comma === -1 ? result : result.slice(comma + 1));
+        };
+        reader.onerror = function () { reject(reader.error || new Error('decode')); };
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function loadBitmap(file) {
+      if (typeof createImageBitmap === 'function') return createImageBitmap(file);
+      return new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('decode')); };
+        img.src = url;
+      });
+    }
+
+    function drawScaled(source, edge) {
+      var w = source.width || source.naturalWidth;
+      var h = source.height || source.naturalHeight;
+      var longEdge = Math.max(w, h);
+      var scale = longEdge > edge ? edge / longEdge : 1;
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(w * scale));
+      canvas.height = Math.max(1, Math.round(h * scale));
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+
+    function canvasBlob(canvas, quality) {
+      return new Promise(function (resolve) {
+        canvas.toBlob(function (blob) { resolve(blob); }, 'image/jpeg', quality);
+      });
+    }
+
+    function compressBitmap(source, name) {
+      var edge = SHOT_EDGE;
+      var quality = SHOT_QUALITY;
+      function attempt(n) {
+        return canvasBlob(drawScaled(source, edge), quality).then(function (blob) {
+          if (blob && blob.size <= SHOT_TARGET) {
+            if (source.close) source.close();
+            return blobToBase64(blob).then(function (data) {
+              var base = String(name || 'shot').replace(/\.[^.]+$/, '') || 'shot';
+              return { data: data, name: base + '.jpg', type: 'image/jpeg', blob: blob };
+            });
+          }
+          if (n >= 8) {
+            if (source.close) source.close();
+            throw new Error('size');
+          }
+          if (quality > 0.5) quality = Math.round((quality - 0.1) * 10) / 10;
+          else edge = Math.max(640, Math.round(edge * 0.75));
+          return attempt(n + 1);
+        });
+      }
+      return attempt(0);
+    }
+
+    function prepareShot(file) {
+      var type = sniffType(file);
+      if (!type) return Promise.reject(new Error('type'));
+      return loadBitmap(file).then(function (bitmap) {
+        return compressBitmap(bitmap, file.name);
+      }).catch(function (err) {
+        if (err && (err.message === 'size' || err.message === 'type')) throw err;
+        if (type === 'image/heic' && file.size <= SHOT_TARGET) {
+          return blobToBase64(file).then(function (data) {
+            return { data: data, name: file.name || 'shot.heic', type: 'image/heic', blob: file };
+          });
+        }
+        if (type === 'image/heic' && file.size > SHOT_TARGET) throw new Error('size');
+        throw new Error('decode');
+      });
+    }
+
+    function showPreview(blob) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = URL.createObjectURL(blob);
+      var thumb = document.getElementById('shot-thumb');
+      thumb.src = previewUrl;
+      thumb.hidden = false;
+      document.getElementById('shot-btn').textContent = 'Change the shot';
+      updateCard();
+    }
+
+    function clearShot() {
+      shotToken += 1;
+      photoBusy = false;
+      photoState = { data: '', name: '', type: '' };
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = '';
+      }
+      var thumb = document.getElementById('shot-thumb');
+      thumb.hidden = true;
+      thumb.removeAttribute('src');
+      document.getElementById('shot-btn').textContent = 'Add the shot';
+      if (photoInput.value) photoInput.value = '';
+    }
+
+    function shotError(err) {
+      if (err && err.message === 'size') return "That's too big even after squishing.";
+      if (err && err.message === 'type') return 'Needs to be a photo. jpg, png, webp, or heic.';
+      return "Couldn't read that shot.";
+    }
+
+    photoInput.addEventListener('change', function () {
+      var file = photoInput.files && photoInput.files[0];
+      var token = ++shotToken;
+      var errEl = document.getElementById('err-photo');
+      errEl.textContent = '';
+      if (!file) {
+        clearShot();
+        updateCard();
+        return;
+      }
+      photoBusy = true;
+      prepareShot(file).then(function (shot) {
+        if (token !== shotToken) return;
+        photoState = { data: shot.data, name: shot.name, type: shot.type };
+        photoBusy = false;
+        showPreview(shot.blob);
+      }).catch(function (err) {
+        if (token !== shotToken) return;
+        clearShot();
+        errEl.textContent = shotError(err);
+        updateCard();
+      });
+    });
 
     function rank(value) {
       var n = Number(String(value).trim());
@@ -636,6 +858,21 @@
         var v = rank(document.getElementById(statInputs[key]).value);
         document.getElementById('card-' + key).style.width = (v === null ? 0 : v) + '%';
       });
+      var cardPhoto = document.getElementById('card-photo');
+      if (previewUrl) {
+        cardPhoto.classList.add('has-shot');
+        var img = cardPhoto.querySelector('img');
+        if (!img) {
+          cardPhoto.textContent = '';
+          img = document.createElement('img');
+          img.alt = '';
+          cardPhoto.appendChild(img);
+        }
+        if (img.getAttribute('src') !== previewUrl) img.src = previewUrl;
+      } else {
+        cardPhoto.classList.remove('has-shot');
+        cardPhoto.textContent = 'photo goes here';
+      }
     }
 
     function syncBar(row) {
@@ -868,6 +1105,10 @@
       event.preventDefault();
       clearStatus();
       clearFieldErrors();
+      if (photoBusy) {
+        showStatus(COPY.squishing, 'bad');
+        return;
+      }
       setBusy(true);
       var body = payload();
       var checked = NoBallValidate.validateSubmission(body);
@@ -905,6 +1146,7 @@
         if (reply.kind === 'success') {
           var friendName = document.getElementById('friend').value;
           form.reset();
+          clearShot();
           document.getElementById('friend').value = friendName;
           Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
           updateCounter();

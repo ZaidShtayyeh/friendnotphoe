@@ -5,6 +5,7 @@
  * Deploy as a Web app: Execute as Me, Who has access: Anyone.
  *
  * Rows are appended only to the "Friend Submissions" tab (created with headers if missing).
+ * The photo is saved in a private Drive folder named "FNF Friend Photos". Files are not shared.
  * This script does not read or write "Master Reference" or "Sheet1".
  *
  * SHARED_TOKEN is optional and not a secret. The page contains the same value.
@@ -40,7 +41,16 @@ var NoBallValidate = (function () {
     scoreMax: 300,
     rankMin: 0,
     rankMax: 100,
-    minFillMs: 3000
+    minFillMs: 3000,
+    photoBytes: 5 * 1024 * 1024,
+    photoName: 180
+  };
+
+  var PHOTO_TYPES = {
+    'image/jpeg': true,
+    'image/png': true,
+    'image/webp': true,
+    'image/heic': true
   };
 
   var RANK_FIELDS = [
@@ -83,6 +93,35 @@ var NoBallValidate = (function () {
     return value == null ? '' : String(value).trim();
   }
 
+  // Decoded byte length of a base64 payload. -1 when the string is not base64.
+  function photoBytes(data) {
+    var raw = String(data || '');
+    if (!raw || raw.length % 4 !== 0) return -1;
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) return -1;
+    var pad = 0;
+    if (raw.charAt(raw.length - 1) === '=') pad += 1;
+    if (raw.charAt(raw.length - 2) === '=') pad += 1;
+    return (raw.length / 4) * 3 - pad;
+  }
+
+  function readPhoto(input) {
+    var type = trimmed(input, 'photoType').toLowerCase();
+    if (type === 'image/jpg') type = 'image/jpeg';
+    if (type === 'image/heif') type = 'image/heic';
+    var name = trimmed(input, 'photoName');
+    var raw = input && input.photoData != null ? String(input.photoData) : '';
+    raw = raw.replace(/\s+/g, '');
+    var marker = raw.indexOf('base64,');
+    if (raw.indexOf('data:') === 0 && marker !== -1) raw = raw.slice(marker + 7);
+    if (!raw) return { error: 'A photo is required.' };
+    if (!PHOTO_TYPES[type]) return { error: 'Photo must be a jpeg, png, webp, or heic image.' };
+    var bytes = photoBytes(raw);
+    if (bytes < 0) return { error: 'Photo could not be read.' };
+    if (bytes > LIMITS.photoBytes) return { error: 'Photo must be 5 MB or smaller.' };
+    if (name.length > LIMITS.photoName) name = name.slice(0, LIMITS.photoName);
+    return { data: raw, name: name, type: type };
+  }
+
   function wholeNumber(value, min, max) {
     var text = String(value == null ? '' : value).trim();
     if (!/^(?:0|-?[1-9]\d*)$/.test(text)) return null;
@@ -101,12 +140,15 @@ var NoBallValidate = (function () {
     var area = trimmed(input, 'area');
     var vibes = trimmed(input, 'vibes');
     var category = trimmed(input, 'category');
+    var photo = readPhoto(input);
 
     if (!submittedBy) errors.submittedBy = 'Your name is required.';
     else if (submittedBy.length > LIMITS.friend) errors.submittedBy = 'Your name must be 60 characters or fewer.';
 
     if (!restaurant) errors.restaurant = 'Place name is required.';
     else if (restaurant.length > LIMITS.name) errors.restaurant = 'Place name must be 80 characters or fewer.';
+
+    if (photo.error) errors.photo = photo.error;
 
     if (maps && !isMapsUrl(maps)) {
       errors.maps = 'Maps link must be an https Google Maps URL, or left blank.';
@@ -154,6 +196,9 @@ var NoBallValidate = (function () {
       value: {
         submittedBy: submittedBy,
         restaurant: restaurant,
+        photoData: photo.data,
+        photoName: photo.name,
+        photoType: photo.type,
         maps: maps,
         city: city,
         area: area,
@@ -220,6 +265,16 @@ if (typeof module === 'object' && module.exports) module.exports = NoBallValidat
 
 var SHEET_NAME = 'Friend Submissions';
 var TIMEZONE = 'America/New_York';
+var PHOTO_FOLDER_NAME = 'FNF Friend Photos';
+var PHOTO_FOLDER_KEY = 'FNF_FRIEND_PHOTOS_FOLDER_ID';
+// A 5 MB image is about 6.7 MB of base64, plus the rest of the JSON.
+var MAX_BODY_CHARS = 8 * 1024 * 1024;
+var PHOTO_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic'
+};
 var HEADERS = [
   'Submitted at',
   'Submitted by',
@@ -233,7 +288,8 @@ var HEADERS = [
   'Food',
   'Drink',
   'Scene',
-  'Google Maps link'
+  'Google Maps link',
+  'Photo'
 ];
 var TEXT_COLUMNS = {
   0: true,
@@ -244,7 +300,8 @@ var TEXT_COLUMNS = {
   6: true,
   7: true,
   8: true,
-  12: true
+  12: true,
+  13: true
 };
 
 function doGet() {
@@ -254,7 +311,7 @@ function doGet() {
 function doPost(e) {
   try {
     var raw = e && e.postData && e.postData.contents;
-    if (typeof raw !== 'string' || raw.length === 0 || raw.length > 8000) {
+    if (typeof raw !== 'string' || raw.length === 0 || raw.length > MAX_BODY_CHARS) {
       return fail_('Could not read that submission.');
     }
     var input;
@@ -291,8 +348,10 @@ function append_(value) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
-  if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
-  var submitted = Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
+  ensureHeaders_(sheet);
+  var when = new Date();
+  var file = savePhoto_(value, when);
+  var submitted = Utilities.formatDate(when, TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
   var row = [
     submitted,
     value.submittedBy,
@@ -306,9 +365,62 @@ function append_(value) {
     value.food,
     value.drink,
     value.scene,
-    value.maps
+    value.maps,
+    file.getUrl()
   ];
   sheet.appendRow(row.map(plainCell_));
+}
+
+function ensureHeaders_(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(HEADERS);
+    return;
+  }
+  var width = Math.max(sheet.getLastColumn(), HEADERS.length);
+  var header = sheet.getRange(1, 1, 1, width).getValues()[0];
+  var found = false;
+  for (var i = 0; i < header.length; i++) {
+    if (header[i] === 'Photo') found = true;
+  }
+  // Write the new header cell only. Do not insert a column; existing columns stay put.
+  if (!found) sheet.getRange(1, HEADERS.length).setValue('Photo');
+}
+
+function photosFolder_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty(PHOTO_FOLDER_KEY);
+  if (id) {
+    try {
+      return DriveApp.getFolderById(id);
+    } catch (err) {
+      id = '';
+    }
+  }
+  var found = DriveApp.getFoldersByName(PHOTO_FOLDER_NAME);
+  var folder = found.hasNext() ? found.next() : DriveApp.createFolder(PHOTO_FOLDER_NAME);
+  props.setProperty(PHOTO_FOLDER_KEY, folder.getId());
+  return folder;
+}
+
+function safeFilePart_(text) {
+  var clean = String(text || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!clean) clean = 'spot';
+  if (clean.length > 80) clean = clean.slice(0, 80).trim();
+  return clean;
+}
+
+function photoFileName_(value, when) {
+  var stamp = Utilities.formatDate(when, TIMEZONE, 'yyyy-MM-dd HHmm');
+  var ext = PHOTO_EXT[value.photoType] || 'jpg';
+  return stamp + ' - ' + safeFilePart_(value.restaurant) + ' - ' + safeFilePart_(value.submittedBy) + '.' + ext;
+}
+
+function savePhoto_(value, when) {
+  var folder = photosFolder_();
+  var bytes = Utilities.base64Decode(value.photoData);
+  var blob = Utilities.newBlob(bytes, value.photoType, photoFileName_(value, when));
+  // Leave the file private to the script owner. Do not change who can open it.
+  return folder.createFile(blob);
 }
 
 function plainCell_(value, index) {
@@ -319,7 +431,7 @@ function plainCell_(value, index) {
 }
 
 function firstError_(errors) {
-  var order = ['submittedBy', 'restaurant', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
+  var order = ['submittedBy', 'restaurant', 'photo', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
   for (var i = 0; i < order.length; i++) {
     if (errors[order[i]]) return errors[order[i]];
   }

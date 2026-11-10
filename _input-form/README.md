@@ -2,7 +2,9 @@
 
 The page friends open is `input-form/index.html` (`https://friendnotphoe.com/input-form/`). It is not linked from the site. Sheet setup is in [apps-script/README.md](apps-script/README.md).
 
-`MAPS_API_KEY` in `input-form/index.html` ships empty. While it is empty, "What's it called" is a normal text field and nothing calls Google. The key is a browser key: it will be visible in the page. Referrer and API restrictions are what keep it limited. Do not put it in `Code.gs`.
+`MAPS_API_KEY` in `input-form/index.html` is the browser key for place suggestions. While it is empty, "What's it called" is a normal text field and nothing calls Google. The key is visible in the page. Referrer and API restrictions are what keep it limited. Do not put it in `Code.gs`.
+
+The shot is required. The page compresses it and the script stores the file in a private Drive folder. See [apps-script/README.md](apps-script/README.md).
 
 ## New Places key
 

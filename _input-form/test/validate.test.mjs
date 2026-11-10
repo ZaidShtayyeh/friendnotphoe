@@ -11,10 +11,24 @@ function words(count) {
   return Array.from({ length: count }, (_, i) => `w${i}`).join(" ");
 }
 
+const TINY_PHOTO = "aGVsbG8=";
+
+function b64OfBytes(n) {
+  const chars = Math.ceil(n / 3) * 4;
+  let raw = "A".repeat(chars);
+  const mod = n % 3;
+  if (mod === 1) raw = `${raw.slice(0, -2)}==`;
+  else if (mod === 2) raw = `${raw.slice(0, -1)}=`;
+  return raw;
+}
+
 function valid(overrides = {}) {
   return {
     submittedBy: "Sam",
     restaurant: "C + B",
+    photoData: TINY_PHOTO,
+    photoName: "spot.jpg",
+    photoType: "image/jpeg",
     maps: "https://maps.google.com/?q=C%20%2B%20B",
     city: "NYC",
     area: "East Village",
@@ -151,6 +165,39 @@ test("required place, city, and area are trimmed and capped at 80 characters", (
   assert.equal(v.validateSubmission(valid({ area: "" })).errors.area, "Area is required.");
   assert.match(v.validateSubmission(valid({ city: "c".repeat(81) })).errors.city, /80/);
   assert.match(v.validateSubmission(valid({ area: "a".repeat(81) })).errors.area, /80/);
+});
+
+test("a photo is required, must be an allowed image, and must be 5 MB or smaller", () => {
+  const ok = v.validateSubmission(valid());
+  assert.equal(ok.ok, true);
+  assert.equal(ok.value.photoData, TINY_PHOTO);
+  assert.equal(ok.value.photoName, "spot.jpg");
+  assert.equal(ok.value.photoType, "image/jpeg");
+
+  assert.equal(v.validateSubmission(valid({ photoData: "" })).errors.photo, "A photo is required.");
+  assert.equal(v.validateSubmission(valid({ photoData: "   " })).errors.photo, "A photo is required.");
+  assert.equal(v.validateSubmission(valid({ photoType: "image/gif" })).errors.photo, "Photo must be a jpeg, png, webp, or heic image.");
+  assert.equal(v.validateSubmission(valid({ photoType: "" })).errors.photo, "Photo must be a jpeg, png, webp, or heic image.");
+  assert.equal(v.validateSubmission(valid({ photoData: "!!!!" })).errors.photo, "Photo could not be read.");
+
+  const wrapped = v.validateSubmission(valid({ photoData: "aGVs bG8=", photoType: "image/jpg" }));
+  assert.equal(wrapped.value.photoData, TINY_PHOTO);
+  assert.equal(wrapped.value.photoType, "image/jpeg");
+
+  const prefixed = v.validateSubmission(valid({ photoData: "data:image/jpeg;base64,aGVsbG8=" }));
+  assert.equal(prefixed.value.photoData, TINY_PHOTO);
+
+  for (const type of ["image/png", "image/webp", "image/heic"]) {
+    assert.equal(v.validateSubmission(valid({ photoType: type })).value.photoType, type);
+  }
+  assert.equal(v.validateSubmission(valid({ photoType: "image/heif" })).value.photoType, "image/heic");
+
+  const longName = `${"n".repeat(200)}.jpg`;
+  assert.equal(v.validateSubmission(valid({ photoName: `  ${longName}  ` })).value.photoName.length, 180);
+
+  const limit = v.LIMITS.photoBytes;
+  assert.equal(v.validateSubmission(valid({ photoData: b64OfBytes(limit) })).ok, true);
+  assert.equal(v.validateSubmission(valid({ photoData: b64OfBytes(limit + 1) })).errors.photo, "Photo must be 5 MB or smaller.");
 });
 
 test("spam check rejects a honeypot and a too-fast or missing timestamp", () => {
