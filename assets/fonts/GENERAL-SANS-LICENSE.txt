@@ -1,0 +1,3 @@
+General Sans (GeneralSans-400.woff2, GeneralSans-400i.woff2, GeneralSans-700.woff2)
+by Indian Type Foundry, from Fontshare (https://www.fontshare.com/fonts/general-sans).
+Used under the ITF Free Font License (https://www.fontshare.com/licenses/itf-ffl).
