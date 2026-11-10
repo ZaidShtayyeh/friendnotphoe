@@ -7,6 +7,8 @@ import { chromium } from "playwright";
 const ROOT = path.resolve(new URL("../..", import.meta.url).pathname);
 const ARTIFACTS = "/opt/cursor/artifacts";
 const ENDPOINT = "https://sheet.test/exec";
+const VIBES = "Killer sandwich menu, kind of worth it if you're chilling. Sandwich, then Tompkins. Shoutout the lads.";
+const TYPES = { ".js": "text/javascript; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".gif": "image/gif" };
 
 function startServer() {
   const server = http.createServer((req, res) => {
@@ -30,7 +32,7 @@ function startServer() {
         res.end();
         return;
       }
-      const type = path.extname(file) === ".js" ? "text/javascript; charset=utf-8" : "text/html; charset=utf-8";
+      const type = TYPES[path.extname(file)] || "text/html; charset=utf-8";
       res.writeHead(200, { "content-type": type });
       res.end(data);
     });
@@ -38,7 +40,7 @@ function startServer() {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
 }
 
-async function fill(page, { name = "Sam", score = "270", vibes = "A short line about the sandwich." } = {}) {
+async function fill(page, { name = "Sam", score = "270", vibes = VIBES } = {}) {
   await page.fill("#friend", name);
   await page.fill("#place", "C + B");
   await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
@@ -50,6 +52,18 @@ async function fill(page, { name = "Sam", score = "270", vibes = "A short line a
   await page.fill("#food", "80");
   await page.fill("#drinks", "50");
   await page.fill("#scene", "60");
+}
+
+async function settle(page) {
+  await page.waitForFunction(() => document.querySelector(".corner-coin").complete
+    && document.getAnimations().every((a) => a.playState !== "running" || a.effect.getTiming().iterations === Infinity));
+}
+
+async function fullShot(page, file) {
+  await settle(page);
+  await page.evaluate(() => { document.querySelector("header").style.position = "static"; });
+  await page.screenshot({ path: path.join(ARTIFACTS, file), fullPage: true });
+  await page.evaluate(() => { document.querySelector("header").style.position = ""; });
 }
 
 async function exercise(page, label, base) {
@@ -74,19 +88,38 @@ async function exercise(page, label, base) {
   assert.ok(page.url().endsWith("/input-form/"), `${label} slash redirect`);
   await page.locator("#friend").waitFor();
   assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
-  assert.equal(await page.locator("h1").textContent(), "No Ball");
+  assert.equal(await page.title(), "For us amongst friends");
+  assert.equal(await page.locator("h1").textContent(), "For us amongst friends");
   const box = await page.locator("#send").boundingBox();
   assert.ok(box && box.height >= 48, `${label} send button tap size`);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   assert.equal(overflow, true, `${label} horizontal overflow`);
   fs.mkdirSync(ARTIFACTS, { recursive: true });
-  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_${label}.png`), fullPage: true });
+  await settle(page);
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v2_${label}.png`) });
+  await fullShot(page, `input_form_v2_${label}_full.png`);
+
+  await page.locator('.stat[data-stat="food"] .bar').fill("35");
+  assert.equal(await page.inputValue("#food"), "35", `${label} slider writes the number`);
+  await page.fill("#drinks", "64");
+  assert.equal(await page.locator('.stat[data-stat="drink"] .bar').inputValue(), "64", `${label} number moves the slider`);
 
   await fill(page);
-  assert.match(await page.locator("#counter").textContent(), /6 \/ 50 words/);
+  assert.match(await page.locator("#counter").textContent(), /^16\/50 words · 102\/250$/);
+  assert.equal(await page.locator("#card-name").textContent(), "C + B");
+  assert.equal(await page.locator("#card-hp").textContent(), "270");
+  assert.equal(await page.locator("#card-area").textContent(), "East Village, NYC");
+  assert.equal(await page.locator("#card").getAttribute("data-kind"), "Food first");
+  await page.waitForFunction(() => {
+    const fill = document.getElementById("card-food").getBoundingClientRect().width;
+    const track = document.getElementById("card-food").parentElement.getBoundingClientRect().width;
+    return track > 0 && Math.abs(fill / track - 0.8) < 0.02;
+  });
+  await page.waitForFunction(() => getComputedStyle(document.getElementById("card")).backgroundColor === "rgb(188, 213, 150)");
+  await fullShot(page, `input_form_v2_filled_${label}.png`);
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
-  await page.waitForFunction(() => document.getElementById("status").textContent === "Form not connected yet");
+  await page.waitForFunction(() => document.getElementById("status").textContent === "Not hooked up yet, nothing got sent. Hang on to this one.");
   assert.equal(calls.length, 0, `${label} disconnected form must not send`);
   assert.equal(await page.inputValue("#place"), "C + B");
   assert.equal(await page.inputValue("#friend"), "Sam");
@@ -101,7 +134,7 @@ async function exercise(page, label, base) {
   await page.fill("#score", "270");
   await page.fill("#friend", "");
   await page.click("#send");
-  await page.waitForFunction(() => document.getElementById("err-submittedBy").textContent === "Your name is required.");
+  await page.waitForFunction(() => document.getElementById("err-submittedBy").textContent === "Need your name. A nickname works.");
   assert.equal(await page.evaluate(() => document.activeElement.id), "friend");
   await page.fill("#friend", "Sam");
 
@@ -115,19 +148,19 @@ async function exercise(page, label, base) {
 
   const tooMany = Array.from({ length: 51 }, () => "a").join(" ");
   await page.fill("#vibes", tooMany);
-  assert.match(await page.locator("#counter").textContent(), /51 \/ 50 words/);
+  assert.match(await page.locator("#counter").textContent(), /^51\/50 words · 101\/250 · too long for the card$/);
   assert.equal(await page.locator("#counter").evaluate((el) => el.classList.contains("over")), true);
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
   await page.waitForFunction(() => /50 words/.test(document.getElementById("err-vibes").textContent));
   assert.equal(calls.length, 0);
-  await page.fill("#vibes", "A short line about the sandwich.");
+  await page.fill("#vibes", VIBES);
 
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
   await page.waitForFunction(() => {
     const status = document.getElementById("status").textContent;
-    return status.startsWith("Saved.") && !document.getElementById("send").disabled;
+    return status.startsWith("Locked in.") && !document.getElementById("send").disabled;
   });
   assert.equal(calls.length, 1, `${label} one post`);
   assert.equal(calls[0].method, "POST");
@@ -141,7 +174,7 @@ async function exercise(page, label, base) {
   assert.equal(sent.area, "East Village");
   assert.equal(sent.hp, "270");
   assert.equal(sent.category, "Food first");
-  assert.equal(sent.vibes, "A short line about the sandwich.");
+  assert.equal(sent.vibes, VIBES);
   assert.equal(sent.food, "80");
   assert.equal(sent.drink, "50");
   assert.equal(sent.scene, "60");
@@ -156,6 +189,12 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('input[name="category"]:checked').count(), 0);
   assert.equal(await page.evaluate(() => document.activeElement.id), "place");
   assert.equal(await page.locator("#send").isEnabled(), true);
+  assert.equal(await page.locator("#card-name").textContent(), "The spot");
+  assert.equal(await page.locator("#card").getAttribute("data-kind"), null);
+  assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await settle(page);
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v2_success_${label}.png`) });
 
   mode = "error";
   await fill(page);
