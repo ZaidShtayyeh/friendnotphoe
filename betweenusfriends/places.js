@@ -5,7 +5,7 @@ var NoBallPlaces = (function () {
   // Establishments only. Up to five primary types are allowed.
   var TYPES = ['restaurant', 'bar', 'cafe', 'food'];
   // location is available and intentionally not requested.
-  var FIELDS = ['displayName', 'googleMapsURI', 'addressComponents'];
+  var FIELDS = ['displayName', 'googleMapsURI', 'addressComponents', 'addressDescriptor'];
   var NYC = {
     'new york': true,
     'new york city': true,
@@ -46,6 +46,28 @@ var NoBallPlaces = (function () {
     return trimmed;
   }
 
+  function descriptorName(area) {
+    if (!area) return '';
+    var direct = asText(area.displayName).replace(/^\s+|\s+$/g, '');
+    if (direct) return direct;
+    var named = area.place && area.place.displayName;
+    return asText(named).replace(/^\s+|\s+$/g, '');
+  }
+
+  // The JS API returns the name on area.place. A missing descriptor is normal
+  // outside the regions Google covers, so every step can come back empty.
+  function descriptorArea(descriptor, wanted) {
+    var areas = descriptor && descriptor.areas;
+    if (!areas || !areas.length) return '';
+    for (var i = 0; i < areas.length; i++) {
+      var area = areas[i];
+      if (!area || wanted.indexOf(area.containment) === -1) continue;
+      var name = descriptorName(area);
+      if (name) return name;
+    }
+    return '';
+  }
+
   function fromPlace(place) {
     var components = (place && (place.addressComponents || place.address_components)) || [];
     var city = cityName(
@@ -53,9 +75,10 @@ var NoBallPlaces = (function () {
       component(components, 'postal_town') ||
       component(components, 'administrative_area_level_1')
     );
-    // Neighborhood first. A borough is only a fallback, and only when Google
-    // sent no neighborhood component at all.
-    var area = component(components, 'neighborhood')
+    var descriptor = place && place.addressDescriptor;
+    var area = descriptorArea(descriptor, ['WITHIN'])
+      || component(components, 'neighborhood')
+      || descriptorArea(descriptor, ['OUTSKIRTS', 'NEAR'])
       || component(components, 'sublocality_level_1')
       || component(components, 'sublocality');
     return {
@@ -89,8 +112,13 @@ var NoBallPlaces = (function () {
 
   function readPlace(prediction) {
     var place = prediction.toPlace();
-    return place.fetchFields({ fields: FIELDS.slice() }).then(function () {
-      return fromPlace(place);
+    function load(fields) {
+      return place.fetchFields({ fields: fields }).then(function () {
+        return fromPlace(place);
+      });
+    }
+    return load(FIELDS.slice()).then(undefined, function () {
+      return load(FIELDS.filter(function (field) { return field !== 'addressDescriptor'; }));
     });
   }
 

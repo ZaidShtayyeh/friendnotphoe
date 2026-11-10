@@ -61,6 +61,46 @@ test("neighborhood wins, otherwise the first sublocality", () => {
   })).area, "Brooklyn");
 });
 
+test("area uses a containing descriptor area, then a neighborhood, then the outskirts", () => {
+  const manhattan = { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] };
+  const within = (name) => ({ containment: "WITHIN", place: { displayName: name } });
+  const outskirts = (name) => ({ containment: "OUTSKIRTS", place: { displayName: name } });
+  assert.equal(places.fromPlace({
+    displayName: "TIME AGAIN",
+    addressComponents: [manhattan, { longText: "New York", types: ["locality"] }],
+    addressDescriptor: { areas: [within("Chinatown"), outskirts("Lower East Side"), within("Lower Manhattan")] },
+  }).area, "Chinatown");
+  assert.equal(places.fromPlace({
+    displayName: "Bar",
+    addressComponents: [{ longText: "East Village", types: ["neighborhood"] }, manhattan],
+    addressDescriptor: { areas: [outskirts("Lower East Side")] },
+  }).area, "East Village");
+  assert.equal(places.fromPlace({
+    displayName: "Bar",
+    addressComponents: [manhattan],
+    addressDescriptor: { areas: [outskirts("Lower East Side"), { containment: "NEAR", displayName: "Two Bridges" }] },
+  }).area, "Lower East Side");
+  assert.equal(places.fromPlace({
+    displayName: "Bar",
+    addressComponents: [manhattan],
+    addressDescriptor: { areas: [{ containment: "NEAR", displayName: "Two Bridges" }, outskirts("Lower East Side")] },
+  }).area, "Two Bridges");
+  assert.equal(places.fromPlace({
+    displayName: "Bar",
+    addressComponents: [manhattan],
+    addressDescriptor: { areas: [{ containment: "NEAR", displayName: "Two Bridges" }] },
+  }).area, "Two Bridges");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [manhattan],
+  }).area, "Manhattan");
+  assert.equal(places.fromPlace({
+    displayName: "Spot",
+    addressComponents: [manhattan],
+    addressDescriptor: { areas: [] },
+  }).area, "Manhattan");
+});
+
 test("area prefers neighborhood, then sublocality level, then sublocality", () => {
   assert.equal(places.fromPlace(place({
     addressComponents: [
@@ -133,9 +173,38 @@ test("reading a prediction requests only the fields we store", async () => {
     },
   };
   const got = await places.readPlace(prediction);
-  assert.deepEqual(asked, ["displayName", "googleMapsURI", "addressComponents"]);
+  assert.deepEqual(asked, ["displayName", "googleMapsURI", "addressComponents", "addressDescriptor"]);
   assert.equal(got.city, "NYC");
   assert.equal(got.name, "Smor");
+});
+
+test("a rejected address descriptor still fills from the address components", async () => {
+  const calls = [];
+  const prediction = {
+    toPlace() {
+      return {
+        displayName: "TIME AGAIN",
+        googleMapsURI: "https://maps.google.com/?cid=1",
+        addressComponents: [
+          { longText: "Manhattan", types: ["sublocality_level_1", "sublocality"] },
+          { longText: "New York", types: ["locality"] },
+        ],
+        fetchFields(options) {
+          calls.push(options.fields.slice());
+          if (options.fields.includes("addressDescriptor")) return Promise.reject(new Error("unsupported"));
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+  const got = await places.readPlace(prediction);
+  assert.deepEqual(calls, [
+    ["displayName", "googleMapsURI", "addressComponents", "addressDescriptor"],
+    ["displayName", "googleMapsURI", "addressComponents"],
+  ]);
+  assert.equal(got.area, "Manhattan");
+  assert.equal(got.city, "NYC");
+  assert.equal(got.name, "TIME AGAIN");
 });
 
 test("an empty key or a failed load leaves places off", async () => {

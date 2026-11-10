@@ -858,7 +858,7 @@ async function placesFlow(page, label, base) {
   assert.equal(await page.evaluate(() => window.__placesLog.requests.length), 1, `${label} a pick does not search again`);
   await page.screenshot({ path: path.join(ARTIFACTS, `places_closed_${label}.png`) });
   const fields = await page.evaluate(() => window.__placesLog.fields);
-  assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents"]);
+  assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents", "addressDescriptor"]);
   await page.fill("#area", "Lower East Side");
   assert.equal(await page.locator("#area").isEditable(), true, `${label} neighborhood stays editable`);
   assert.equal(await page.inputValue("#area"), "Lower East Side");
