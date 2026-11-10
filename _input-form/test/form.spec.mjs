@@ -87,10 +87,13 @@ async function exercise(page, label, base) {
   await page.goto(`${base}/input-form`, { waitUntil: "domcontentloaded" });
   assert.ok(page.url().endsWith("/input-form/"), `${label} slash redirect`);
   await page.locator("#friend").waitFor();
+  // The page ships a real Apps Script URL. Blank it here so this run still
+  // covers the disconnected path, and never POST that URL.
+  await page.evaluate(() => { FORM_ENDPOINT = ""; });
   assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
   assert.equal(await page.title(), "For us amongst friends");
   assert.equal(await page.locator("h1").textContent(), "For us amongst friends");
-  assert.equal(await page.locator("#place").getAttribute("data-places"), null);
+  await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "failed");
   assert.equal(await page.locator("#place-list").isHidden(), true);
   assert.equal(await page.locator(".subtitle").count(), 0);
   const coin = await page.locator(".corner-coin").boundingBox();
@@ -360,28 +363,43 @@ async function placesLoadFailure(page, base) {
   assert.deepEqual(errors, []);
 }
 
+async function guardedContext(browser, options) {
+  const context = await browser.newContext(options);
+  // Never let a test reach the live Apps Script. Abort before the request leaves.
+  await context.route(/https?:\/\/script\.google(?:usercontent)?\.com\/.*/i, async (route) => {
+    appsScriptHits.push(route.request().method());
+    await route.abort();
+  });
+  // The page now has a browser key. Don't load the real Maps script from these tests.
+  await context.route(/https?:\/\/maps\.googleapis\.com\/.*/i, (route) => route.abort());
+  return context;
+}
+
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({
   executablePath: "/usr/bin/google-chrome",
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
+const appsScriptHits = [];
 try {
-  const desktop = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const desktopContext = await guardedContext(browser, { viewport: { width: 1280, height: 800 } });
+  const desktop = await desktopContext.newPage();
   await exercise(desktop, "desktop", base);
-  await desktop.close();
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  await exercise(mobile, "mobile", base);
-  await mobile.close();
-  const placesDesktop = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const placesDesktop = await desktopContext.newPage();
   await placesFlow(placesDesktop, "desktop", base);
-  await placesDesktop.close();
-  const placesMobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  await placesFlow(placesMobile, "mobile", base);
-  await placesMobile.close();
-  const placesFailed = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const placesFailed = await desktopContext.newPage();
   await placesLoadFailure(placesFailed, base);
-  await placesFailed.close();
+  await desktopContext.close();
+
+  const mobileContext = await guardedContext(browser, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const mobile = await mobileContext.newPage();
+  await exercise(mobile, "mobile", base);
+  const placesMobile = await mobileContext.newPage();
+  await placesFlow(placesMobile, "mobile", base);
+  await mobileContext.close();
+
+  assert.equal(appsScriptHits.length, 0, "script.google.com was contacted");
   console.log("form checks passed");
 } finally {
   await browser.close();
