@@ -87,6 +87,45 @@
     .text::placeholder, textarea::placeholder { color: var(--faint); font-style: italic; }
     .text:hover, textarea:hover { border-color: var(--line-hover); }
     .text:focus, textarea:focus { outline: none; border-color: var(--sage); box-shadow: 0 0 0 3px var(--soft); }
+    .place-combo { position: relative; }
+    .place-list {
+      position: absolute;
+      z-index: 30;
+      left: 0;
+      right: 0;
+      top: calc(100% + 0.4rem);
+      margin: 0;
+      padding: 0.35rem;
+      list-style: none;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .place-list[hidden] { display: none; }
+    .place-option {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      min-height: 44px;
+      margin: 0;
+      padding: 0.4rem 0.95rem;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.25;
+      text-align: left;
+      cursor: pointer;
+    }
+    .place-option .sub { font-weight: 500; font-style: italic; font-size: 0.8rem; color: var(--muted); }
+    .place-option:hover,
+    .place-option[aria-selected="true"] { background: var(--soft); }
+    .place-option:focus-visible { outline: 3px solid var(--sage); outline-offset: 1px; }
     textarea {
       display: block;
       width: 100%;
@@ -346,7 +385,10 @@
 
           <div class="field">
             <label for="place">What's it called <span class="hint">how it'd read on the card</span></label>
-            <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Bar Oliver">
+            <div class="place-combo">
+              <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Bar Oliver" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
+              <ul id="place-list" class="place-list" role="listbox" hidden></ul>
+            </div>
             <p class="error" id="err-restaurant"></p>
           </div>
 
@@ -467,9 +509,15 @@
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
   <script src="validate.js"></script>
+  <script src="places.js"></script>
   <script>
     // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
     var FORM_ENDPOINT = '';
+    // PASTE A NEW BROWSER KEY HERE. Leave it empty until then.
+    // It ships in the page, so it is not a server secret. Restrict it to
+    // friendnotphoe.com and to Maps JavaScript API + Places API (New).
+    // Steps are in _input-form/README.md.
+    var MAPS_API_KEY = '';
     // Optional speed bump. Not a secret: anyone who can open this page can read it.
     // If you set it, set the same value on SHARED_TOKEN in Code.gs.
     var SHARED_TOKEN = '';
@@ -666,6 +714,155 @@
     form.addEventListener('input', updateCard);
     form.addEventListener('change', updateCard);
     updateCard();
+
+    // Official Maps JavaScript API bootstrap loader:
+    // https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+    function installMapsLoader(key) {
+      if (window.google && google.maps && typeof google.maps.importLibrary === 'function') return;
+      (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })({
+        key: key,
+        v: "weekly"
+      });
+    }
+
+    function bindPlaces(lib) {
+      var list = document.getElementById('place-list');
+      var token = null;
+      var requestId = 0;
+      var active = -1;
+      var current = [];
+      var timer = null;
+
+      function closeList() {
+        list.hidden = true;
+        list.replaceChildren();
+        place.setAttribute('aria-expanded', 'false');
+        place.removeAttribute('aria-activedescendant');
+        active = -1;
+        current = [];
+      }
+
+      function paint() {
+        list.replaceChildren();
+        current.forEach(function (item, index) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'place-option';
+          button.id = 'place-opt-' + index;
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', index === active ? 'true' : 'false');
+          var main = document.createElement('span');
+          main.textContent = item.label.main;
+          button.appendChild(main);
+          if (item.label.secondary) {
+            var sub = document.createElement('span');
+            sub.className = 'sub';
+            sub.textContent = item.label.secondary;
+            button.appendChild(sub);
+          }
+          button.addEventListener('mousedown', function (event) { event.preventDefault(); });
+          button.addEventListener('click', function () { choose(index); });
+          list.appendChild(button);
+        });
+        var open = current.length > 0;
+        list.hidden = !open;
+        place.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (active >= 0) place.setAttribute('aria-activedescendant', 'place-opt-' + active);
+        else place.removeAttribute('aria-activedescendant');
+      }
+
+      function applyFields(fields) {
+        if (fields.name) place.value = fields.name;
+        document.getElementById('maps').value = fields.maps;
+        document.getElementById('city').value = fields.city;
+        document.getElementById('area').value = fields.area;
+        place.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      function choose(index) {
+        var item = current[index];
+        if (!item) return;
+        var prediction = item.prediction;
+        closeList();
+        NoBallPlaces.readPlace(prediction).then(function (fields) {
+          applyFields(fields);
+          token = null;
+        }).catch(function () {
+          token = null;
+        });
+      }
+
+      function searchNow() {
+        var value = place.value.trim();
+        if (value.length < 2) {
+          closeList();
+          return;
+        }
+        if (!token) token = new lib.AutocompleteSessionToken();
+        var id = ++requestId;
+        NoBallPlaces.search(lib, value, token).then(function (suggestions) {
+          if (id !== requestId) return;
+          current = [];
+          (suggestions || []).forEach(function (suggestion) {
+            var prediction = suggestion.placePrediction;
+            if (!prediction) return;
+            current.push({ prediction: prediction, label: NoBallPlaces.suggestionLabel(prediction) });
+          });
+          active = current.length ? 0 : -1;
+          paint();
+        }).catch(function () {
+          if (id === requestId) closeList();
+        });
+      }
+
+      place.addEventListener('input', function () {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(searchNow, 200);
+      });
+      place.addEventListener('keydown', function (event) {
+        if (list.hidden) return;
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          active = Math.min(current.length - 1, active + 1);
+          paint();
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          active = Math.max(0, active - 1);
+          paint();
+        } else if (event.key === 'Enter' && active >= 0) {
+          event.preventDefault();
+          choose(active);
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          closeList();
+        }
+      });
+      document.addEventListener('click', function (event) {
+        if (!place.contains(event.target) && !list.contains(event.target)) closeList();
+      });
+      form.addEventListener('reset', function () { window.setTimeout(closeList, 0); });
+    }
+
+    function initPlaces(key) {
+      if (!key || place.getAttribute('data-places')) return;
+      place.setAttribute('data-places', 'loading');
+      try {
+        installMapsLoader(key);
+      } catch (e) {
+        place.setAttribute('data-places', 'failed');
+        return;
+      }
+      NoBallPlaces.loadLibrary(key, google.maps.importLibrary).then(function (lib) {
+        if (!lib) {
+          place.setAttribute('data-places', 'failed');
+          return;
+        }
+        place.setAttribute('data-places', 'on');
+        bindPlaces(lib);
+      });
+    }
+    window.initPlaces = initPlaces;
+    initPlaces(MAPS_API_KEY);
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();

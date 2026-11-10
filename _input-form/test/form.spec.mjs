@@ -90,6 +90,8 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
   assert.equal(await page.title(), "For us amongst friends");
   assert.equal(await page.locator("h1").textContent(), "For us amongst friends");
+  assert.equal(await page.locator("#place").getAttribute("data-places"), null);
+  assert.equal(await page.locator("#place-list").isHidden(), true);
   assert.equal(await page.locator(".subtitle").count(), 0);
   const coin = await page.locator(".corner-coin").boundingBox();
   const pad = label === "desktop" ? { x: 32, y: 24 } : { x: 24, y: 9.6 };
@@ -231,6 +233,133 @@ async function exercise(page, label, base) {
   assert.equal(await page.inputValue("#place"), "Forsythia");
 }
 
+function installPlacesMock() {
+  const samples = [
+    {
+      name: "C + B",
+      secondary: "East Village, New York",
+      uri: "https://maps.google.com/?cid=111",
+      components: [
+        { longText: "East Village", types: ["neighborhood", "political"] },
+        { longText: "Manhattan", types: ["sublocality_level_1", "sublocality", "political"] },
+        { longText: "New York", types: ["locality", "political"] },
+      ],
+    },
+    {
+      name: "Bar Oliver",
+      secondary: "Chinatown, New York",
+      uri: "https://maps.google.com/?cid=222",
+      components: [
+        { longText: "Chinatown", types: ["neighborhood"] },
+        { longText: "New York", types: ["locality", "political"] },
+      ],
+    },
+    {
+      name: "Smor",
+      secondary: "East Village, New York",
+      uri: "https://maps.google.com/?cid=333",
+      components: [
+        { longText: "East Village", types: ["neighborhood"] },
+        { longText: "New York", types: ["locality", "political"] },
+      ],
+    },
+  ];
+  window.__placesLog = { requests: [], fields: null, tokens: 0 };
+  function Token() { this.id = ++window.__placesLog.tokens; }
+  window.google = {
+    maps: {
+      importLibrary() {
+        return Promise.resolve({
+          AutocompleteSessionToken: Token,
+          AutocompleteSuggestion: {
+            fetchAutocompleteSuggestions(body) {
+              window.__placesLog.requests.push({
+                input: body.input,
+                types: body.includedPrimaryTypes.slice(),
+                token: body.sessionToken && body.sessionToken.id,
+              });
+              return Promise.resolve({
+                suggestions: samples.map((sample) => ({
+                  placePrediction: {
+                    mainText: { toString() { return sample.name; } },
+                    secondaryText: { toString() { return sample.secondary; } },
+                    text: { toString() { return `${sample.name}, ${sample.secondary}`; } },
+                    toPlace() {
+                      return {
+                        displayName: sample.name,
+                        googleMapsURI: sample.uri,
+                        addressComponents: sample.components,
+                        fetchFields(options) {
+                          window.__placesLog.fields = options.fields.slice();
+                          return Promise.resolve();
+                        },
+                      };
+                    },
+                  },
+                })),
+              });
+            },
+          },
+        });
+      },
+    },
+  };
+}
+
+async function placesFlow(page, label, base) {
+  const mapsCalls = [];
+  await page.route("https://maps.googleapis.com/**", (route) => {
+    mapsCalls.push(route.request().url());
+    return route.abort();
+  });
+  await page.addInitScript(installPlacesMock);
+  await page.goto(`${base}/input-form/`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => initPlaces("test-key"));
+  await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "on");
+  await page.fill("#place", "C +");
+  await page.locator(".place-option").first().waitFor();
+  assert.equal(await page.locator(".place-option").count(), 3);
+  assert.equal(await page.locator("#place").getAttribute("aria-expanded"), "true");
+  await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v3_places_${label}.png`) });
+  const before = await page.evaluate(() => window.__placesLog.requests.slice());
+  assert.equal(before.length, 1);
+  assert.deepEqual(before[0].types, ["restaurant", "bar", "cafe", "food"]);
+  assert.equal(before[0].token, 1);
+  await page.locator(".place-option").first().click();
+  await page.waitForFunction(() => document.getElementById("city").value === "NYC");
+  assert.equal(await page.inputValue("#place"), "C + B");
+  assert.equal(await page.inputValue("#maps"), "https://maps.google.com/?cid=111");
+  assert.equal(await page.inputValue("#area"), "East Village");
+  assert.equal(await page.locator("#card-name").textContent(), "C + B");
+  assert.equal(await page.locator("#card-area").textContent(), "East Village, NYC");
+  const fields = await page.evaluate(() => window.__placesLog.fields);
+  assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents"]);
+  await page.fill("#area", "Lower East Side");
+  assert.equal(await page.inputValue("#area"), "Lower East Side");
+  await page.fill("#place", "Smor");
+  await page.locator(".place-option").first().waitFor();
+  const after = await page.evaluate(() => window.__placesLog.requests.map((item) => item.token));
+  assert.deepEqual(after, [1, 2]);
+  assert.equal(mapsCalls.length, 0, `${label} mock must not call Google`);
+}
+
+async function placesLoadFailure(page, base) {
+  await page.addInitScript(() => {
+    window.google = { maps: { importLibrary: () => Promise.reject(new Error("could not load")) } };
+  });
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  await page.goto(`${base}/input-form/`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => initPlaces("test-key"));
+  await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "failed");
+  await page.fill("#place", "Typed by hand");
+  await page.fill("#city", "NYC");
+  assert.equal(await page.inputValue("#place"), "Typed by hand");
+  assert.equal(await page.locator("#place-list").isHidden(), true);
+  assert.equal(await page.locator("#place").getAttribute("aria-expanded"), "false");
+  assert.deepEqual(errors, []);
+}
+
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({
@@ -244,6 +373,15 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await exercise(mobile, "mobile", base);
   await mobile.close();
+  const placesDesktop = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await placesFlow(placesDesktop, "desktop", base);
+  await placesDesktop.close();
+  const placesMobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await placesFlow(placesMobile, "mobile", base);
+  await placesMobile.close();
+  const placesFailed = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await placesLoadFailure(placesFailed, base);
+  await placesFailed.close();
   console.log("form checks passed");
 } finally {
   await browser.close();
