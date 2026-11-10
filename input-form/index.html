@@ -4,226 +4,472 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#5a6f5e">
-  <title>Add a No Ball</title>
+  <meta name="theme-color" content="#fafafa">
+  <title>For us amongst friends</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
-  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&amp;display=swap" rel="stylesheet">
   <style>
-    /* Colors and Luckiest Guy are borrowed from the public site. This page does not use its stylesheet. */
+    /* Tokens copied from the site's inline styles in /index.html. This page never loads or edits them. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --sage: #5a6f5e;
       --sage-dark: #4a5f4e;
       --ink: #2d3748;
+      --body: #4a5568;
       --muted: #718096;
+      --faint: #a0aec0;
       --line: #e4dfd6;
-      --paper: #fafafa;
-      --card: #ffffff;
+      --line-hover: #b9c4bb;
       --soft: #e8f0ea;
-      --food: #8FB64D;
-      --drink: #61B7F4;
-      --gold: #E8C347;
-      --danger: #8f3d3d;
-      --danger-bg: #f8ecec;
+      --cream: #F4EFE6;
+      --linen: #ece5d8;
+      --stitch: #9e1c35;
+      --wasta: rgba(201, 20, 40, 0.75);
     }
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #fafafa;
+      color: var(--ink);
+      line-height: 1.5;
       min-height: 100vh;
       min-height: 100dvh;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      font-size: 16px;
-      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
     }
-    main {
-      width: min(100%, 40rem);
-      margin: 0 auto;
-      padding: 1.25rem 1rem 3rem;
-    }
-    h1 {
-      margin: 0.25rem 0 0.35rem;
-      font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
-      font-weight: 400;
-      font-size: clamp(2.4rem, 10vw, 3.4rem);
-      letter-spacing: 0.02em;
+    input, textarea, button { font: inherit; color: inherit; }
+
+    header { background-color: white; padding: 0.6rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; }
+    .corner-coin { width: 72px; height: 72px; display: block; }
+    .coin-link { display: block; border-radius: 50%; }
+    .coin-link:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+
+    main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; animation: riseIn 0.5s ease both; }
+    .page-header { padding: 2rem 1.5rem 0.5rem; container-type: inline-size; }
+    .page-header h1 { color: var(--sage); margin-bottom: .5rem; font-size: clamp(24px, 7.5cqi, 40px); line-height: 1.2; }
+    .subtitle { display: flex; justify-content: space-between; gap: 1rem; color: var(--body); font-style: italic; font-size: clamp(12px, 3.3cqi, 17.6px); }
+
+    form { display: grid; gap: 0 2.5rem; padding: 0 1.5rem; grid-template-columns: 1fr; }
+    .fields { min-width: 0; }
+
+    .block { padding-top: 1.75rem; }
+    .block h2 {
+      font-size: 1.5rem;
       color: var(--sage);
-      line-height: 1;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--soft);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
     }
-    .lede { margin: 0 0 1.25rem; color: var(--muted); }
-    form {
-      background: var(--card);
+    .block h2 .aside { font-size: 0.85rem; font-weight: 500; font-style: italic; color: var(--faint); text-align: right; }
+
+    .field { margin-bottom: 1.1rem; min-width: 0; }
+    fieldset { border: 0; min-width: 0; }
+    .field > label, .field > legend {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem;
+      width: 100%;
+      font-size: 0.95rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem;
+    }
+    .hint { font-size: 0.8rem; font-weight: 500; font-style: italic; color: var(--muted); text-align: right; }
+    .pair { display: grid; gap: 0 0.9rem; grid-template-columns: 1fr 1fr; }
+
+    .text {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.7rem 1.05rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      font-size: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .text::placeholder, textarea::placeholder { color: var(--faint); font-style: italic; }
+    .text:hover, textarea:hover { border-color: var(--line-hover); }
+    .text:focus, textarea:focus { outline: none; border-color: var(--sage); box-shadow: 0 0 0 3px var(--soft); }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 8.5rem;
+      padding: 0.85rem 1.05rem;
       border: 1px solid var(--line);
       border-radius: 18px;
-      padding: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    }
-    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-    legend, label { display: block; font-size: 0.92rem; font-weight: 600; margin-bottom: 0.35rem; }
-    .hint { color: var(--muted); font-weight: 500; }
-    .field { margin-bottom: 0.95rem; }
-    .grid-2, .grid-3 { display: grid; gap: 0.75rem; }
-    input, textarea, button { font: inherit; color: inherit; }
-    input, textarea {
-      width: 100%;
-      min-height: 48px;
-      padding: 0.65rem 0.75rem;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #fff;
+      background: white;
       font-size: 16px;
+      line-height: 1.45;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    textarea { min-height: 8.5rem; resize: vertical; line-height: 1.4; }
-    input:focus-visible, textarea:focus-visible, .choice input:focus-visible + span {
-      outline: 3px solid var(--sage);
-      outline-offset: 2px;
+    .invalid .text, .invalid textarea, .invalid .hp-box, .invalid .num { border-color: var(--wasta); }
+
+    /* HP: same "HP 270" lockup the cards use */
+    .hp-box {
+      display: inline-flex; align-items: baseline; gap: 0.45rem;
+      min-height: 64px; padding: 0.35rem 1.2rem 0.35rem 1.25rem;
+      border: 1px solid var(--line); border-radius: 999px; background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .choices { display: grid; gap: 0.5rem; }
-    .choice {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      min-height: 48px;
-      padding: 0.35rem 0.7rem;
-      border: 1px solid var(--line);
+    .hp-box:focus-within { border-color: var(--sage); box-shadow: 0 0 0 3px var(--soft); }
+    .hp-box span { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+    #score {
+      width: 3.4ch; border: 0; background: transparent; outline: none;
+      font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: #111;
+      font-variant-numeric: tabular-nums;
+    }
+    #score::placeholder { color: #cbd5e0; }
+    .hp-scale { margin-left: 0.85rem; font-size: 0.8rem; font-style: italic; color: var(--muted); }
+
+    /* Category: the Explore filter chips, card colors and all */
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .chip { position: relative; }
+    .chip input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+    .chip span {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      height: 40px; padding: 0 1rem;
+      border: 1px solid var(--line); border-radius: 999px; background: white;
+      font-size: 0.85rem; font-weight: 500; color: var(--body);
+      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .chip span::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--kind); flex-shrink: 0; }
+    .chip.kind-vibes { --kind: transparent; --kind-soft: var(--sage); }
+    .chip.kind-vibes span::before { box-shadow: inset 0 0 0 1.5px var(--faint); }
+    .chip.kind-drink { --kind: #61B7F4; --kind-soft: #95CCF7; }
+    .chip.kind-food { --kind: #8FB64D; --kind-soft: #B6D08C; }
+    .chip.kind-gold { --kind: #E8C347; --kind-soft: #F2DA92; }
+    .chip:hover span { border-color: var(--kind); color: var(--ink); }
+    .chip.kind-vibes:hover span { border-color: var(--line-hover); }
+    .chip input:checked + span { background-color: var(--kind-soft); border-color: var(--kind); color: var(--ink); font-weight: 600; }
+    .chip input:checked + span::before { box-shadow: 0 0 0 2px rgba(255,255,255,0.7); }
+    .chip.kind-vibes input:checked + span { border-color: var(--sage); color: white; }
+    .chip.kind-vibes input:checked + span::before { box-shadow: inset 0 0 0 1.5px white; }
+    .chip input:focus-visible + span { outline: 3px solid var(--sage); outline-offset: 2px; }
+
+    .counter { margin-top: 0.4rem; font-size: 0.8rem; font-style: italic; color: var(--faint); font-variant-numeric: tabular-nums; text-align: right; }
+    .counter.over { color: var(--wasta); font-weight: 600; }
+
+    /* Food / Drink / Scene: the card's stat bars, draggable */
+    .stat { display: grid; grid-template-columns: 4.2rem 1fr 4.4rem; align-items: center; gap: 0.85rem; margin-bottom: 0.2rem; }
+    .stat > label { font-weight: 800; font-size: 1rem; color: #111; }
+    .bar {
+      --v: 0%;
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 18px; margin: 0;
       border-radius: 999px;
-      background: #fff;
-    }
-    .choice input { width: 1.15rem; height: 1.15rem; min-height: 0; accent-color: var(--sage); }
-    .swatch { width: 0.85rem; height: 0.85rem; border-radius: 50%; flex: none; border: 1px solid rgba(0,0,0,0.12); }
-    .swatch.food { background: var(--food); }
-    .swatch.drink { background: var(--drink); }
-    .swatch.gold { background: var(--gold); }
-    .swatch.plain { background: transparent; border-style: dashed; border-color: var(--muted); }
-    .counter { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.92rem; font-variant-numeric: tabular-nums; }
-    .counter.over { color: var(--danger); font-weight: 650; }
-    .error { min-height: 0; margin: 0.3rem 0 0; color: var(--danger); font-size: 0.9rem; }
-    .status {
-      margin: 0 0 0.9rem;
-      padding: 0.75rem 0.85rem;
-      border-radius: 12px;
-      display: none;
-    }
-    .status.show { display: block; }
-    .status.ok { background: var(--soft); color: var(--sage-dark); }
-    .status.bad { background: var(--danger-bg); color: var(--danger); }
-    button {
-      width: 100%;
-      min-height: 52px;
-      border: 0;
-      border-radius: 999px;
-      background: var(--sage);
-      color: #fff;
-      font-weight: 650;
+      border: 1px solid rgba(0,0,0,0.28);
+      background: linear-gradient(#000, #000) 0 0 / var(--v) 100% no-repeat, linear-gradient(#fbfaf7, #e9e6df);
       cursor: pointer;
     }
-    button:hover { background: var(--sage-dark); }
-    button:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
-    button:disabled { opacity: 0.65; cursor: progress; }
-    .hp-field {
-      position: absolute;
-      left: -10000px;
-      width: 1px;
-      height: 1px;
+    .bar::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: white; border: 3px solid #000; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+    .bar::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid #000; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+    .bar::-moz-range-track { background: transparent; }
+    .stat.unset .bar::-webkit-slider-thumb { border-color: var(--faint); }
+    .stat.unset .bar::-moz-range-thumb { border-color: var(--faint); }
+    .num {
+      width: 100%; min-height: 44px; padding: 0 0.5rem;
+      border: 1px solid var(--line); border-radius: 999px; background: white;
+      text-align: center; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .num::placeholder { color: var(--faint); font-weight: 500; }
+    .num:focus { outline: none; border-color: var(--sage); box-shadow: 0 0 0 3px var(--soft); }
+    .stat-err { margin: 0 0 0.6rem 5.05rem; }
+
+    .error { font-size: 0.85rem; font-weight: 600; color: var(--wasta); margin-top: 0.35rem; }
+    .error:empty { display: none; }
+
+    .status {
+      display: none;
+      margin-top: 1.5rem;
+      padding: 0.75rem 1.1rem;
+      border-radius: 18px;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 0.9rem; font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .status.show { display: block; animation: riseIn 0.3s ease both; }
+    .status.bad { color: #8c1d2c; }
+
+    .actions { padding: 0.75rem 0 1rem; }
+    .send {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; padding: 0 2.4rem;
+      border: none; border-radius: 999px;
+      background: var(--ink); color: white;
+      font-weight: 600; font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+    }
+    .send:hover { transform: translateY(-2px); background: #1a202c; }
+    .send:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+    .send:disabled { opacity: 0.6; cursor: progress; transform: none; }
+    .fine { margin-top: 0.7rem; font-size: 0.8rem; font-style: italic; color: var(--faint); }
+
+    /* Live card: a CSS stand-in for the printed card art */
+    .preview { padding-top: 1.75rem; }
+    .preview-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-style: italic; color: var(--faint); margin-bottom: 0.75rem; }
+    .np-card {
+      --ground: var(--linen); --panel: var(--cream); --kind: transparent;
+      position: relative;
+      width: 100%; max-width: 340px; margin: 0 auto;
+      aspect-ratio: 750 / 1050;
+      border-radius: 4.5cqi;
+      background: var(--ground);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      container-type: inline-size;
+      transition: background-color 0.35s ease;
+      color: #111;
+    }
+    .np-card[data-kind="Food first"] { --ground: #bcd596; --panel: #d3e5b4; --kind: #8FB64D; }
+    .np-card[data-kind="Drinks first"] { --ground: #8fc2ec; --panel: #bddaf2; --kind: #61B7F4; }
+    .np-card[data-kind="Legendary"] { --ground: #f1c65c; --panel: #f7e6b4; --kind: #E8C347; }
+    /* cross-stitch band: two hatch layers make the Xs, the panel's ground-colored ring trims the inside edge */
+    .np-card::before {
+      content: ''; position: absolute; inset: 2.6cqi;
+      border-radius: 3.2cqi;
+      background:
+        repeating-linear-gradient(45deg, var(--stitch) 0 0.55cqi, transparent 0.55cqi 1.7cqi),
+        repeating-linear-gradient(-45deg, var(--stitch) 0 0.55cqi, transparent 0.55cqi 1.7cqi);
+      opacity: 0.92;
+      pointer-events: none;
+    }
+    .np-inner {
+      position: absolute; inset: 6.6cqi 6.4cqi 7cqi;
+      display: flex; flex-direction: column; gap: 2.2cqi;
+      padding: 3cqi 3.2cqi;
+      border-radius: 3cqi;
+      background: var(--panel);
+      box-shadow: inset 0 0 0 0.5cqi rgba(255,255,255,0.75), 0 0 0 1.4cqi var(--ground);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
       overflow: hidden;
     }
-    @media (min-width: 700px) {
-      main { padding-top: 2.5rem; }
-      form { padding: 1.25rem 1.35rem 1.35rem; }
-      .grid-2 { grid-template-columns: 1fr 1fr; }
-      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-      .choices { grid-template-columns: 1fr 1fr; }
+    .np-top { display: flex; align-items: center; gap: 2cqi; min-height: 9cqi; }
+    .np-pill { flex-shrink: 0; max-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.3cqi 2cqi; border: 0.35cqi solid #111; border-radius: 999px; font-size: 3cqi; font-style: italic; background: rgba(255,255,255,0.35); }
+    .np-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 5.6cqi; font-weight: 800; letter-spacing: -0.01em; }
+    .np-hp { flex-shrink: 0; display: flex; align-items: baseline; gap: 0.8cqi; }
+    .np-hp small { font-size: 2.9cqi; }
+    .np-hp b { font-size: 6.4cqi; font-weight: 800; letter-spacing: -0.02em; }
+    .np-icon { flex-shrink: 0; width: 6.6cqi; height: 6.6cqi; border-radius: 50%; background: var(--kind); box-shadow: inset 0 0 0 0.4cqi rgba(0,0,0,0.12); opacity: 0.85; }
+    .np-card:not([data-kind]) .np-icon, .np-card[data-kind="Vibes first"] .np-icon { background: transparent; box-shadow: inset 0 0 0 0.4cqi rgba(0,0,0,0.25); }
+    .np-photo {
+      flex: 1 1 37%;
+      min-height: 20%;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 2.2cqi;
+      background: repeating-linear-gradient(135deg, rgba(255,255,255,0.5) 0 2cqi, rgba(255,255,255,0.32) 2cqi 4cqi);
+      box-shadow: inset 0 0 0 0.6cqi rgba(255,255,255,0.85), 0 0.4cqi 1.4cqi rgba(0,0,0,0.12);
+      font-size: 3.1cqi; font-style: italic; color: rgba(17,17,17,0.45);
+    }
+    .np-area { align-self: center; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.3cqi 2.4cqi; border: 0.3cqi solid #111; border-radius: 999px; font-size: 2.8cqi; font-style: italic; background: rgba(255,255,255,0.55); }
+    .np-h { font-size: 3.3cqi; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+    .np-vibes { margin-top: -1.4cqi; font-size: 3.15cqi; line-height: 1.32; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; min-height: 4em; }
+    .np-stitch { flex-shrink: 0; height: 1.6cqi; background: repeating-linear-gradient(90deg, var(--stitch) 0 0.9cqi, transparent 0.9cqi 1.5cqi); border-radius: 1cqi; opacity: 0.9; }
+    .np-stats { display: grid; gap: 2.4cqi; padding-top: 0.6cqi; }
+    .np-row { display: grid; grid-template-columns: 11cqi 1fr; align-items: center; gap: 2cqi; font-size: 3.2cqi; font-weight: 800; }
+    .np-track { height: 2.8cqi; border-radius: 999px; background: linear-gradient(#fbfaf7, #e9e6df); box-shadow: inset 0 0 0 0.3cqi rgba(0,0,0,0.25); overflow: hidden; }
+    .np-track, .np-fill { display: block; }
+    .np-fill { height: 100%; width: 0; border-radius: 999px; background: #000; transition: width 0.25s ease; }
+    .is-empty { color: rgba(17,17,17,0.35); }
+    .np-pill.is-empty, .np-area.is-empty { border-color: rgba(17,17,17,0.3); }
+    .np-handle { position: absolute; left: 50%; bottom: 1.9cqi; transform: translateX(-50%); padding: 0.2cqi 2cqi; border-radius: 1cqi; background: var(--ground); font-size: 2.4cqi; font-style: italic; font-weight: 700; color: var(--stitch); white-space: nowrap; transition: background-color 0.35s ease; }
+
+    .twinkle {
+      position: absolute; pointer-events: none; z-index: 2; opacity: 0;
+      color: #ffdfa5;
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 7px rgba(199, 138, 42, 0.8);
+      font-size: 5cqi; line-height: 1;
+      display: none;
+      animation: twinkle var(--tw-dur, 3s) ease-in-out var(--tw-delay, 0s) infinite;
+    }
+    .np-card[data-kind="Legendary"] .twinkle { display: block; }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(0deg); }
+      35% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.05) rotate(15deg); }
+      65% { opacity: 0.95; transform: translate(-50%, -50%) scale(1) rotate(28deg); }
+    }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes boomIn { 0% { transform: scale(0.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+    .np-card.landed { animation: boomIn 0.45s ease; }
+
+    .honey { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+    footer { padding: 2rem 1.5rem; margin-top: 3rem; color: var(--muted); font-size: 0.95rem; }
+    footer a { color: var(--muted); text-decoration: none; }
+
+    @media (min-width: 900px) {
+      header { padding: 1.5rem 2rem; }
+      .page-header { padding: 3rem 2rem 0.5rem; }
+      form { padding: 0 2rem; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "fields preview" "actions preview"; align-items: start; }
+      .fields { grid-area: fields; }
+      .actions { grid-area: actions; }
+      .preview { grid-area: preview; position: sticky; top: 9rem; }
+      footer { padding: 2rem; }
+    }
+    @media (max-width: 560px) {
+      .chip span { padding: 0 0.85rem; }
+      .stat { grid-template-columns: 3.6rem 1fr 4rem; gap: 0.7rem; }
+      .stat-err { margin-left: 4.3rem; }
+      .preview { padding-top: 1.25rem; }
+      .np-card { max-width: 300px; }
+      .send { width: 100%; }
+      .fine { text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      main, .status.show, .np-card.landed { animation: none; }
+      .twinkle { display: none !important; }
+      .np-fill, .np-card, .np-inner { transition: none; }
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="header-content">
+      <a class="coin-link" href="/"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin" width="72" height="72"></a>
+    </div>
+  </header>
+
   <main>
-    <h1>No Ball</h1>
-    <p class="lede">Send a place for a card. It goes on Zaid’s sheet, then the form clears for the next place. Your name stays filled.</p>
+    <div class="page-header">
+      <h1>For us amongst friends</h1>
+      <div class="subtitle"><span>You found a spot…</span><span>… we make it a card</span></div>
+    </div>
+
     <form id="entry" novalidate>
-      <p id="status" class="status" role="status"></p>
+      <div class="fields">
+        <p id="status" class="status" role="status"></p>
 
-      <div class="field">
-        <label for="friend">Your name</label>
-        <input id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next">
-        <p class="error" id="err-submittedBy"></p>
-      </div>
+        <section class="block">
+          <h2>The spot <span class="aside">who, what, where</span></h2>
 
-      <div class="field">
-        <label for="place">Place name</label>
-        <input id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next">
-        <p class="error" id="err-restaurant"></p>
-      </div>
+          <div class="field">
+            <label for="friend">Your name <span class="hint">so we know who to thank</span></label>
+            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Zaid">
+            <p class="error" id="err-submittedBy"></p>
+          </div>
 
-      <div class="field">
-        <label for="maps">Google Maps link <span class="hint">(optional)</span></label>
-        <input id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://maps.google.com/…" enterkeyhint="next">
-        <p class="error" id="err-maps"></p>
-      </div>
+          <div class="field">
+            <label for="place">What's it called <span class="hint">how it'd read on the card</span></label>
+            <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Bar Oliver">
+            <p class="error" id="err-restaurant"></p>
+          </div>
 
-      <div class="grid-2">
-        <div class="field">
-          <label for="city">City</label>
-          <input id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next">
-          <p class="error" id="err-city"></p>
+          <div class="field">
+            <label for="maps">Google Maps link <span class="hint">optional, saves us a search</span></label>
+            <input class="text" id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="Paste the share link" enterkeyhint="next">
+            <p class="error" id="err-maps"></p>
+          </div>
+
+          <div class="pair">
+            <div class="field">
+              <label for="city">City</label>
+              <input class="text" id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="NYC">
+              <p class="error" id="err-city"></p>
+            </div>
+            <div class="field">
+              <label for="area">Neighborhood</label>
+              <input class="text" id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="East Village">
+              <p class="error" id="err-area"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>The card <span class="aside">how it plays</span></h2>
+
+          <div class="field">
+            <label for="score">HP <span class="hint">1 to 300, save the big numbers</span></label>
+            <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next" placeholder="270"></span><span class="hp-scale">300 = undefeated</span></div>
+            <p class="error" id="err-hp"></p>
+          </div>
+
+          <fieldset class="field">
+            <legend>What's it for <span class="hint">pick one</span></legend>
+            <div class="chips">
+              <label class="chip kind-vibes"><input type="radio" name="category" value="Vibes first"><span>Vibes first</span></label>
+              <label class="chip kind-drink"><input type="radio" name="category" value="Drinks first"><span>Drinks first</span></label>
+              <label class="chip kind-food"><input type="radio" name="category" value="Food first"><span>Food first</span></label>
+              <label class="chip kind-gold"><input type="radio" name="category" value="Legendary"><span>Legendary</span></label>
+            </div>
+            <p class="error" id="err-category"></p>
+          </fieldset>
+
+          <div class="field">
+            <label for="vibes">Vibes <span class="hint">say it like you'd text the group chat</span></label>
+            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="Killer sandwich menu, kind of worth it if you're chilling. Sandwich, then Tompkins."></textarea>
+            <p class="counter" id="counter">0/50 words · 0/250</p>
+            <p class="error" id="err-vibes"></p>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>The stats <span class="aside">out of 100, be honest</span></h2>
+
+          <div class="stat unset" data-stat="food">
+            <label for="food">Food</label>
+            <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="food">
+            <input class="num" id="food" name="food" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+          </div>
+          <p class="error stat-err" id="err-food"></p>
+
+          <div class="stat unset" data-stat="drink">
+            <label for="drinks">Drink</label>
+            <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="drinks">
+            <input class="num" id="drinks" name="drink" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+          </div>
+          <p class="error stat-err" id="err-drink"></p>
+
+          <div class="stat unset" data-stat="scene">
+            <label for="scene">Scene</label>
+            <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="scene">
+            <input class="num" id="scene" name="scene" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+          </div>
+          <p class="error stat-err" id="err-scene"></p>
+        </section>
+
+        <div class="honey" aria-hidden="true">
+          <label for="company">Company website</label>
+          <input id="company" name="company_website" tabindex="-1" autocomplete="off">
         </div>
-        <div class="field">
-          <label for="area">Area of that city</label>
-          <input id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next">
-          <p class="error" id="err-area"></p>
-        </div>
       </div>
 
-      <div class="field">
-        <label for="score">Score <span class="hint">(1–300)</span></label>
-        <input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next">
-        <p class="error" id="err-hp"></p>
-      </div>
-
-      <fieldset class="field">
-        <legend>Category</legend>
-        <div class="choices">
-          <label class="choice"><input type="radio" name="category" value="Vibes first"><span class="swatch plain" aria-hidden="true"></span><span>Vibes first</span></label>
-          <label class="choice"><input type="radio" name="category" value="Drinks first"><span class="swatch drink" aria-hidden="true"></span><span>Drinks first</span></label>
-          <label class="choice"><input type="radio" name="category" value="Food first"><span class="swatch food" aria-hidden="true"></span><span>Food first</span></label>
-          <label class="choice"><input type="radio" name="category" value="Legendary"><span class="swatch gold" aria-hidden="true"></span><span>Legendary</span></label>
+      <aside class="preview" aria-label="Card preview">
+        <div class="preview-label"><span>Your card, live</span><span>photo's on us</span></div>
+        <div class="np-card" id="card" aria-hidden="true">
+          <span class="twinkle" style="left: 14%; top: 9%; --tw-dur: 3.2s;">✦</span>
+          <span class="twinkle" style="left: 86%; top: 47%; --tw-dur: 2.6s; --tw-delay: 1.1s;">✦</span>
+          <span class="twinkle" style="left: 22%; top: 93%; --tw-dur: 3.6s; --tw-delay: 0.5s;">✦</span>
+          <div class="np-inner">
+            <div class="np-top">
+              <span class="np-pill" id="card-city">City</span>
+              <span class="np-name" id="card-name">The spot</span>
+              <span class="np-hp"><small>HP</small><b id="card-hp">—</b></span>
+              <span class="np-icon"></span>
+            </div>
+            <div class="np-photo">photo goes here</div>
+            <span class="np-area" id="card-area">Neighborhood, City</span>
+            <div class="np-h">Vibes</div>
+            <p class="np-vibes" id="card-vibes">The vibes go here…</p>
+            <div class="np-stitch"></div>
+            <div class="np-stats">
+              <div class="np-row"><span>Food</span><span class="np-track"><span class="np-fill" id="card-food"></span></span></div>
+              <div class="np-row"><span>Drink</span><span class="np-track"><span class="np-fill" id="card-drink"></span></span></div>
+              <div class="np-row"><span>Scene</span><span class="np-track"><span class="np-fill" id="card-scene"></span></span></div>
+            </div>
+          </div>
+          <span class="np-handle">@friend_not_phoe</span>
         </div>
-        <p class="error" id="err-category"></p>
-      </fieldset>
+      </aside>
 
-      <div class="field">
-        <label for="vibes">Vibes</label>
-        <textarea id="vibes" name="vibes" maxlength="250" required></textarea>
-        <p class="counter" id="counter">0 / 50 words · 0 / 250 characters</p>
-        <p class="error" id="err-vibes"></p>
+      <div class="actions">
+        <button type="submit" class="send" id="send">Send it</button>
+        <p class="fine">Goes straight to Zaid. Your name sticks around for the next one.</p>
       </div>
-
-      <div class="grid-3">
-        <div class="field">
-          <label for="food">Food <span class="hint">(0–100)</span></label>
-          <input id="food" name="food" inputmode="numeric" maxlength="3" required autocomplete="off">
-          <p class="error" id="err-food"></p>
-        </div>
-        <div class="field">
-          <label for="drinks">Drinks <span class="hint">(0–100)</span></label>
-          <input id="drinks" name="drink" inputmode="numeric" maxlength="3" required autocomplete="off">
-          <p class="error" id="err-drink"></p>
-        </div>
-        <div class="field">
-          <label for="scene">Scene <span class="hint">(0–100)</span></label>
-          <input id="scene" name="scene" inputmode="numeric" maxlength="3" required autocomplete="off">
-          <p class="error" id="err-scene"></p>
-        </div>
-      </div>
-
-      <div class="hp-field" aria-hidden="true">
-        <label for="company">Company website</label>
-        <input id="company" name="company_website" tabindex="-1" autocomplete="off">
-      </div>
-
-      <button type="submit" id="send">Send</button>
     </form>
   </main>
+
+  <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
+
   <script src="validate.js"></script>
   <script>
     // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
@@ -232,14 +478,67 @@
     // If you set it, set the same value on SHARED_TOKEN in Code.gs.
     var SHARED_TOKEN = '';
 
+    var COPY = {
+      send: 'Send it',
+      sending: 'Sending…',
+      fixIt: 'Almost. Fix the red bits.',
+      notConnected: "Not hooked up yet, nothing got sent. Hang on to this one.",
+      saved: "Locked in. Zaid's got it. Got another spot?",
+      unsure: "Not sure that landed. Nothing's cleared, check with Zaid before you send it again.",
+      offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
+      bounced: 'The sheet bounced that. Try again.',
+      tooFast: 'Easy, give it a few seconds, then send.',
+      blocked: "That didn't go through. Try again."
+    };
+
+    // validate.js keeps the plain wording the Apps Script also uses; this page says it in the site's voice.
+    function friendly(key, message) {
+      var long = /or fewer/.test(message) && !/words/.test(message);
+      switch (key) {
+        case 'submittedBy': return long ? 'Keep it under 60 characters.' : 'Need your name. A nickname works.';
+        case 'restaurant': return long ? 'Keep it under 80 characters.' : "What's the spot called?";
+        case 'maps': return "That's not a Google Maps link. Paste one or leave it blank.";
+        case 'city': return long ? 'Keep it under 80 characters.' : 'Which city?';
+        case 'area': return long ? 'Keep it under 80 characters.' : 'Which part of town?';
+        case 'hp': return 'HP is a whole number, 1 to 300.';
+        case 'category': return "Pick one. Can't be everything.";
+        case 'vibes':
+          if (/required/.test(message)) return 'Give it some vibes.';
+          if (/words/.test(message) && /characters/.test(message)) return '50 words and 250 characters max. The card only fits so much.';
+          if (/words/.test(message)) return '50 words max. The card only fits so much.';
+          return '250 characters max. The card only fits so much.';
+        case 'food': return 'Food is 0 to 100, whole numbers.';
+        case 'drink': return 'Drink is 0 to 100, whole numbers.';
+        case 'scene': return 'Scene is 0 to 100, whole numbers.';
+      }
+      return message;
+    }
+
+    var SERVER_KEYS = [
+      [/^Your name/, 'submittedBy'], [/^Place name/, 'restaurant'], [/^Maps link/, 'maps'],
+      [/^City/, 'city'], [/^Area/, 'area'], [/^Score/, 'hp'], [/category/, 'category'],
+      [/^Vibes/, 'vibes'], [/^Food/, 'food'], [/^Drinks/, 'drink'], [/^Scene/, 'scene']
+    ];
+    function friendlyServer(message) {
+      if (!message) return COPY.bounced;
+      if (/few seconds/.test(message)) return COPY.tooFast;
+      if (/didn't go through/.test(message)) return COPY.blocked;
+      for (var i = 0; i < SERVER_KEYS.length; i++) {
+        if (SERVER_KEYS[i][0].test(message)) return friendly(SERVER_KEYS[i][1], message);
+      }
+      return message;
+    }
+
     var form = document.getElementById('entry');
     var statusEl = document.getElementById('status');
     var sendBtn = document.getElementById('send');
     var place = document.getElementById('place');
     var vibes = document.getElementById('vibes');
     var counter = document.getElementById('counter');
+    var card = document.getElementById('card');
     var limits = NoBallValidate.LIMITS;
     var fields = ['submittedBy', 'restaurant', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
+    var statInputs = { food: 'food', drink: 'drinks', scene: 'scene' };
     window.formStartedAt = Date.now();
 
     function selectedCategory() {
@@ -266,18 +565,60 @@
       };
     }
 
+    function rank(value) {
+      var n = Number(String(value).trim());
+      if (String(value).trim() === '' || !isFinite(n)) return null;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function fillText(id, value, fallback) {
+      var el = document.getElementById(id);
+      var text = String(value || '').trim();
+      el.textContent = text || fallback;
+      el.classList.toggle('is-empty', !text);
+    }
+
+    function updateCard() {
+      var city = document.getElementById('city').value.trim();
+      var area = document.getElementById('area').value.trim();
+      fillText('card-name', place.value, 'The spot');
+      fillText('card-city', city, 'City');
+      fillText('card-area', area && city ? area + ', ' + city : area || city, 'Neighborhood, City');
+      fillText('card-hp', document.getElementById('score').value, '—');
+      fillText('card-vibes', vibes.value, 'The vibes go here…');
+      var kind = selectedCategory();
+      if (kind) card.setAttribute('data-kind', kind); else card.removeAttribute('data-kind');
+      Object.keys(statInputs).forEach(function (key) {
+        var v = rank(document.getElementById(statInputs[key]).value);
+        document.getElementById('card-' + key).style.width = (v === null ? 0 : v) + '%';
+      });
+    }
+
+    function syncBar(row) {
+      var num = row.querySelector('.num');
+      var bar = row.querySelector('.bar');
+      var v = rank(num.value);
+      row.classList.toggle('unset', v === null);
+      bar.value = v === null ? 0 : v;
+      bar.style.setProperty('--v', (v === null ? 0 : v) + '%');
+    }
+
     function updateCounter() {
       var words = NoBallValidate.wordCount(vibes.value);
       var chars = vibes.value.trim().length;
-      counter.textContent = words + ' / ' + limits.vibesWords + ' words · ' + chars + ' / ' + limits.vibesChars + ' characters';
-      counter.classList.toggle('over', words > limits.vibesWords || chars > limits.vibesChars);
+      var over = words > limits.vibesWords || chars > limits.vibesChars;
+      counter.textContent = words + '/' + limits.vibesWords + ' words · ' + chars + '/' + limits.vibesChars + (over ? ' · too long for the card' : '');
+      counter.classList.toggle('over', over);
     }
+
+    function errorEl(key) { return document.getElementById('err-' + key); }
 
     function clearFieldErrors() {
       fields.forEach(function (key) {
-        var el = document.getElementById('err-' + key);
+        var el = errorEl(key);
         if (el) el.textContent = '';
       });
+      Array.prototype.forEach.call(form.querySelectorAll('.invalid'), function (el) { el.classList.remove('invalid'); });
     }
 
     function showStatus(message, kind) {
@@ -293,10 +634,14 @@
     function showErrors(errors) {
       var first = null;
       fields.forEach(function (key) {
-        var el = document.getElementById('err-' + key);
+        var el = errorEl(key);
         if (!el) return;
-        el.textContent = errors[key] || '';
-        if (errors[key] && !first) first = key;
+        el.textContent = errors[key] ? friendly(key, errors[key]) : '';
+        if (errors[key]) {
+          var holder = el.previousElementSibling && el.previousElementSibling.classList.contains('stat') ? el.previousElementSibling : el.closest('.field');
+          if (holder) holder.classList.add('invalid');
+          if (!first) first = key;
+        }
       });
       if (first === 'category') form.querySelector('input[name="category"]').focus();
       else if (first === 'submittedBy') document.getElementById('friend').focus();
@@ -308,10 +653,23 @@
 
     function setBusy(busy) {
       sendBtn.disabled = busy;
-      sendBtn.textContent = busy ? 'Sending…' : 'Send';
+      sendBtn.textContent = busy ? COPY.sending : COPY.send;
     }
 
+    Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (row) {
+      var num = row.querySelector('.num');
+      var bar = row.querySelector('.bar');
+      bar.addEventListener('input', function () {
+        num.value = bar.value;
+        syncBar(row);
+        updateCard();
+      });
+      num.addEventListener('input', function () { syncBar(row); });
+    });
     vibes.addEventListener('input', updateCounter);
+    form.addEventListener('input', updateCard);
+    form.addEventListener('change', updateCard);
+    updateCard();
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
@@ -323,18 +681,18 @@
       if (!checked.ok) {
         setBusy(false);
         showErrors(checked.errors);
-        showStatus('Fix the highlighted fields and try again.', 'bad');
+        showStatus(COPY.fixIt, 'bad');
         return;
       }
       if (!FORM_ENDPOINT) {
         setBusy(false);
-        showStatus('Form not connected yet', 'bad');
+        showStatus(COPY.notConnected, 'bad');
         return;
       }
       var spam = NoBallValidate.checkSpam(body, Date.now());
       if (!spam.ok) {
         setBusy(false);
-        showStatus(spam.error, 'bad');
+        showStatus(friendlyServer(spam.error), 'bad');
         return;
       }
       fetch(FORM_ENDPOINT, {
@@ -355,25 +713,30 @@
           var friendName = document.getElementById('friend').value;
           form.reset();
           document.getElementById('friend').value = friendName;
+          Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
           updateCounter();
+          updateCard();
           clearFieldErrors();
+          card.classList.remove('landed');
+          void card.offsetWidth;
+          card.classList.add('landed');
           window.formStartedAt = Date.now() - limits.minFillMs;
-          showStatus('Saved. Add another whenever you want.', 'ok');
+          showStatus(COPY.saved, 'ok');
           place.focus();
           return;
         }
         if (reply.kind === 'opaque') {
-          showStatus("Couldn't read a reply from the sheet. Nothing was cleared — check Friend Submissions before sending again.", 'bad');
+          showStatus(COPY.unsure, 'bad');
           return;
         }
-        showStatus(reply.error || 'The sheet rejected that.', 'bad');
+        showStatus(friendlyServer(reply.error), 'bad');
       }).catch(function () {
-        showStatus("Couldn't reach the sheet. Check your connection and try again.", 'bad');
+        showStatus(COPY.offline, 'bad');
       }).then(function () {
         setBusy(false);
       });
     });
   </script>
-  <noscript><p style="max-width:40rem;margin:1rem auto;padding:0 1rem;">This form needs JavaScript.</p></noscript>
+  <noscript><p style="max-width:40rem;margin:1rem auto;padding:0 1.5rem;">This one needs JavaScript on.</p></noscript>
 </body>
 </html>
