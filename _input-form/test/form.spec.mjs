@@ -36,8 +36,8 @@ const TYPES = {
 function startServer() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, "http://127.0.0.1");
-    if (url.pathname === "/input-form") {
-      res.writeHead(302, { Location: "/input-form/" });
+    if (url.pathname === "/betweenusfriends") {
+      res.writeHead(302, { Location: "/betweenusfriends/" });
       res.end();
       return;
     }
@@ -61,6 +61,41 @@ function startServer() {
     });
   });
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
+}
+
+function publishedMentions() {
+  const hits = [];
+  const walk = (dir) => {
+    for (const name of fs.readdirSync(dir)) {
+      if (name === ".git" || name === "node_modules" || name.startsWith("_") || name === "betweenusfriends") continue;
+      const full = path.join(dir, name);
+      if (fs.statSync(full).isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!/\.(html|js|css|xml|txt|json)$/.test(name)) continue;
+      const text = fs.readFileSync(full, "utf8");
+      if (text.includes("betweenusfriends") || text.includes("/input-form")) hits.push(path.relative(ROOT, full));
+    }
+  };
+  walk(ROOT);
+  return hits;
+}
+
+async function assertRoutes(base) {
+  for (const gone of ["/input-form", "/input-form/", "/input-form/index.html"]) {
+    const res = await fetch(base + gone, { redirect: "manual" });
+    assert.equal(res.status, 404, `${gone} should be gone`);
+  }
+  const bare = await fetch(base + "/betweenusfriends", { redirect: "manual" });
+  assert.equal(bare.status, 302);
+  assert.equal(bare.headers.get("location"), "/betweenusfriends/");
+  const slash = await fetch(base + "/betweenusfriends/");
+  assert.equal(slash.status, 200);
+  assert.match(await slash.text(), /name="robots" content="noindex,nofollow"/);
+  assert.equal((await fetch(base + "/robots.txt", { redirect: "manual" })).status, 404);
+  assert.equal((await fetch(base + "/sitemap.xml", { redirect: "manual" })).status, 404);
+  assert.deepEqual(publishedMentions(), []);
 }
 
 function jpegSize(buffer) {
@@ -184,8 +219,8 @@ async function exercise(page, label, base) {
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (msg) => { if (msg.type() === "error" && !/Failed to load resource/.test(msg.text())) errors.push(msg.text()); });
 
-  await page.goto(`${base}/input-form`, { waitUntil: "domcontentloaded" });
-  assert.ok(page.url().endsWith("/input-form/"), `${label} slash redirect`);
+  await page.goto(`${base}/betweenusfriends`, { waitUntil: "domcontentloaded" });
+  assert.ok(page.url().endsWith("/betweenusfriends/"), `${label} slash redirect`);
   await page.locator("#friend").waitFor();
   // The page ships a real Apps Script URL. Blank it here so this run still
   // covers the disconnected path, and never POST that URL.
@@ -598,7 +633,7 @@ function peak(box) {
 async function fidelity(browser, base) {
   const context = await guardedContext(browser, { viewport: { width: 1700, height: 2300 }, deviceScaleFactor: 2 });
   const page = await context.newPage();
-  await page.goto(`${base}/input-form/`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${base}/betweenusfriends/`, { waitUntil: "domcontentloaded" });
   await page.evaluate(() => { FORM_ENDPOINT = ""; });
   await waitForFonts(page);
   await page.fill("#place", TIME_AGAIN.name);
@@ -792,7 +827,7 @@ async function placesFlow(page, label, base) {
     return route.abort();
   });
   await page.addInitScript(installPlacesMock);
-  await page.goto(`${base}/input-form/`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${base}/betweenusfriends/`, { waitUntil: "domcontentloaded" });
   await page.evaluate(() => initPlaces("test-key"));
   await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "on");
   await page.fill("#place", "C +");
@@ -829,7 +864,7 @@ async function placesLoadFailure(page, base) {
   });
   const errors = [];
   page.on("pageerror", (error) => errors.push(String(error)));
-  await page.goto(`${base}/input-form/`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${base}/betweenusfriends/`, { waitUntil: "domcontentloaded" });
   await page.evaluate(() => initPlaces("test-key"));
   await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "failed");
   await page.fill("#place", "Typed by hand");
@@ -854,6 +889,7 @@ async function guardedContext(browser, options) {
 
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}`;
+await assertRoutes(base);
 const browser = await chromium.launch({
   executablePath: "/usr/bin/google-chrome",
   args: ["--no-sandbox", "--disable-dev-shm-usage"],

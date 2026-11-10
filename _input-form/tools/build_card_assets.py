@@ -9,7 +9,7 @@ in the same place (city pill, icon glyph, bar ends) are cleaned up explicitly.
     python3 _input-form/tools/build_card_assets.py
 
 Reads  index.html and assets/cards-finish-v12/*.webp
-Writes input-form/card/chassis-{green,blue,gold}.webp, glyph-{food,drink,both}.png, card.json
+Writes betweenusfriends/card/chassis-{green,blue,gold}.webp, glyph-{food,drink,both}.png, card.json
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 CARDS = ROOT / "assets" / "cards-finish-v12"
-OUT = ROOT / "input-form" / "card"
+OUT = ROOT / "betweenusfriends" / "card"
 
 W, H = 1500, 2100
 S = 1056 / 1110

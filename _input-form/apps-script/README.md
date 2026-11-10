@@ -1,8 +1,8 @@
 # No Ball submissions (Apps Script)
 
-The public page is `input-form/index.html`. It is not linked from the site. `FORM_ENDPOINT` in that file is the web app URL this script is deployed at. Until that constant is set, the page says it is not hooked up and does not send anything.
+The public page is `betweenusfriends/index.html`. It is not linked from the site. `FORM_ENDPOINT` in that file is the web app URL this script is deployed at. Until that constant is set, the page says it is not hooked up and does not send anything.
 
-GitHub Pages serves the folder as `https://friendnotphoe.com/input-form/` and redirects `/input-form` (no slash) to that address. There is no `robots.txt` in the repo; the page itself sends `noindex, nofollow`.
+GitHub Pages serves the folder as `https://friendnotphoe.com/betweenusfriends/` and redirects `/betweenusfriends` (no slash) to that address. The page itself sends `noindex, nofollow`. There is no `sitemap.xml`, and no `robots.txt`: a Disallow line would name the page.
 
 Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **not** a secret, because the same value would be visible in the page.
 
@@ -11,15 +11,15 @@ Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **n
 1. Open the spreadsheet that holds the card pipeline. Do not edit **Master Reference** or **Sheet1**.
 2. **Extensions → Apps Script**.
 3. Select `Code.gs`, replace its contents with this folder’s `Code.gs`, and save.
-4. Leave `SHARED_TOKEN` as `''` unless you set the same string on `SHARED_TOKEN` in `input-form/index.html`.
+4. Leave `SHARED_TOKEN` as `''` unless you set the same string on `SHARED_TOKEN` in `betweenusfriends/index.html`.
 5. **Deploy → New deployment → type: Web app**.
    - Execute as: **Me**
    - Who has access: **Anyone**
 6. Authorize when Google asks. The script needs the spreadsheet and Drive. It only creates **Friend Submissions** (if that tab is missing) and appends rows there. The photo goes in a Drive folder named **FNF Friend Photos** (created in your Drive the first time, then remembered). The script does not share those files.
 7. Copy the web app URL. It ends in `/exec`.
 8. Open that URL once. The browser should show `{"ok":true,"ready":true}` and the sheet should gain no row.
-9. Put that URL in `input-form/index.html` as `FORM_ENDPOINT` if it is not already the one there. That constant is what connects the form.
-10. After you replace `Code.gs`, use **Deploy → Manage deployments → pencil → Version: New version → Deploy** so the existing URL runs this version. Then submit one test from `https://friendnotphoe.com/input-form/` with a photo. Confirm the row is on **Friend Submissions**, the **Photo** cell is a Drive link you can open, the file is in **FNF Friend Photos** and is not shared publicly, and that Master Reference and Sheet1 did not change.
+9. Put that URL in `betweenusfriends/index.html` as `FORM_ENDPOINT` if it is not already the one there. That constant is what connects the form.
+10. After you replace `Code.gs`, use **Deploy → Manage deployments → pencil → Version: New version → Deploy** so the existing URL runs this version. Then submit one test from `https://friendnotphoe.com/betweenusfriends/` with a photo. Confirm the row is on **Friend Submissions**, the **Photo** cell is a Drive link you can open, the file is in **FNF Friend Photos** and is not shared publicly, and that Master Reference and Sheet1 did not change.
 
 Changing the script later: **Deploy → Manage deployments → pencil → Version: New version → Deploy**. An old deployment keeps running the old code until you do that.
 

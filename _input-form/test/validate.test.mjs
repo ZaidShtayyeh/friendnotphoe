@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const v = require("../../input-form/validate.js");
+const v = require("../../betweenusfriends/validate.js");
 
 const now = 1_700_000_000_000;
 

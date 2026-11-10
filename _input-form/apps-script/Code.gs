@@ -13,7 +13,7 @@
  */
 var SHARED_TOKEN = '';
 
-// --- shared validation: keep identical to input-form/validate.js ---
+// --- shared validation: keep identical to betweenusfriends/validate.js ---
 
 /* Shared checks for the No Ball form and the Apps Script.
  * No secrets live here. The optional page token is not a secret either.

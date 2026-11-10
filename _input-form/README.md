@@ -1,8 +1,8 @@
 # No Ball form
 
-The page friends open is `input-form/index.html` (`https://friendnotphoe.com/input-form/`). It is not linked from the site. Sheet setup is in [apps-script/README.md](apps-script/README.md).
+The page friends open is `betweenusfriends/index.html` (`https://friendnotphoe.com/betweenusfriends/`). It is not linked from the site. Sheet setup is in [apps-script/README.md](apps-script/README.md).
 
-`MAPS_API_KEY` in `input-form/index.html` is the browser key for place suggestions. While it is empty, "What's it called" is a normal text field and nothing calls Google. The key is visible in the page. Referrer and API restrictions are what keep it limited. Do not put it in `Code.gs`.
+`MAPS_API_KEY` in `betweenusfriends/index.html` is the browser key for place suggestions. While it is empty, "What's it called" is a normal text field and nothing calls Google. The key is visible in the page. Referrer and API restrictions are what keep it limited. Do not put it in `Code.gs`.
 
 The shot is required. The friend drags and zooms it inside the photo window of the live card, and the page sends exactly that window. The script stores the file in a private Drive folder. See [apps-script/README.md](apps-script/README.md).
 
@@ -10,8 +10,8 @@ The shot is required. The friend drags and zooms it inside the photo window of t
 
 The preview on the right (a pull-up tab on phones) is the real card build, not a mock. It uses the v12 chassis for each color, the card fonts in `assets/fonts`, and the same text positions, sizes, and wrapping as the card compositor. The page needs these files:
 
-- `input-form/card/chassis-green.webp`, `chassis-blue.webp`, `chassis-gold.webp`: the card with the photo window, text, bars, and type icon removed.
-- `input-form/card/glyph-food.png`, `glyph-drink.png`, `glyph-both.png`: the type icon masks.
+- `betweenusfriends/card/chassis-green.webp`, `chassis-blue.webp`, `chassis-gold.webp`: the card with the photo window, text, bars, and type icon removed.
+- `betweenusfriends/card/glyph-food.png`, `glyph-drink.png`, `glyph-both.png`: the type icon masks.
 - `assets/cards-finish-v12/timeagain.webp`: the "Need inspo?" reference card.
 
 `tools/build_card_assets.py` rebuilds the chassis and glyphs from the finished cards in `assets/cards-finish-v12`. Run it again if the card art changes. `npm test` compares the preview against the real Time Again card and fails if they drift.
@@ -35,7 +35,7 @@ Use the Google Cloud project this site already has. Create a new key. Do not reu
     - Maps JavaScript API
     - Places API (New)
 11. Save.
-12. Paste the key into `input-form/index.html` as `MAPS_API_KEY` and publish that change when the form should start suggesting. Until then leave the constant empty.
+12. Paste the key into `betweenusfriends/index.html` as `MAPS_API_KEY` and publish that change when the form should start suggesting. Until then leave the constant empty.
 
 Those two referrers do not cover a laptop preview. To try it locally, add `http://localhost:*/*` and `http://127.0.0.1:*/*` for the check, then remove them.
 

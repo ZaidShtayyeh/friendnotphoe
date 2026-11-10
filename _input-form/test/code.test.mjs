@@ -4,7 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const root = new URL("../apps-script/Code.gs", import.meta.url);
-const shared = fs.readFileSync(new URL("../../input-form/validate.js", import.meta.url), "utf8");
+const shared = fs.readFileSync(new URL("../../betweenusfriends/validate.js", import.meta.url), "utf8");
 const source = fs.readFileSync(root, "utf8");
 
 test("Code.gs embeds the page validation unchanged and avoids the pipeline sheets", () => {

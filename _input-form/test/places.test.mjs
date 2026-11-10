@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const places = require("../../input-form/places.js");
+const places = require("../../betweenusfriends/places.js");
 
 function place(overrides) {
   return Object.assign({
