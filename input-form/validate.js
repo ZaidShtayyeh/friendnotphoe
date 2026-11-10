@@ -20,6 +20,7 @@ var NoBallValidate = (function () {
     maps: 500,
     vibesWords: 50,
     vibesChars: 250,
+    move: 24,
     scoreMin: 1,
     scoreMax: 300,
     rankMin: 0,
@@ -40,6 +41,12 @@ var NoBallValidate = (function () {
     ['food', 'Food'],
     ['drink', 'Drinks'],
     ['scene', 'Scene']
+  ];
+
+  var MOVE_FIELDS = [
+    ['move1', 'Move 1'],
+    ['move2', 'Move 2'],
+    ['move3', 'Move 3']
   ];
 
   function wordCount(text) {
@@ -161,6 +168,15 @@ var NoBallValidate = (function () {
       }
     }
 
+    var moves = {};
+    MOVE_FIELDS.forEach(function (pair) {
+      var key = pair[0];
+      var move = trimmed(input, key);
+      if (!move) errors[key] = pair[1] + ' is required.';
+      else if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
+      else moves[key] = move;
+    });
+
     var ranks = {};
     RANK_FIELDS.forEach(function (pair) {
       var key = pair[0];
@@ -189,6 +205,9 @@ var NoBallValidate = (function () {
         category: category,
         color: CATEGORY_COLORS[category],
         vibes: vibes,
+        move1: moves.move1,
+        move2: moves.move2,
+        move3: moves.move3,
         food: ranks.food,
         drink: ranks.drink,
         scene: ranks.scene

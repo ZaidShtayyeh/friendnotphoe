@@ -218,6 +218,9 @@ function entry(overrides = {}) {
     hp: "270",
     category: "Food first",
     vibes: "A short line about the sandwich.",
+    move1: "Bread & Olive Oil",
+    move2: "Dirty Martini",
+    move3: "=Orange Wine",
     food: "80",
     drink: "50",
     scene: "60",
@@ -246,13 +249,14 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     const rows = sheets.get("Friend Submissions").rows;
     assert.equal(JSON.stringify(rows[0]), JSON.stringify([
       "Submitted at", "Submitted by", "Restaurant", "HP", "Category", "Color", "City", "Area",
-      "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo",
+      "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo", "Move 1", "Move 2", "Move 3",
     ]));
     assert.equal(JSON.stringify(rows[1]), JSON.stringify([
       "2026-11-10 09:15:00", "Sam", "C + B", 270, "Food first", "Green", "NYC", "East Village",
       "A short line about the sandwich.", 80, 50, 60,
       "https://www.google.com/maps/search/?api=1&query=C+%2B+B",
       "https://drive.google.com/file/d/file-1/view",
+      "Bread & Olive Oil", "Dirty Martini", "'=Orange Wine",
     ]));
     assert.equal(files.length, 1);
     assert.equal(files[0].name, "2026-11-10 0915 - C + B - Sam.jpg");
@@ -300,6 +304,8 @@ test("a second post does not repeat the header row", () => {
     assert.equal(rows.length, 3);
     assert.equal(rows.filter((row) => row[0] === "Submitted at").length, 1);
     assert.equal(rows[0].filter((cell) => cell === "Photo").length, 1);
+    assert.equal(rows[0].filter((cell) => cell === "Move 1").length, 1);
+    assert.equal(rows[0].length, 17);
     assert.equal(rows[2][1], "Sam");
     assert.equal(rows[2][2], "Forsythia");
     assert.equal(folders.length, 1);
@@ -332,9 +338,61 @@ test("an existing tab is appended to and not recreated", () => {
     assert.equal(existing.rows.length, 2);
     assert.equal(existing.rows[0][12], "Google Maps link");
     assert.equal(existing.rows[0][13], "Photo");
+    assert.equal(JSON.stringify(existing.rows[0].slice(14)), JSON.stringify(["Move 1", "Move 2", "Move 3"]));
     assert.equal(existing.rows[1][1], "Sam:me");
     assert.equal(existing.rows[1][13], "https://drive.google.com/file/d/file-1/view");
+    assert.equal(JSON.stringify(existing.rows[1].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine"]));
     assert.equal(files[0].name, "2026-11-10 0915 - C B - Sam me.jpg");
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a tab that already has Photo gets the move headers after it, and nothing moves", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const header = ["Submitted at", "Submitted by", "Restaurant", "HP", "Category", "Color", "City", "Area", "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo"];
+    const old = ["2026-11-09 20:00:00", "Ana", "Smor", 250, "Food first", "Green", "NYC", "East Village", "Good bread.", 90, 20, 40, "", "https://drive.google.com/file/d/old/view"];
+    const rows = [header.slice(), old.slice()];
+    const existing = {
+      name: "Friend Submissions",
+      rows,
+      appendRow(row) { this.rows.push(row.slice()); },
+      getLastRow() { return this.rows.length; },
+      ...sheetCells(rows),
+    };
+    const { context } = boot({ existing });
+    assert.equal(reply(context.doPost(event(entry()))).ok, true);
+    assert.deepEqual(rows[0], [...header, "Move 1", "Move 2", "Move 3"]);
+    assert.deepEqual(rows[1], old);
+    assert.equal(rows[2][13], "https://drive.google.com/file/d/file-1/view");
+    assert.equal(JSON.stringify(rows[2].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine"]));
+    assert.equal(reply(context.doPost(event(entry({ restaurant: "Forsythia" })))).ok, true);
+    assert.equal(rows[0].length, 17);
+    assert.equal(rows[0].filter((cell) => cell === "Move 3").length, 1);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("header cells someone already typed are left alone", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const header = ["Submitted at", "Submitted by", "Restaurant", "HP", "Category", "Color", "City", "Area", "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo", "Order this", "", "Notes"];
+    const rows = [header.slice()];
+    const existing = {
+      name: "Friend Submissions",
+      rows,
+      appendRow(row) { this.rows.push(row.slice()); },
+      getLastRow() { return this.rows.length; },
+      ...sheetCells(rows),
+    };
+    const { context } = boot({ existing });
+    assert.equal(reply(context.doPost(event(entry()))).ok, true);
+    assert.equal(JSON.stringify(rows[0].slice(14)), JSON.stringify(["Order this", "Move 2", "Notes"]));
+    assert.equal(rows[1][15], "Dirty Martini");
   } finally {
     Date.now = realNow;
   }
@@ -358,6 +416,8 @@ test("invalid fields, honeypot, and too-fast posts write nothing", () => {
       entry({ photoData: "" }),
       entry({ photoType: "image/gif" }),
       entry({ photoData: b64OfBytes(5 * 1024 * 1024 + 1) }),
+      entry({ move1: "" }),
+      entry({ move3: "m".repeat(25) }),
     ];
     for (const body of cases) {
       const { context, calls, sheets, files, folders } = boot();

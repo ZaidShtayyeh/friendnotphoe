@@ -37,6 +37,7 @@ var NoBallValidate = (function () {
     maps: 500,
     vibesWords: 50,
     vibesChars: 250,
+    move: 24,
     scoreMin: 1,
     scoreMax: 300,
     rankMin: 0,
@@ -57,6 +58,12 @@ var NoBallValidate = (function () {
     ['food', 'Food'],
     ['drink', 'Drinks'],
     ['scene', 'Scene']
+  ];
+
+  var MOVE_FIELDS = [
+    ['move1', 'Move 1'],
+    ['move2', 'Move 2'],
+    ['move3', 'Move 3']
   ];
 
   function wordCount(text) {
@@ -178,6 +185,15 @@ var NoBallValidate = (function () {
       }
     }
 
+    var moves = {};
+    MOVE_FIELDS.forEach(function (pair) {
+      var key = pair[0];
+      var move = trimmed(input, key);
+      if (!move) errors[key] = pair[1] + ' is required.';
+      else if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
+      else moves[key] = move;
+    });
+
     var ranks = {};
     RANK_FIELDS.forEach(function (pair) {
       var key = pair[0];
@@ -206,6 +222,9 @@ var NoBallValidate = (function () {
         category: category,
         color: CATEGORY_COLORS[category],
         vibes: vibes,
+        move1: moves.move1,
+        move2: moves.move2,
+        move3: moves.move3,
         food: ranks.food,
         drink: ranks.drink,
         scene: ranks.scene
@@ -289,7 +308,10 @@ var HEADERS = [
   'Drink',
   'Scene',
   'Google Maps link',
-  'Photo'
+  'Photo',
+  'Move 1',
+  'Move 2',
+  'Move 3'
 ];
 var TEXT_COLUMNS = {
   0: true,
@@ -301,7 +323,10 @@ var TEXT_COLUMNS = {
   7: true,
   8: true,
   12: true,
-  13: true
+  13: true,
+  14: true,
+  15: true,
+  16: true
 };
 
 function doGet() {
@@ -366,7 +391,10 @@ function append_(value) {
     value.drink,
     value.scene,
     value.maps,
-    file.getUrl()
+    file.getUrl(),
+    value.move1,
+    value.move2,
+    value.move3
   ];
   sheet.appendRow(row.map(plainCell_));
 }
@@ -378,12 +406,12 @@ function ensureHeaders_(sheet) {
   }
   var width = Math.max(sheet.getLastColumn(), HEADERS.length);
   var header = sheet.getRange(1, 1, 1, width).getValues()[0];
-  var found = false;
-  for (var i = 0; i < header.length; i++) {
-    if (header[i] === 'Photo') found = true;
+  // Every column has a fixed position. Fill in blank header cells only:
+  // never insert or move a column, never overwrite a header someone typed.
+  for (var i = 0; i < HEADERS.length; i++) {
+    var cell = header[i] == null ? '' : String(header[i]).trim();
+    if (cell === '') sheet.getRange(1, i + 1).setValue(HEADERS[i]);
   }
-  // Write the new header cell only. Do not insert a column; existing columns stay put.
-  if (!found) sheet.getRange(1, HEADERS.length).setValue('Photo');
 }
 
 function photosFolder_() {
@@ -431,7 +459,7 @@ function plainCell_(value, index) {
 }
 
 function firstError_(errors) {
-  var order = ['submittedBy', 'restaurant', 'photo', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'food', 'drink', 'scene'];
+  var order = ['submittedBy', 'restaurant', 'photo', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'move1', 'move2', 'move3', 'food', 'drink', 'scene'];
   for (var i = 0; i < order.length; i++) {
     if (errors[order[i]]) return errors[order[i]];
   }

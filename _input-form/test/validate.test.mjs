@@ -35,6 +35,9 @@ function valid(overrides = {}) {
     hp: "270",
     category: "Food first",
     vibes: "Short line about the sandwich.",
+    move1: "Bread & Olive Oil",
+    move2: "Dirty Martini",
+    move3: "Orange Wine",
     food: "80",
     drink: "50",
     scene: "60",
@@ -198,6 +201,26 @@ test("a photo is required, must be an allowed image, and must be 5 MB or smaller
   const limit = v.LIMITS.photoBytes;
   assert.equal(v.validateSubmission(valid({ photoData: b64OfBytes(limit) })).ok, true);
   assert.equal(v.validateSubmission(valid({ photoData: b64OfBytes(limit + 1) })).errors.photo, "Photo must be 5 MB or smaller.");
+});
+
+test("three special moves are required, trimmed, and capped at 24 characters so they fit the card", () => {
+  const ok = v.validateSubmission(valid({ move1: "  Bread & Olive Oil  ", move3: "x".repeat(24) }));
+  assert.equal(ok.ok, true);
+  assert.equal(ok.value.move1, "Bread & Olive Oil");
+  assert.equal(ok.value.move2, "Dirty Martini");
+  assert.equal(ok.value.move3, "x".repeat(24));
+  assert.equal(v.LIMITS.move, 24);
+
+  const missing = v.validateSubmission(valid({ move1: "", move2: "   ", move3: undefined }));
+  assert.equal(missing.ok, false);
+  assert.equal(missing.errors.move1, "Move 1 is required.");
+  assert.equal(missing.errors.move2, "Move 2 is required.");
+  assert.equal(missing.errors.move3, "Move 3 is required.");
+
+  const long = v.validateSubmission(valid({ move2: "y".repeat(25) }));
+  assert.equal(long.ok, false);
+  assert.deepEqual(Object.keys(long.errors), ["move2"]);
+  assert.equal(long.errors.move2, "Move 2 must be 24 characters or fewer.");
 });
 
 test("spam check rejects a honeypot and a too-fast or missing timestamp", () => {
