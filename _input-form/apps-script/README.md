@@ -27,7 +27,7 @@ To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drink
 
 ## What the script does
 
-`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page shrinks a shot to a jpeg around 2000 px on the long edge before sending.
+`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, three special moves are required at 24 characters or fewer each, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page sends the 3:2 window the friend framed on the card, as an 1800 × 1200 jpeg. A HEIC the browser cannot decode is sent as-is.
 
 It then takes a script lock, saves the photo, and appends one row.
 
@@ -35,9 +35,9 @@ The Drive file is named `yyyy-MM-dd HHmm - Restaurant - Submitted by.ext` in Ame
 
 The row is:
 
-`Submitted at` (America/New_York), `Submitted by`, `Restaurant`, `HP`, `Category`, `Color`, `City`, `Area`, `Vibes`, `Food`, `Drink`, `Scene`, `Google Maps link`, `Photo`.
+`Submitted at` (America/New_York), `Submitted by`, `Restaurant`, `HP`, `Category`, `Color`, `City`, `Area`, `Vibes`, `Food`, `Drink`, `Scene`, `Google Maps link`, `Photo`, `Move 1`, `Move 2`, `Move 3`.
 
-`Photo` is the last column. On a sheet that already has the older header, the script writes `Photo` into that last header cell and does not insert a column, so the existing columns stay where they are. The cell is the Drive file URL.
+Every column has a fixed position. On a tab that already exists, the script fills in only header cells that are blank, so an older tab gains `Photo` and then `Move 1` to `Move 3` after it. It never inserts or moves a column and never overwrites a header someone typed. Older rows keep blank move cells. The `Photo` cell is the Drive file URL. The moves are the three things to order, in the order they show on the card.
 
 `Submitted by` is the friend’s name from the form (required, 60 characters or fewer). After a successful send the page keeps that name and clears the rest, so the same person can add another place.
 

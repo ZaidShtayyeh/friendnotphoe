@@ -4,7 +4,17 @@ The page friends open is `input-form/index.html` (`https://friendnotphoe.com/inp
 
 `MAPS_API_KEY` in `input-form/index.html` is the browser key for place suggestions. While it is empty, "What's it called" is a normal text field and nothing calls Google. The key is visible in the page. Referrer and API restrictions are what keep it limited. Do not put it in `Code.gs`.
 
-The shot is required. The page compresses it and the script stores the file in a private Drive folder. See [apps-script/README.md](apps-script/README.md).
+The shot is required. The friend drags and zooms it inside the photo window of the live card, and the page sends exactly that window. The script stores the file in a private Drive folder. See [apps-script/README.md](apps-script/README.md).
+
+## The live card
+
+The preview on the right (a pull-up tab on phones) is the real card build, not a mock. It uses the v12 chassis for each color, the card fonts in `assets/fonts`, and the same text positions, sizes, and wrapping as the card compositor. The page needs these files:
+
+- `input-form/card/chassis-green.webp`, `chassis-blue.webp`, `chassis-gold.webp`: the card with the photo window, text, bars, and type icon removed.
+- `input-form/card/glyph-food.png`, `glyph-drink.png`, `glyph-both.png`: the type icon masks.
+- `assets/cards-finish-v12/timeagain.webp`: the "Need inspo?" reference card.
+
+`tools/build_card_assets.py` rebuilds the chassis and glyphs from the finished cards in `assets/cards-finish-v12`. Run it again if the card art changes. `npm test` compares the preview against the real Time Again card and fails if they drift.
 
 ## New Places key
 
