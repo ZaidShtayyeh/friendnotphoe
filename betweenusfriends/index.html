@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#fafafa">
+  <meta name="theme-color" content="#f2f0e7">
   <title>For us amongst friends</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="../assets/fonts/GeneralSans-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -546,43 +546,53 @@
       .card-wrap::after { display: none; }
     }
   </style>
+  <link rel="stylesheet" href="refinement.css">
 </head>
 <body>
   <header>
     <div class="header-content">
-      <a class="coin-link" href="/"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin"></a>
+      <a class="coin-link" href="../#home"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin"></a>
+      <span class="header-note">FOR US AMONGST FRIENDS</span>
+      <a class="back-link" href="../#exploration">Explore <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
   <main>
     <div class="page-header">
-      <h1>For us amongst friends</h1>
+      <span class="page-kicker">MAKE A CARD</span>
+      <h1>For us...<br><em>amongst friends.</em></h1>
+      <nav class="form-sections" aria-label="Form sections"><a href="#the-spot">01 <span>The spot</span></a><a href="#the-card">02 <span>The card</span></a><a href="#the-moves">03 <span>Special moves</span></a><a href="#the-stats">04 <span>The stats</span></a></nav>
     </div>
 
     <form id="entry" novalidate>
       <div class="fields">
         <p id="status" class="status" role="status"></p>
 
-        <section class="block">
-          <h2>The spot <span class="aside">who, what, where</span></h2>
+        <section class="block" id="the-spot">
+          <h2><span class="section-heading"><span class="section-number">01</span>The spot</span></h2>
 
           <div class="field">
-            <label for="friend">Your name <span class="hint">so we know who to thank</span></label>
-            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Zaid">
+            <label for="friend">Your name</label>
+            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Your name or nickname">
             <p class="error" id="err-submittedBy"></p>
           </div>
 
           <div class="field">
-            <label for="place">What's it called <span class="hint">how it reads on the card</span></label>
+            <label for="place">Place</label>
             <div class="place-combo">
-              <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Time Again" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
+              <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Search for a place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
               <ul id="place-list" class="place-list" role="listbox" hidden></ul>
+            </div>
+            <p id="place-status" class="place-status" role="status" hidden></p>
+            <div class="place-connection" id="place-connection" hidden>
+              <a id="selected-maps" target="_blank" rel="noopener">View on Google Maps ↗</a>
+              <button type="button" id="change-place">Change place</button>
             </div>
             <p class="error" id="err-restaurant"></p>
           </div>
 
-          <div class="field">
-            <label for="maps">Google Maps link <span class="hint">optional, saves a search</span></label>
+          <div class="field" id="maps-field">
+            <label for="maps">Google Maps link (optional)</label>
             <input class="text" id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="Paste the share link" enterkeyhint="next">
             <p class="error" id="err-maps"></p>
           </div>
@@ -601,29 +611,29 @@
           </div>
         </section>
 
-        <section class="block">
-          <h2>The card <span class="aside">how it plays</span></h2>
+        <section class="block" id="the-card">
+          <h2><span class="section-heading"><span class="section-number">02</span>The card</span></h2>
 
           <div class="field" id="shot-field">
-            <label for="photo">The shot</label>
+            <label for="photo">Picture</label>
             <input id="photo" class="sr-only" name="photo" type="file" accept="image/*" required>
             <label for="photo" class="drop" id="drop">
               <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
               <span class="drop-copy">
-                <span class="drop-main"><span class="mouse">Drop the shot here</span><span class="touch">Tap to add the shot</span></span>
-                <span class="drop-sub"><span class="mouse">or click to pick one. You frame it on the card.</span><span class="touch">Camera roll or a fresh one. You frame it after.</span></span>
+                <span class="drop-main"><span class="mouse">Add your picture</span><span class="touch">Add your picture</span></span>
+                <span class="drop-sub">Please use your own photo of the place or food.</span>
               </span>
             </label>
             <div class="framer" id="framer" hidden>
               <div class="frame-inline" id="frameInline">
                 <svg viewBox="150.6 221 1198.8 799.2" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image id="inline-photo" preserveAspectRatio="none"/></svg>
-                <div class="photo-hit" id="inlineHit" role="group" aria-label="Frame the shot. Drag it, or use the arrow keys. Plus and minus zoom."><span class="hit-hud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>Drag to frame</span></div>
+                <div class="photo-hit" id="inlineHit" role="group" aria-label="Frame the picture. Drag it, or use the arrow keys. Plus and minus zoom."><span class="hit-hud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>Drag to frame</span></div>
               </div>
               <div class="frame-bar">
                 <span class="frame-tip" id="frameTip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span id="frameTipText">On the card. Drag it around to frame it.</span></span>
                 <span class="zoom">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-4-4"/></svg>
-                  <input type="range" id="zoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom the shot">
+                  <input type="range" id="zoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom the picture">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6M20 20l-4-4"/></svg>
                 </span>
                 <button type="button" class="swap" id="swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.6L4 15M4 20v-5h5"/></svg>Swap it</button>
@@ -650,15 +660,15 @@
           </fieldset>
 
           <div class="field">
-            <div class="label-row"><label for="vibes">Vibes</label><button type="button" class="inspo-btn" data-inspo><span class="spark" aria-hidden="true">✦</span>Need inspo?</button></div>
-            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="Say it like you'd text the group chat. What it is, who it's for, when to go."></textarea>
+            <label for="vibes">Vibes</label>
+            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="inspo&#10;&#10;Casual bar that does not try as hard as their customers do. Plastic chairs and free-for-all seating. Go for a long sip, try and sit outside and be ready to chat - type of place you meet people"></textarea>
             <p class="counter" id="counter">0/250</p>
             <p class="error" id="err-vibes"></p>
           </div>
         </section>
 
-        <section class="block">
-          <h2>Special moves <span class="aside">what you'd order again</span></h2>
+        <section class="block" id="the-moves">
+          <h2><span class="section-heading"><span class="section-number">03</span>Special moves</span></h2>
           <div class="moves">
             <div class="field">
               <label class="sr-only" for="move1">Move 1</label>
@@ -678,8 +688,8 @@
           </div>
         </section>
 
-        <section class="block">
-          <h2>The stats <span class="aside">out of 100, be honest</span></h2>
+        <section class="block" id="the-stats">
+          <h2><span class="section-heading"><span class="section-number">04</span>The stats</span></h2>
 
           <div class="stat unset" data-stat="food">
             <label for="food">Food</label>
@@ -712,11 +722,11 @@
       <div class="stage-scrim" id="stageScrim"></div>
       <aside class="stage" id="stage" aria-label="Your card">
         <button type="button" class="stage-tab" id="stageTab" aria-expanded="false" aria-controls="cardWrap">
-          <span class="peek-label">Your card</span><span class="open-label">Back to it</span>
+          <span class="peek-label">See your card as you build</span><span class="open-label">Back to the form</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
         </button>
         <div class="stage-head">
-          <span class="stage-title"><span class="live-dot" aria-hidden="true"></span>Your card, live</span>
+          <span class="stage-title"><span class="live-dot" aria-hidden="true"></span>Your card</span>
           <button type="button" class="inspo-btn" data-inspo><span class="spark" aria-hidden="true">✦</span>See a real one</button>
         </div>
         <div class="card-wrap" id="cardWrap">
@@ -743,7 +753,7 @@
                 <path d="M688 536a22 22 0 0 1 22-22h16l12-18h48l12 18h16a22 22 0 0 1 22 22v76a22 22 0 0 1-22 22H710a22 22 0 0 1-22-22z"/>
                 <circle cx="762" cy="572" r="30"/>
               </g>
-              <text class="i" x="750" y="714" font-size="46" text-anchor="middle" fill="rgba(0,0,0,0.45)" style="fill: rgba(0,0,0,0.45)">Your shot goes here</text>
+              <text class="i" x="750" y="714" font-size="46" text-anchor="middle" fill="rgba(0,0,0,0.45)" style="fill: rgba(0,0,0,0.45)">Your picture goes here</text>
               <text class="i" x="750" y="766" font-size="33" text-anchor="middle" style="fill: rgba(0,0,0,0.32)">drop it in, then drag to frame</text>
             </g>
             <g clip-path="url(#clip-photo)"><image id="card-photo" preserveAspectRatio="none" opacity="0"/></g>
@@ -767,7 +777,7 @@
             <rect id="card-bar-drink" class="bar-fill" x="293" y="1814.6" width="0" height="31.6" rx="15.8"/>
             <rect id="card-bar-scene" class="bar-fill" x="293" y="1915.6" width="0" height="31.6" rx="15.8"/>
           </svg>
-          <div class="photo-hit" id="cardHit" role="group" aria-label="Your shot. Drop a photo here, or once it's in, drag it or use the arrow keys to frame it. Plus and minus zoom."><span class="hit-hud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span class="mouse-hud">Drag to frame · scroll to zoom</span></span></div>
+          <div class="photo-hit" id="cardHit" role="group" aria-label="Your picture. Drop a photo here, or once it's in, drag it or use the arrow keys to frame it. Plus and minus zoom."><span class="hit-hud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span class="mouse-hud">Drag to frame · scroll to zoom</span></span></div>
         </div>
         <p class="stage-tip" id="stageTip">Fills in as you go.</p>
       </aside>
@@ -805,7 +815,7 @@
       send: 'Send it',
       sending: 'Sending…',
       fixIt: 'Almost. Fix the red bits.',
-      notConnected: "Not hooked up yet, nothing got sent. Hang on to this one.",
+      notConnected: "The form isn’t connected right now. Please try again later.",
       saved: "Locked in. Zaid's got it. Got another spot?",
       unsure: "Not sure that landed. Nothing's cleared, check with Zaid before you send it again.",
       offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
@@ -1708,9 +1718,18 @@
     // ==================== PHONE CARD VIEW ====================
     var scrim = $('stageScrim');
     var stageTab = $('stageTab');
+    var previewNudged = false;
+    form.addEventListener('change', function (event) {
+      if (event.target.name !== 'category' || !event.target.checked || previewNudged || !mobileQuery.matches) return;
+      previewNudged = true;
+      if (stage.classList.contains('open') || prefersReducedMotion) return;
+      stageTab.classList.add('preview-nudge');
+    });
+    stageTab.addEventListener('animationend', function () { stageTab.classList.remove('preview-nudge'); });
     function setStage(open) {
       if (!mobileQuery.matches) open = false;
       var was = stage.classList.contains('open');
+      if (open) stageTab.classList.remove('preview-nudge');
       stage.classList.toggle('open', open);
       scrim.classList.toggle('open', open);
       stageTab.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -1781,6 +1800,29 @@
       var active = -1;
       var current = [];
       var timer = null;
+      var placeStatus = $('place-status');
+      var selectedPlace = null;
+      var applyingPlace = false;
+      var mapsInput = $('maps');
+      var connection = $('place-connection');
+
+      function releasePlace(clearFields) {
+        if (selectedPlace && clearFields) {
+          mapsInput.value = '';
+          if ($('city').value === selectedPlace.city) $('city').value = '';
+          if ($('area').value === selectedPlace.area) $('area').value = '';
+        }
+        selectedPlace = null;
+        mapsInput.readOnly = false;
+        $('maps-field').hidden = false;
+        connection.hidden = true;
+        $('selected-maps').removeAttribute('href');
+      }
+
+      function searchStatus(message) {
+        placeStatus.textContent = message;
+        placeStatus.hidden = !message;
+      }
 
       function closeList() {
         list.hidden = true;
@@ -1822,27 +1864,43 @@
 
       function applyFields(fields) {
         if (fields.name) place.value = fields.name;
-        $('maps').value = fields.maps;
+        mapsInput.value = fields.maps;
         $('city').value = fields.city;
         $('area').value = fields.area;
+        // A selected place owns its Maps URL; changing the place releases it.
+        selectedPlace = { name: place.value, maps: fields.maps, city: fields.city, area: fields.area };
+        mapsInput.readOnly = !!fields.maps;
+        $('maps-field').hidden = !!fields.maps;
+        connection.hidden = !fields.maps;
+        if (fields.maps) $('selected-maps').href = fields.maps;
+        applyingPlace = true;
         place.dispatchEvent(new Event('input', { bubbles: true }));
+        applyingPlace = false;
       }
 
       function choose(index) {
         var item = current[index];
         if (!item) return;
         var prediction = item.prediction;
+        window.clearTimeout(timer);
+        var selectionId = ++requestId;
         closeList();
+        searchStatus('');
         NoBallPlaces.readPlace(prediction).then(function (fields) {
+          if (selectionId !== requestId) return;
           applyFields(fields);
           token = null;
-        }).catch(function () {
+        }).catch(function (error) {
+          if (selectionId !== requestId) return;
           token = null;
+          console.warn('Google place details unavailable:', error.message || error);
+          searchStatus('Couldn’t load that place. You can fill in the details below.');
         });
       }
 
       function searchNow() {
         var value = place.value.trim();
+        searchStatus('');
         if (value.length < 2) {
           closeList();
           return;
@@ -1859,14 +1917,29 @@
           });
           active = current.length ? 0 : -1;
           paint();
-        }).catch(function () {
-          if (id === requestId) closeList();
+        }).catch(function (error) {
+          if (id === requestId) {
+            closeList();
+            console.warn('Google place search unavailable:', error.message || error);
+            searchStatus('Google place search is unavailable here. You can enter the place below.');
+          }
         });
       }
 
       place.addEventListener('input', function () {
+        if (applyingPlace) return;
         window.clearTimeout(timer);
+        ++requestId;
+        closeList();
+        searchStatus('');
+        if (selectedPlace && place.value !== selectedPlace.name) releasePlace(true);
         timer = window.setTimeout(searchNow, 200);
+      });
+      $('change-place').addEventListener('click', function () {
+        releasePlace(true);
+        place.value = '';
+        place.dispatchEvent(new Event('input', { bubbles: true }));
+        place.focus();
       });
       place.addEventListener('keydown', function (event) {
         if (list.hidden) return;
@@ -1889,7 +1962,14 @@
       document.addEventListener('click', function (event) {
         if (!place.contains(event.target) && !list.contains(event.target)) closeList();
       });
-      form.addEventListener('reset', function () { window.setTimeout(closeList, 0); });
+      form.addEventListener('reset', function () {
+        window.clearTimeout(timer);
+        ++requestId;
+        token = null;
+        closeList();
+        searchStatus('');
+        releasePlace(false);
+      });
     }
 
     function initPlaces(key) {

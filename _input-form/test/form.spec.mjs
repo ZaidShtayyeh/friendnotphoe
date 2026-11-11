@@ -266,9 +266,9 @@ async function exercise(page, label, base) {
   assert.deepEqual(chassis, ["card/chassis-green.webp", "card/chassis-green.webp", "card/chassis-blue.webp", "card/chassis-gold.webp"]);
 
   if (label === "mobile") {
-    // the card peeks up from the bottom edge
-    const peek = await page.locator("#cardWrap").boundingBox();
-    assert.ok(peek.y > 844 - 130 && peek.y < 844 - 30, `mobile card peeks (top at ${peak(peek)})`);
+    // The full card stays tucked away; its explicit preview control remains visible.
+    assert.equal(await page.locator("#cardWrap").isVisible(), false);
+    assert.equal(await page.locator("#stageTab .peek-label").textContent(), "See your card as you build");
     assert.equal(await page.locator("#stageTab").isVisible(), true);
   } else {
     assert.equal(await page.locator("#stageTab").isVisible(), false);
@@ -328,7 +328,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#drop").isHidden(), true);
   assert.equal(await page.locator("#framer").isVisible(), true);
   assert.equal(await page.locator("#swap").isVisible(), true);
-  assert.equal(await page.locator("#frameInline").isVisible(), label === "mobile", `${label} inline framer only on phones`);
+  assert.equal(await page.locator("#frameInline").isVisible(), true, `${label} inline framer remains visible beside the upload`);
   assert.equal(await page.locator("#card-photo-empty").evaluate((el) => el.style.opacity), "0");
   const start = await crop(page);
   // spot.jpg is 1037x777: wider than tall but not 3:2, so it covers the window by width
@@ -418,7 +418,7 @@ async function exercise(page, label, base) {
     assert.ok((await crop(page))[0] < beforeBig[0] - 5, "mobile card view drag moves the crop");
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => !document.getElementById("stage").classList.contains("open"));
-    await page.locator("#cardWrap").click({ position: { x: 60, y: 20 } });
+    await page.click("#stageTab");
     await page.waitForFunction(() => document.getElementById("stage").classList.contains("open"));
     await page.click("#stageTab");
     await page.waitForFunction(() => !document.getElementById("stage").classList.contains("open"));
@@ -428,9 +428,11 @@ async function exercise(page, label, base) {
   const framed = await crop(page);
   assert.notDeepEqual(framed, start);
 
-  // Need inspo? opens the real Time Again card.
-  const inspoBtn = page.locator(".label-row [data-inspo]");
-  assert.equal(await inspoBtn.textContent(), "✦Need inspo?");
+  // The full example card remains available from the live preview.
+  if (label === "mobile") await page.click("#stageTab");
+  const inspoBtn = page.locator(".stage-head [data-inspo]");
+  assert.equal(await inspoBtn.textContent(), "✦See a real one");
+  assert.equal(await page.locator("#vibes").getAttribute("placeholder"), "inspo\n\n" + TIME_AGAIN.vibes);
   await inspoBtn.click();
   await page.waitForFunction(() => document.getElementById("inspo").open);
   const inspoImg = page.locator("#inspoCard img");
@@ -442,7 +444,7 @@ async function exercise(page, label, base) {
   await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v5_${label}_inspo.png`) });
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => !document.getElementById("inspo").open);
-  assert.equal(await page.evaluate(() => document.activeElement.matches(".label-row [data-inspo]")), true, `${label} focus returns to the button`);
+  assert.equal(await page.evaluate(() => document.activeElement.matches(".stage-head [data-inspo]")), true, `${label} focus returns to the button`);
   await inspoBtn.click();
   await page.waitForFunction(() => document.getElementById("inspo").open);
   await page.mouse.click(6, label === "mobile" ? 110 : 400);
@@ -452,6 +454,7 @@ async function exercise(page, label, base) {
   await page.click("#inspoClose");
   await page.waitForFunction(() => !document.getElementById("inspo").open);
   assert.ok((await page.inputValue("#vibes")).length > 0, `${label} inspo leaves the form alone`);
+  if (label === "mobile") await page.click("#stageTab");
 
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
@@ -843,6 +846,9 @@ async function placesFlow(page, label, base) {
   await page.waitForFunction(() => document.getElementById("city").value === "NYC");
   assert.equal(await page.inputValue("#place"), "C + B");
   assert.equal(await page.inputValue("#maps"), "https://maps.google.com/?cid=111");
+  assert.equal(await page.locator("#maps").evaluate(el => el.readOnly), true);
+  assert.equal(await page.locator("#maps-field").isHidden(), true);
+  assert.equal(await page.locator("#selected-maps").getAttribute("href"), "https://maps.google.com/?cid=111");
   assert.equal(await page.inputValue("#area"), "East Village");
   assert.equal(await page.locator("#card-name").textContent(), "C + B");
   assert.equal(await page.locator("#card-area").textContent(), "East Village, New York");
