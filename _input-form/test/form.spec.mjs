@@ -243,6 +243,25 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("text=optional, saves a search").count(), 0, `${label} no maps hint`);
   assert.equal(await page.locator('label[for="friend"] .hint, label[for="place"] .hint, label[for="maps"] .hint').count(), 0);
   assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
+  const shotNote = "Must be your own photo (of the food, drinks or scene you picked, not a pulled pic)";
+  assert.equal(await page.locator("#shot-field .hint").textContent(), shotNote);
+  assert.equal(await page.locator("#drop").isVisible(), true, `${label} callout shows before upload`);
+  assert.equal(await page.locator("#framer").isHidden(), true);
+  const shotPlace = await page.evaluate(() => {
+    const label = document.querySelector("#shot-field > label");
+    const hint = label.querySelector(".hint");
+    const range = document.createRange();
+    range.setStart(label.firstChild, 0);
+    range.setEnd(label.firstChild, label.firstChild.textContent.trimEnd().length);
+    const title = range.getBoundingClientRect();
+    const note = hint.getBoundingClientRect();
+    return { titleY: title.bottom, titleX: title.x, noteY: note.y, noteX: note.x };
+  });
+  assert.ok(shotPlace.noteY >= shotPlace.titleY - 1, `${label} callout sits under The shot`);
+  assert.ok(Math.abs(shotPlace.noteX - shotPlace.titleX) < 4, `${label} callout lines up with The shot`);
+  await page.locator("#shot-field").evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(200);
+  await page.locator("#shot-field").screenshot({ path: path.join(ARTIFACTS, `shot_callout_${label}.png`) });
   const hpLabel = await page.locator('label[for="score"]').boundingBox();
   const hpHint = await page.locator('label[for="score"] .hint').boundingBox();
   assert.ok(hpHint.x - hpLabel.x < 50, `${label} 300 max sits next to HP (${Math.round(hpHint.x - hpLabel.x)}px in)`);

@@ -92,6 +92,8 @@
     .label-row { align-items: center; }
     .hint { font-size: 0.8rem; font-weight: 500; font-style: italic; color: var(--muted); text-align: right; }
     .field > label.inline-hint { justify-content: flex-start; gap: 0.4rem; }
+    .field > label.with-note { flex-wrap: wrap; row-gap: 0.2rem; }
+    .field > label.with-note .hint { flex-basis: 100%; text-align: left; line-height: 1.35; }
     .pair { display: grid; gap: 0 0.9rem; grid-template-columns: 1fr 1fr; }
 
     .text {
@@ -605,7 +607,7 @@
           <h2>The card <span class="aside">how it plays</span></h2>
 
           <div class="field" id="shot-field">
-            <label for="photo">The shot</label>
+            <label class="with-note" for="photo">The shot <span class="hint">Must be your own photo (of the food, drinks or scene you picked, not a pulled pic)</span></label>
             <input id="photo" class="sr-only" name="photo" type="file" accept="image/*" required>
             <label for="photo" class="drop" id="drop">
               <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
