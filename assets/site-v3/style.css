@@ -108,3 +108,7 @@ body[data-focus=heart] .home-sticky{background:var(--home-bg)}
 .detail-image.snap{transition:transform .2s ease,opacity .2s ease!important}.detail-image.holding .inspect-art{transform:scale(1.035)}.detail-image.dragging~.modal-actions{opacity:0}
 #maps-dialog{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,420px);max-width:100%;padding:22px 18px calc(18px + env(safe-area-inset-bottom));background:#f4efe6;color:#263125;border:0;border-radius:18px 18px 0 0;box-shadow:0 -10px 40px #0004}#maps-dialog::backdrop{background:#0005}#maps-dialog p{text-align:center;font-size:13px;margin:0 0 15px}#maps-dialog a{display:flex;align-items:center;justify-content:center;min-height:52px;background:#fff;border-radius:10px;margin:8px 0;font-size:14px}#maps-cancel{width:100%;min-height:44px;color:#65715b;font-size:12px}
 @media(max-width:700px){#card-dialog .detail-image{height:min(73svh,calc(90vw * 1.4));width:auto}.modal-actions button{font-size:11px;padding:0 17px}}
+
+/* Never expose a canvas until its texture and first frame render correctly. */
+#soft-heart{visibility:hidden}.heart-object.is-ready #soft-heart{visibility:visible}
+.heart-fallback{inset:auto;left:50%;top:50%;width:auto;height:76%;max-width:none;transform:translate(-50%,-50%)}
