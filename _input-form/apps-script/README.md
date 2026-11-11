@@ -41,7 +41,7 @@ Every column has a fixed position. On a tab that already exists, the script fill
 
 `Area` is optional. A blank one is saved as an empty cell. On a pick the page fills it from Google, and for a NYC spot it snaps the name to the neighborhood list in `betweenusfriends/places.js` (Chinatown, Lower East Side, and so on, or `Bronx` for anything in the Bronx). A NYC neighborhood that is not on that list keeps Google's own name, and a spot where Google only gives a borough leaves Area blank.
 
-`Submitted by` is the friend’s name from the form (required, 60 characters or fewer). After a successful send the page keeps that name and clears the rest, so the same person can add another place.
+`Submitted by` is the friend’s name from the form (required, 60 characters or fewer). After a successful send the page thanks them, then clears the whole form, including the name and the city.
 
 Text that starts with `=`, `+`, `-`, or `@` is prefixed with a quote so it cannot run as a formula.
 

@@ -777,8 +777,7 @@
       <div class="actions" id="actions">
         <p id="status" class="status" role="status"></p>
         <button type="submit" class="send" id="send">Send it</button>
-        <button type="button" class="send" id="another" hidden>Make another</button>
-        <p class="fine">Goes straight to Zaid. Your name and city stick around for the next one.</p>
+        <p class="fine">Goes straight to Zaid.</p>
       </div>
     </form>
   </main>
@@ -810,7 +809,7 @@
       sending: 'Sending…',
       fixIt: 'Almost. Fix the red bits.',
       notConnected: "Not hooked up yet, nothing got sent. Hang on to this one.",
-      saved: "Locked in. Zaid's got it.",
+      saved: "Locked in. Thank you.",
       unsure: "Not sure that landed. Nothing's cleared, check with Zaid before you send it again.",
       offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
       bounced: 'The sheet bounced that. Try again.',
@@ -877,7 +876,6 @@
     var form = $('entry');
     var statusEl = $('status');
     var sendBtn = $('send');
-    var anotherBtn = $('another');
     var place = $('place');
     var vibes = $('vibes');
     var counter = $('counter');
@@ -891,26 +889,10 @@
     var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var mobileQuery = window.matchMedia('(max-width: 959px)');
     window.formStartedAt = Date.now();
-    var holding = false;
-    var NAME_KEY = 'fnf-name';
-
-    function rememberName() {
-      try {
-        var name = String($('friend').value || '').replace(/^\s+|\s+$/g, '');
-        if (name) localStorage.setItem(NAME_KEY, name);
-        else localStorage.removeItem(NAME_KEY);
-      } catch (err) {}
-    }
-
-    function recallName() {
-      try {
-        var saved = localStorage.getItem(NAME_KEY);
-        if (saved && !String($('friend').value || '').replace(/^\s+|\s+$/g, '')) $('friend').value = saved;
-      } catch (err) {}
-    }
-
-    recallName();
-    $('friend').addEventListener('input', rememberName);
+    var thanking = false;
+    var resetTimer = null;
+    // Drop a name an older version of this page stored. Nothing is remembered now.
+    try { localStorage.removeItem('fnf-name'); } catch (err) {}
 
     function selectedCategory() {
       var picked = form.querySelector('input[name="category"]:checked');
@@ -1632,7 +1614,7 @@
     }
 
     function setBusy(busy) {
-      sendBtn.disabled = busy;
+      sendBtn.disabled = busy || thanking;
       sendBtn.textContent = busy ? COPY.sending : COPY.send;
     }
 
@@ -1990,26 +1972,21 @@
       };
     }
 
-    // The card they just sent stays up. Make another clears it, except the name and the city.
+    // Thank them, then start over. Nothing carries to the next card.
     function showSaved() {
-      holding = true;
-      rememberName();
-      sendBtn.hidden = true;
-      anotherBtn.hidden = false;
+      thanking = true;
+      setBusy(false);
       setStage(false);
       showStatus(COPY.saved, 'ok');
-      anotherBtn.focus();
+      if (resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(blankTheForm, 2500);
     }
 
-    function resetForAnother() {
-      var name = $('friend').value;
-      var city = $('city').value;
+    function blankTheForm() {
+      resetTimer = null;
       form.reset();
       forgetPick();
       clearShot();
-      $('friend').value = name;
-      $('city').value = city;
-      rememberName();
       Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
       refresh();
       clearFieldErrors();
@@ -2019,14 +1996,11 @@
       void wrap.offsetWidth;
       if (!prefersReducedMotion) wrap.classList.add('landed');
       window.formStartedAt = Date.now() - limits.minFillMs;
-      holding = false;
-      sendBtn.hidden = false;
-      anotherBtn.hidden = true;
+      thanking = false;
       setBusy(false);
-      place.focus();
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
-
-    anotherBtn.addEventListener('click', resetForAnother);
 
     function finish(body) {
       var checked = NoBallValidate.validateSubmission(body);
@@ -2075,7 +2049,7 @@
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
-      if (holding) return;
+      if (thanking) return;
       clearStatus();
       clearFieldErrors();
       if (photoBusy) {

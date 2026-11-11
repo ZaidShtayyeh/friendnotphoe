@@ -244,6 +244,9 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator('label[for="friend"] .hint, label[for="place"] .hint, label[for="maps"] .hint').count(), 0);
   assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
   assert.equal(await page.locator("input[placeholder], textarea[placeholder]").count(), 0, `${label} no placeholder example text`);
+  assert.equal(await page.locator("#another").count(), 0, `${label} no Make another`);
+  assert.equal(await page.locator("text=stick around").count(), 0);
+  assert.equal(await page.locator(".fine").textContent(), "Goes straight to Zaid.");
   const shotNote = "Must be your own photo (of the food, drinks or scene you picked, not a pulled pic)";
   assert.equal(await page.locator("#shot-field .hint").textContent(), shotNote);
   assert.equal(await page.locator("#drop").isVisible(), true, `${label} callout shows before upload`);
@@ -569,11 +572,7 @@ async function exercise(page, label, base) {
   mode = "ok";
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
-  await page.waitForFunction(() => {
-    const status = document.getElementById("status").textContent;
-    const another = document.getElementById("another");
-    return status.startsWith("Locked in.") && another && !another.hidden && document.getElementById("send").hidden;
-  });
+  await page.waitForFunction(() => document.getElementById("status").textContent === "Locked in. Thank you.");
   assert.equal(calls.length, 2, `${label} one more post`);
   assert.equal(calls[1].method, "POST");
   assert.match(calls[1].type, /^text\/plain/i);
@@ -604,23 +603,18 @@ async function exercise(page, label, base) {
   assert.equal(sent.token, "");
   assert.equal(typeof sent.startedAt, "number");
 
-  // The card they sent stays up, with a way to start the next one.
-  assert.equal(await page.locator("#status").textContent(), "Locked in. Zaid's got it.");
-  assert.equal(await page.locator("#another").isVisible(), true);
-  assert.equal(await page.locator("#send").isHidden(), true);
+  // The card stays up for the thank-you, then the whole form goes blank.
   assert.equal(await page.inputValue("#friend"), "Sam");
   assert.equal(await page.inputValue("#place"), "C + B");
   assert.equal(await page.inputValue("#city"), "NYC");
+  assert.equal(await page.locator("#send").isDisabled(), true);
   assert.equal(await page.locator("#card-photo").getAttribute("opacity"), "1");
   await page.locator("#actions").evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await page.waitForTimeout(200);
-  await page.screenshot({ path: path.join(ARTIFACTS, `success_${label}.png`) });
-  await page.locator("#actions").screenshot({ path: path.join(ARTIFACTS, `success_actions_${label}.png`) });
+  await page.screenshot({ path: path.join(ARTIFACTS, `thanks_${label}.png`) });
+  await page.locator("#actions").screenshot({ path: path.join(ARTIFACTS, `thanks_actions_${label}.png`) });
 
-  await page.click("#another");
-  await page.waitForFunction(() => document.getElementById("another").hidden && document.activeElement.id === "place");
-  assert.equal(await page.inputValue("#friend"), "Sam");
-  assert.equal(await page.inputValue("#city"), "NYC");
+  await page.waitForFunction(() => window.scrollY < 2 && document.getElementById("friend").value === "" && document.getElementById("status").textContent === "");
+  assert.equal(await page.inputValue("#city"), "");
   assert.equal(await page.inputValue("#place"), "");
   assert.equal(await page.inputValue("#maps"), "");
   assert.equal(await page.inputValue("#area"), "");
@@ -633,12 +627,10 @@ async function exercise(page, label, base) {
   assert.equal(await page.inputValue("#drinks"), "");
   assert.equal(await page.inputValue("#scene"), "");
   assert.equal(await page.locator('input[name="category"]:checked').count(), 0);
-  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), "Sam");
-  assert.equal(await page.locator("#send").isVisible(), true);
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null);
   assert.equal(await page.locator("#send").isEnabled(), true);
   assert.equal(await page.locator("#card-name").textContent(), "The spot");
-  assert.equal(await page.locator("#card-city").textContent(), "NYC");
-  assert.equal(await page.locator("#card-area").textContent(), "New York");
+  assert.equal(await page.locator("#card-city").textContent(), "City");
   assert.deepEqual(await cardText(page, "card-move-1"), ["Move one"]);
   assert.equal(await page.locator("#card").getAttribute("data-color"), "neutral");
   assert.equal(await page.locator("#card").getAttribute("data-crop"), null);
@@ -646,7 +638,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#drop").isVisible(), true);
   assert.equal(await page.locator("#framer").isHidden(), true);
   assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
-  await page.locator("section.block").first().screenshot({ path: path.join(ARTIFACTS, `another_${label}.png`) });
+  await page.screenshot({ path: path.join(ARTIFACTS, `blank_after_${label}.png`) });
 
   // No photo: the card can't be made.
   await fill(page, { shot: null });
@@ -682,13 +674,11 @@ async function exercise(page, label, base) {
   assert.equal(await page.inputValue("#place"), "Forsythia");
   assert.deepEqual(errors, [], `${label} page errors`);
 
+  await page.evaluate(() => localStorage.setItem("fnf-name", "Stale"));
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.locator("#friend").waitFor();
-  assert.equal(await page.inputValue("#friend"), "Sam", `${label} the name is waiting next visit`);
-  await page.fill("#friend", "Alex");
-  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), "Alex");
-  await page.fill("#friend", "   ");
-  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null);
+  assert.equal(await page.inputValue("#friend"), "", `${label} a stored name is not filled in`);
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null, `${label} the old name key is cleared`);
 }
 
 function peak(box) {
@@ -1041,14 +1031,9 @@ async function areaFlow(page, label, base) {
   async function send() {
     await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
     await page.click("#send");
-    await page.waitForFunction(() => {
-      const status = document.getElementById("status").textContent;
-      const another = document.getElementById("another");
-      return status.startsWith("Locked in.") && another && !another.hidden;
-    });
+    await page.waitForFunction(() => document.getElementById("status").textContent === "Locked in. Thank you.");
     const body = posts[posts.length - 1];
-    await page.click("#another");
-    await page.waitForFunction(() => document.getElementById("another").hidden);
+    await page.waitForFunction(() => document.getElementById("friend").value === "" && document.getElementById("place").value === "");
     return body;
   }
 
