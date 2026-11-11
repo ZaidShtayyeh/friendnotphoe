@@ -127,12 +127,8 @@ async function crop(page) {
   return (await page.locator("#card").getAttribute("data-crop")).split(",").map(Number);
 }
 
-async function fill(page, { name = "Sam", score = "270", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
+async function fillDetails(page, { name = "Sam", score = "270", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
   await page.fill("#friend", name);
-  await page.fill("#place", "C + B");
-  await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
-  await page.fill("#city", "NYC");
-  await page.fill("#area", "East Village");
   await page.fill("#score", score);
   await page.locator('input[value="Food first"]').check();
   await page.fill("#vibes", vibes);
@@ -144,6 +140,14 @@ async function fill(page, { name = "Sam", score = "270", vibes = VIBES, moves = 
     await page.setInputFiles("#photo", shot);
     await waitForShot(page);
   }
+}
+
+async function fill(page, options = {}) {
+  await page.fill("#place", "C + B");
+  await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
+  await page.fill("#city", "NYC");
+  await page.fill("#area", "East Village");
+  await fillDetails(page, options);
 }
 
 async function settle(page) {
@@ -234,7 +238,34 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("text=it's half the card").count(), 0, `${label} no shot hint`);
   assert.equal(await page.locator("text=1 to 300, save the big ones").count(), 0, `${label} no HP hint on the right`);
   assert.equal(await page.locator("text=pick one, it sets the color").count(), 0, `${label} no category hint`);
+  assert.equal(await page.locator("text=so we know who to thank").count(), 0, `${label} no name hint`);
+  assert.equal(await page.locator("text=how it reads on the card").count(), 0, `${label} no place hint`);
+  assert.equal(await page.locator("text=optional, saves a search").count(), 0, `${label} no maps hint`);
+  assert.equal(await page.locator('label[for="friend"] .hint, label[for="place"] .hint, label[for="maps"] .hint').count(), 0);
   assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
+  assert.equal(await page.locator("input[placeholder], textarea[placeholder]").count(), 0, `${label} no placeholder example text`);
+  assert.equal(await page.locator("#another").count(), 0, `${label} no Make another`);
+  assert.equal(await page.locator("text=stick around").count(), 0);
+  assert.equal(await page.locator(".fine").textContent(), "Goes straight to Zaid.");
+  const shotNote = "Must be your own photo (of the food, drinks or scene you picked, not a pulled pic)";
+  assert.equal(await page.locator("#shot-field .hint").textContent(), shotNote);
+  assert.equal(await page.locator("#drop").isVisible(), true, `${label} callout shows before upload`);
+  assert.equal(await page.locator("#framer").isHidden(), true);
+  const shotPlace = await page.evaluate(() => {
+    const label = document.querySelector("#shot-field > label");
+    const hint = label.querySelector(".hint");
+    const range = document.createRange();
+    range.setStart(label.firstChild, 0);
+    range.setEnd(label.firstChild, label.firstChild.textContent.trimEnd().length);
+    const title = range.getBoundingClientRect();
+    const note = hint.getBoundingClientRect();
+    return { titleY: title.bottom, titleX: title.x, noteY: note.y, noteX: note.x };
+  });
+  assert.ok(shotPlace.noteY >= shotPlace.titleY - 1, `${label} callout sits under The shot`);
+  assert.ok(Math.abs(shotPlace.noteX - shotPlace.titleX) < 4, `${label} callout lines up with The shot`);
+  await page.locator("#shot-field").evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(200);
+  await page.locator("#shot-field").screenshot({ path: path.join(ARTIFACTS, `shot_callout_${label}.png`) });
   const hpLabel = await page.locator('label[for="score"]').boundingBox();
   const hpHint = await page.locator('label[for="score"] .hint').boundingBox();
   assert.ok(hpHint.x - hpLabel.x < 50, `${label} 300 max sits next to HP (${Math.round(hpHint.x - hpLabel.x)}px in)`);
@@ -249,6 +280,7 @@ async function exercise(page, label, base) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   assert.equal(overflow, true, `${label} horizontal overflow`);
   await waitForFonts(page);
+  await page.locator("section.block").first().screenshot({ path: path.join(ARTIFACTS, `hints_removed_${label}.png`) });
 
   // Empty card: the real chassis, with placeholders where their stuff goes.
   assert.equal(await page.locator("#card").getAttribute("data-color"), "neutral");
@@ -278,7 +310,9 @@ async function exercise(page, label, base) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   await quiet(page);
   await settle(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v5_${label}_empty.png`) });
+  await page.locator(".fields").screenshot({ path: path.join(ARTIFACTS, `empty_form_${label}.png`) });
 
   await page.locator('.stat[data-stat="food"] .bar').fill("35");
   assert.equal(await page.inputValue("#food"), "35", `${label} slider writes the number`);
@@ -538,10 +572,7 @@ async function exercise(page, label, base) {
   mode = "ok";
   await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
   await page.click("#send");
-  await page.waitForFunction(() => {
-    const status = document.getElementById("status").textContent;
-    return status.startsWith("Locked in.") && !document.getElementById("send").disabled;
-  });
+  await page.waitForFunction(() => document.getElementById("status").textContent === "Locked in. Thank you.");
   assert.equal(calls.length, 2, `${label} one more post`);
   assert.equal(calls[1].method, "POST");
   assert.match(calls[1].type, /^text\/plain/i);
@@ -572,16 +603,34 @@ async function exercise(page, label, base) {
   assert.equal(sent.token, "");
   assert.equal(typeof sent.startedAt, "number");
 
+  // The card stays up for the thank-you, then the whole form goes blank.
   assert.equal(await page.inputValue("#friend"), "Sam");
-  assert.equal(await page.inputValue("#place"), "");
+  assert.equal(await page.inputValue("#place"), "C + B");
+  assert.equal(await page.inputValue("#city"), "NYC");
+  assert.equal(await page.locator("#send").isDisabled(), true);
+  assert.equal(await page.locator("#card-photo").getAttribute("opacity"), "1");
+  await page.locator("#actions").evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: path.join(ARTIFACTS, `thanks_${label}.png`) });
+  await page.locator("#actions").screenshot({ path: path.join(ARTIFACTS, `thanks_actions_${label}.png`) });
+
+  await page.waitForFunction(() => window.scrollY < 2 && document.getElementById("friend").value === "" && document.getElementById("status").textContent === "");
   assert.equal(await page.inputValue("#city"), "");
+  assert.equal(await page.inputValue("#place"), "");
+  assert.equal(await page.inputValue("#maps"), "");
+  assert.equal(await page.inputValue("#area"), "");
   assert.equal(await page.inputValue("#score"), "");
   assert.equal(await page.inputValue("#vibes"), "");
   assert.equal(await page.inputValue("#move1"), "");
+  assert.equal(await page.inputValue("#move2"), "");
+  assert.equal(await page.inputValue("#move3"), "");
+  assert.equal(await page.inputValue("#food"), "");
+  assert.equal(await page.inputValue("#drinks"), "");
+  assert.equal(await page.inputValue("#scene"), "");
   assert.equal(await page.locator('input[name="category"]:checked').count(), 0);
-  assert.equal(await page.evaluate(() => document.activeElement.id), "place");
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null);
   assert.equal(await page.locator("#send").isEnabled(), true);
   assert.equal(await page.locator("#card-name").textContent(), "The spot");
+  assert.equal(await page.locator("#card-city").textContent(), "City");
   assert.deepEqual(await cardText(page, "card-move-1"), ["Move one"]);
   assert.equal(await page.locator("#card").getAttribute("data-color"), "neutral");
   assert.equal(await page.locator("#card").getAttribute("data-crop"), null);
@@ -589,6 +638,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#drop").isVisible(), true);
   assert.equal(await page.locator("#framer").isHidden(), true);
   assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
+  await page.screenshot({ path: path.join(ARTIFACTS, `blank_after_${label}.png`) });
 
   // No photo: the card can't be made.
   await fill(page, { shot: null });
@@ -623,6 +673,12 @@ async function exercise(page, label, base) {
   assert.equal(calls.length, 3, `${label} honeypot must not send`);
   assert.equal(await page.inputValue("#place"), "Forsythia");
   assert.deepEqual(errors, [], `${label} page errors`);
+
+  await page.evaluate(() => localStorage.setItem("fnf-name", "Stale"));
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#friend").waitFor();
+  assert.equal(await page.inputValue("#friend"), "", `${label} a stored name is not filled in`);
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null, `${label} the old name key is cleared`);
 }
 
 function peak(box) {
@@ -846,16 +902,217 @@ async function placesFlow(page, label, base) {
   assert.equal(await page.inputValue("#area"), "East Village");
   assert.equal(await page.locator("#card-name").textContent(), "C + B");
   assert.equal(await page.locator("#card-area").textContent(), "East Village, New York");
+  // The pick refreshes the card. It must not look like more typing, or the list opens again.
+  await page.waitForTimeout(600);
+  assert.equal(await page.locator("#place-list").isHidden(), true, `${label} suggestion list stays closed after a pick`);
+  assert.equal(await page.locator("#place").getAttribute("aria-expanded"), "false");
+  assert.equal(await page.evaluate(() => window.__placesLog.requests.length), 1, `${label} a pick does not search again`);
+  await page.screenshot({ path: path.join(ARTIFACTS, `places_closed_${label}.png`) });
   const fields = await page.evaluate(() => window.__placesLog.fields);
-  assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents"]);
+  assert.deepEqual(fields, ["displayName", "googleMapsURI", "addressComponents", "addressDescriptor"]);
   await page.fill("#area", "Lower East Side");
+  assert.equal(await page.locator("#area").isEditable(), true, `${label} neighborhood stays editable`);
   assert.equal(await page.inputValue("#area"), "Lower East Side");
   assert.equal(await page.locator("#card-area").textContent(), "Lower East Side, New York");
   await page.fill("#place", "Smor");
   await page.locator(".place-option").first().waitFor();
+  await page.locator(".place-option").first().click();
+  await page.waitForFunction(() => document.getElementById("place").value === "C + B");
+  await page.waitForTimeout(400);
+  assert.equal(await page.inputValue("#area"), "Lower East Side", `${label} a typed neighborhood is not replaced`);
+  assert.equal(await page.locator("#area").isEditable(), true);
+  assert.equal(await page.locator("#place-list").isHidden(), true);
   const after = await page.evaluate(() => window.__placesLog.requests.map((item) => item.token));
   assert.deepEqual(after, [1, 2]);
   assert.equal(mapsCalls.length, 0, `${label} mock must not call Google`);
+}
+
+function installAreaMock(fixtures) {
+  const samples = fixtures.map((item, index) => ({
+    name: item.displayName,
+    uri: `https://maps.google.com/?cid=${index + 1}`,
+    components: item.components,
+    areas: item.areas,
+  }));
+  window.__areaPicks = [];
+  function Token() {}
+  window.google = {
+    maps: {
+      importLibrary() {
+        return Promise.resolve({
+          AutocompleteSessionToken: Token,
+          AutocompleteSuggestion: {
+            fetchAutocompleteSuggestions(body) {
+              const typed = body.input.toLowerCase();
+              const hits = samples.filter((sample) => sample.name.toLowerCase().includes(typed));
+              return Promise.resolve({
+                suggestions: hits.map((sample) => ({
+                  placePrediction: {
+                    mainText: { toString() { return sample.name; } },
+                    secondaryText: { toString() { return "Somewhere"; } },
+                    text: { toString() { return sample.name; } },
+                    toPlace() {
+                      return {
+                        displayName: sample.name,
+                        googleMapsURI: sample.uri,
+                        addressComponents: sample.components,
+                        addressDescriptor: { areas: sample.areas.map((a) => ({ containment: a.containment, place: { displayName: a.name } })) },
+                        fetchFields() { return Promise.resolve(); },
+                      };
+                    },
+                  },
+                })),
+              });
+            },
+          },
+        });
+      },
+    },
+  };
+}
+
+const AREA_SPOTS = [
+  ["Time Again", "TIME AGAIN", "NYC", "Chinatown"],
+  ["Katz", "Katz's Delicatessen", "NYC", "Lower East Side"],
+  ["Via Carota", "Via Carota", "NYC", "West Village"],
+  ["Veselka", "Veselka", "NYC", "East Village"],
+  ["Peter Luger", "Peter Luger Steak House", "NYC", "Williamsburg"],
+  ["Roberta", "Roberta's", "NYC", "Bushwick"],
+  ["Roberto", "Roberto's", "NYC", "Bronx"],
+  ["Bu Qtair", "Bu Qtair Restaurant", "Dubai", "Umm Suqeim 2"],
+];
+
+async function areaFlow(page, label, base) {
+  const posts = [];
+  await page.route("https://sheet.test/**", async (route) => {
+    posts.push(JSON.parse(route.request().postData()));
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.route("https://maps.googleapis.com/**", (route) => route.abort());
+  const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, "_input-form/test/fixtures/places-real.json"), "utf8"));
+  fixtures.push({
+    query: "Nameless",
+    displayName: "Nameless Spot",
+    components: [
+      { longText: "Manhattan", types: ["sublocality_level_1", "sublocality"] },
+      { longText: "New York", types: ["locality"] },
+    ],
+    areas: [{ containment: "WITHIN", name: "Manhattan" }],
+  });
+  await page.addInitScript(installAreaMock, fixtures);
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  await page.goto(`${base}/betweenusfriends/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "on");
+  await page.evaluate((endpoint) => { FORM_ENDPOINT = endpoint; }, ENDPOINT);
+
+  const required = await page.evaluate(() => ({
+    attr: document.getElementById("area").required,
+    ariaRequired: document.getElementById("area").getAttribute("aria-required"),
+    label: document.querySelector('label[for="area"]').textContent,
+  }));
+  assert.equal(required.attr, false, `${label} area is not required`);
+  assert.equal(required.ariaRequired, null);
+  assert.equal(/\*/.test(required.label), false, `${label} no asterisk on area`);
+
+  async function pick(typed, name) {
+    await page.fill("#place", typed);
+    await page.locator(".place-option").first().waitFor();
+    await page.locator(".place-option").first().click();
+    await page.waitForFunction((want) => document.getElementById("place").value === want, name);
+    await page.waitForTimeout(150);
+  }
+
+  async function send() {
+    await page.evaluate(() => { formStartedAt = Date.now() - 5000; });
+    await page.click("#send");
+    await page.waitForFunction(() => document.getElementById("status").textContent === "Locked in. Thank you.");
+    const body = posts[posts.length - 1];
+    await page.waitForFunction(() => document.getElementById("friend").value === "" && document.getElementById("place").value === "");
+    return body;
+  }
+
+  const results = [];
+  for (const [typed, name, city, want] of AREA_SPOTS) {
+    await pick(typed, name);
+    const got = await page.inputValue("#area");
+    assert.equal(await page.inputValue("#city"), city, `${name} city`);
+    assert.equal(got, want, `${label} ${name} fills ${want}`);
+    assert.equal(await page.locator("#area").isEditable(), true);
+    assert.equal(await page.locator("#err-area").textContent(), "");
+    results.push([name, got]);
+    if (name === "TIME AGAIN") {
+      assert.equal(await page.locator("#card-area").textContent(), `Chinatown, New York`);
+      await page.waitForTimeout(500);
+      assert.equal(await page.locator("#place-list").isHidden(), true);
+      await page.mouse.move(2, 300);
+      if (label === "mobile") await page.locator("#area").scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(ARTIFACTS, `area_filled_${label}.png`) });
+    }
+  }
+
+  // Something they typed is never replaced, by a pick or a later pick.
+  await page.fill("#area", "Tompkins");
+  await pick("Katz", "Katz's Delicatessen");
+  assert.equal(await page.inputValue("#area"), "Tompkins", `${label} typed area survives a pick`);
+  await pick("Veselka", "Veselka");
+  assert.equal(await page.inputValue("#area"), "Tompkins");
+  // Clearing it lets the next pick fill, and an autofilled one is replaced by the next pick.
+  await page.fill("#area", "");
+  await pick("Katz", "Katz's Delicatessen");
+  assert.equal(await page.inputValue("#area"), "Lower East Side");
+  await pick("Veselka", "Veselka");
+  assert.equal(await page.inputValue("#area"), "East Village", `${label} an autofilled area follows the next pick`);
+
+  // Typed area goes out as typed.
+  await fillDetails(page);
+  await page.fill("#area", "Tompkins");
+  assert.equal((await send()).area, "Tompkins");
+
+  // Blank at submit, spot still the one they picked: Google's area goes out and shows.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#area", "");
+  assert.equal(await page.locator("#card-area").textContent(), "New York");
+  assert.equal((await send()).area, "Chinatown", `${label} a blank area sends Google's area`);
+
+  // They renamed the spot, so the old pick's area no longer applies.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#place", "Totally different spot");
+  await page.fill("#area", "");
+  assert.equal((await send()).area, "", `${label} a renamed spot does not borrow the old area`);
+
+  // Only the casing of the name changed: still the same pick.
+  await fillDetails(page);
+  await pick("Time Again", "TIME AGAIN");
+  await page.fill("#place", "Time Again");
+  await page.fill("#area", "");
+  assert.equal((await send()).area, "Chinatown");
+
+  // Google had nothing but a borough: blank, and it submits.
+  await fillDetails(page);
+  await pick("Nameless", "Nameless Spot");
+  assert.equal(await page.inputValue("#area"), "");
+  const nameless = await send();
+  assert.equal(nameless.area, "");
+  assert.equal(nameless.restaurant, "Nameless Spot");
+
+  // Never picked anything: blank and it submits.
+  await fillDetails(page);
+  await page.fill("#place", "Typed by hand");
+  await page.fill("#city", "NYC");
+  assert.equal(await page.inputValue("#area"), "");
+  assert.equal((await send()).area, "");
+
+  assert.equal(posts.length, 6);
+  assert.deepEqual(errors, []);
+  return results;
 }
 
 async function placesLoadFailure(page, base) {
@@ -901,6 +1158,8 @@ try {
   await exercise(desktop, "desktop", base);
   const placesDesktop = await desktopContext.newPage();
   await placesFlow(placesDesktop, "desktop", base);
+  const areaDesktop = await desktopContext.newPage();
+  for (const [name, area] of await areaFlow(areaDesktop, "desktop", base)) console.log(`area (desktop mock of real response): ${name} -> ${area}`);
   const placesFailed = await desktopContext.newPage();
   await placesLoadFailure(placesFailed, base);
   await desktopContext.close();
@@ -912,6 +1171,8 @@ try {
   await exercise(mobile, "mobile", base);
   const placesMobile = await mobileContext.newPage();
   await placesFlow(placesMobile, "mobile", base);
+  const areaMobile = await mobileContext.newPage();
+  await areaFlow(areaMobile, "mobile", base);
   await mobileContext.close();
 
   assert.equal(appsScriptHits.length, 0, "script.google.com was contacted");

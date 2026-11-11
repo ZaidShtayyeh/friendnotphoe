@@ -164,8 +164,8 @@ var NoBallValidate = (function () {
     if (!city) errors.city = 'City is required.';
     else if (city.length > LIMITS.city) errors.city = 'City must be 80 characters or fewer.';
 
-    if (!area) errors.area = 'Area is required.';
-    else if (area.length > LIMITS.area) errors.area = 'Area must be 80 characters or fewer.';
+    // Area is optional. The page fills it from Google when it can.
+    if (area.length > LIMITS.area) errors.area = 'Area must be 80 characters or fewer.';
 
     var hp = wholeNumber(input.hp, LIMITS.scoreMin, LIMITS.scoreMax);
     if (hp === null) errors.hp = 'Score must be a whole number from 1 to 300.';
@@ -283,6 +283,8 @@ if (typeof module === 'object' && module.exports) module.exports = NoBallValidat
 // --- end shared validation ---
 
 var SHEET_NAME = 'Friend Submissions';
+// Friend Submissions tab. The row link in the alert mail uses this gid.
+var SHEET_GID = '1940091207';
 var TIMEZONE = 'America/New_York';
 var PHOTO_FOLDER_NAME = 'FNF Friend Photos';
 var PHOTO_FOLDER_KEY = 'FNF_FRIEND_PHOTOS_FOLDER_ID';
@@ -397,6 +399,29 @@ function append_(value) {
     value.move3
   ];
   sheet.appendRow(row.map(plainCell_));
+  notify_(ss, value, file.getUrl(), sheet.getLastRow());
+}
+
+// The row and the photo are already saved. A mail failure must not undo that.
+function notify_(ss, value, photoUrl, rowNumber) {
+  try {
+    var to = Session.getEffectiveUser().getEmail();
+    if (!to) return;
+    var where = value.area ? value.city + ' / ' + value.area : value.city;
+    var link = String(ss.getUrl() || '').split('#')[0] + '#gid=' + SHEET_GID + '&range=A' + rowNumber;
+    var subject = 'New FNF card: ' + value.restaurant + ' from ' + value.submittedBy;
+    var body = [
+      value.restaurant,
+      'From ' + value.submittedBy,
+      where,
+      'HP ' + value.hp,
+      value.category,
+      '',
+      'Row: ' + link,
+      'Photo: ' + photoUrl
+    ].join('\n');
+    MailApp.sendEmail(to, subject, body);
+  } catch (err) {}
 }
 
 function ensureHeaders_(sheet) {

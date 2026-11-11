@@ -53,6 +53,7 @@ function sheetCells(rows) {
 
 function boot(options = {}) {
   const calls = { names: [], inserts: [], locks: [], tz: null, fmts: [] };
+  const mail = [];
   const sheets = new Map();
   const files = [];
   const folders = [];
@@ -95,6 +96,7 @@ function boot(options = {}) {
     };
   }
   const ss = {
+    getUrl() { return "https://docs.google.com/spreadsheets/d/sheet-1/edit"; },
     getSheetByName(name) {
       calls.names.push(name);
       return sheets.get(name) || null;
@@ -184,9 +186,25 @@ function boot(options = {}) {
         };
       },
     },
+    Session: {
+      getEffectiveUser() {
+        return {
+          getEmail() {
+            if (options.emailThrows) throw new Error("no user");
+            return options.owner === undefined ? "owner@example.com" : options.owner;
+          },
+        };
+      },
+    },
+    MailApp: {
+      sendEmail(to, subject, body) {
+        if (options.mailThrows) throw new Error("mail failed");
+        mail.push({ to, subject, body });
+      },
+    },
   };
   vm.runInContext(source, vm.createContext(context), { filename: "Code.gs" });
-  return { context, calls, sheets, files, folders, props, sharing };
+  return { context, calls, sheets, files, folders, props, sharing, mail };
 }
 
 function reply(out) {
@@ -238,7 +256,7 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
   const realNow = Date.now;
   Date.now = () => now;
   try {
-    const { context, calls, sheets, files, folders, props, sharing } = boot();
+    const { context, calls, sheets, files, folders, props, sharing, mail } = boot();
     const body = reply(context.doPost(event(entry())));
     assert.deepEqual(body, { ok: true });
     assert.deepEqual(calls.names, ["Friend Submissions"]);
@@ -266,6 +284,57 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     assert.equal(folders[0].name, "FNF Friend Photos");
     assert.equal(props.FNF_FRIEND_PHOTOS_FOLDER_ID, "folder-1");
     assert.deepEqual(sharing, []);
+    assert.equal(mail.length, 1);
+    assert.equal(mail[0].to, "owner@example.com");
+    assert.equal(mail[0].subject, "New FNF card: C + B from Sam");
+    assert.equal(mail[0].body, [
+      "C + B",
+      "From Sam",
+      "NYC / East Village",
+      "HP 270",
+      "Food first",
+      "",
+      "Row: https://docs.google.com/spreadsheets/d/sheet-1/edit#gid=1940091207&range=A2",
+      "Photo: https://drive.google.com/file/d/file-1/view",
+    ].join("\n"));
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a mail failure still saves the row", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    for (const options of [{ mailThrows: true }, { emailThrows: true }, { owner: "" }]) {
+      const { context, sheets, mail } = boot(options);
+      assert.deepEqual(reply(context.doPost(event(entry()))), { ok: true });
+      assert.equal(sheets.get("Friend Submissions").rows.length, 2);
+      assert.equal(mail.length, 0);
+    }
+    const blank = boot();
+    assert.deepEqual(reply(blank.context.doPost(event(entry({ area: "" })))), { ok: true });
+    assert.match(blank.mail[0].body, /^C \+ B\nFrom Sam\nNYC\nHP 270\nFood first\n/);
+    assert.equal(blank.mail[0].body.includes(" / "), false);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a post with no area still saves, with an empty Area cell", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets } = boot();
+    for (const blank of ["", "   "]) {
+      assert.deepEqual(reply(context.doPost(event(entry({ area: blank })))), { ok: true });
+    }
+    const rows = sheets.get("Friend Submissions").rows;
+    assert.equal(rows.length, 3);
+    assert.equal(rows[0][7], "Area");
+    assert.equal(rows[1][6], "NYC");
+    assert.equal(rows[1][7], "");
+    assert.equal(rows[2][7], "");
   } finally {
     Date.now = realNow;
   }
@@ -420,10 +489,11 @@ test("invalid fields, honeypot, and too-fast posts write nothing", () => {
       entry({ move3: "m".repeat(25) }),
     ];
     for (const body of cases) {
-      const { context, calls, sheets, files, folders } = boot();
+      const { context, calls, sheets, files, folders, mail } = boot();
       const result = reply(context.doPost(event(body)));
       assert.equal(result.ok, false, JSON.stringify({ ...body, photoData: body.photoData ? `${body.photoData.length} chars` : "" }));
       assert.equal(typeof result.error, "string");
+      assert.equal(mail.length, 0);
       assert.equal(sheets.size, 0);
       assert.equal(files.length, 0);
       assert.equal(folders.length, 0);

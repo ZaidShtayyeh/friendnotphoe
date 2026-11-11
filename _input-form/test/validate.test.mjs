@@ -159,13 +159,20 @@ test("your name is required, trimmed, and capped at 60 characters", () => {
   assert.match(v.validateSubmission(valid({ submittedBy: "n".repeat(61) })).errors.submittedBy, /60/);
 });
 
-test("required place, city, and area are trimmed and capped at 80 characters", () => {
+test("required place and city, and optional area, are trimmed and capped at 80 characters", () => {
   assert.equal(v.validateSubmission(valid({ restaurant: "  Café  " })).value.restaurant, "Café");
   assert.equal(v.validateSubmission(valid({ restaurant: "" })).errors.restaurant, "Place name is required.");
   assert.match(v.validateSubmission(valid({ restaurant: "a".repeat(81) })).errors.restaurant, /80/);
   assert.equal(v.validateSubmission(valid({ restaurant: "a".repeat(80) })).ok, true);
   assert.equal(v.validateSubmission(valid({ city: " " })).errors.city, "City is required.");
-  assert.equal(v.validateSubmission(valid({ area: "" })).errors.area, "Area is required.");
+  for (const blank of ["", "   ", undefined]) {
+    const result = v.validateSubmission(valid({ area: blank }));
+    assert.equal(result.ok, true);
+    assert.equal(result.errors.area, undefined);
+    assert.equal(result.value.area, "");
+  }
+  assert.equal(v.validateSubmission(valid({ area: "  Chinatown " })).value.area, "Chinatown");
+  assert.equal(v.validateSubmission(valid({ area: "a".repeat(80) })).ok, true);
   assert.match(v.validateSubmission(valid({ city: "c".repeat(81) })).errors.city, /80/);
   assert.match(v.validateSubmission(valid({ area: "a".repeat(81) })).errors.area, /80/);
 });

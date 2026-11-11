@@ -1,0 +1,1388 @@
+[
+ {
+  "query": "Time Again New York",
+  "displayName": "TIME AGAIN",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Chinatown"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Lower East Side"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Katz's Delicatessen New York",
+  "displayName": "Katz's Delicatessen",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Lower East Side"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Via Carota New York",
+  "displayName": "Via Carota",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "West Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Greenwich Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Veselka New York",
+  "displayName": "Veselka",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Ukrainian Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "East Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Peter Luger Steak House Brooklyn",
+  "displayName": "Peter Luger Steak House",
+  "components": [
+   {
+    "longText": "Southside",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Southside"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "South Williamsburg"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Williamsburg"
+   }
+  ]
+ },
+ {
+  "query": "Roberta's Pizza Brooklyn",
+  "displayName": "Roberta's",
+  "components": [
+   {
+    "longText": "Bushwick",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Bushwick"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Parking lot"
+   }
+  ]
+ },
+ {
+  "query": "Roberto's Restaurant Bronx",
+  "displayName": "Roberto's",
+  "components": [
+   {
+    "longText": "Little Italy",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "The Bronx",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Bronx County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Little Italy"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Belmont"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "West Bronx"
+   }
+  ]
+ },
+ {
+  "query": "Bu Qtair Dubai",
+  "displayName": "Bu Qtair Restaurant",
+  "components": [
+   {
+    "longText": "Umm Suqeim 2",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Umm Suqeim Second",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Dubai",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "Dubai",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Umm Suqeim 2"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Umm Suqeim Second"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Umm Suqeim"
+   }
+  ]
+ },
+ {
+  "query": "Kalaya Philadelphia",
+  "displayName": "Kalaya",
+  "components": [
+   {
+    "longText": "North Philadelphia",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Philadelphia",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "Philadelphia County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "Pennsylvania",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Fishtown"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "North Philadelphia East"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "North Philadelphia"
+   }
+  ]
+ },
+ {
+  "query": "Nom Wah Tea Parlor New York",
+  "displayName": "Nom Wah Tea Parlor",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Chinatown"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Lucali Brooklyn",
+  "displayName": "Lucali",
+  "components": [
+   {
+    "longText": "Carroll Gardens",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Carroll Gardens"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn"
+   }
+  ]
+ },
+ {
+  "query": "Cho Dang Gol New York",
+  "displayName": "Cho Dang Gol",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Midtown South"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Midtown West"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Midtown Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Gramercy Tavern New York",
+  "displayName": "Gramercy Tavern",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Midtown Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Flatiron District"
+   }
+  ]
+ },
+ {
+  "query": "Balthazar New York",
+  "displayName": "Balthazar",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "SoHo"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Carbone New York",
+  "displayName": "Carbone New York",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "South Village"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Greenwich Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Peter Pan Donut Brooklyn",
+  "displayName": "Peter Pan Donut & Pastry Shop",
+  "components": [
+   {
+    "longText": "Greenpoint",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Greenpoint"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn"
+   },
+   {
+    "containment": "NEAR",
+    "name": "Nassau Av"
+   }
+  ]
+ },
+ {
+  "query": "Per Se New York",
+  "displayName": "Per Se",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Mandarin Oriental, New York"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Midtown Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Sushi Yasuda New York",
+  "displayName": "Sushi Yasuda",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Midtown East"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Midtown Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Jackson Diner Queens",
+  "displayName": "JACKSON DINER - INDIAN CUISINE",
+  "components": [
+   {
+    "longText": "Jackson Heights",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Queens",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Queens County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Jackson Heights"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Queens"
+   },
+   {
+    "containment": "NEAR",
+    "name": "Elmjack Mall"
+   }
+  ]
+ },
+ {
+  "query": "Al Di La Trattoria Brooklyn",
+  "displayName": "al di l\u00e0 Trattoria",
+  "components": [
+   {
+    "longText": "Park Slope",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Park Slope"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Brooklyn"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Parking Lot for Bicycles"
+   }
+  ]
+ },
+ {
+  "query": "Speedy Romeo Brooklyn",
+  "displayName": "Speedy Romeo",
+  "components": [
+   {
+    "longText": "Clinton Hill",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Clinton Hill"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Brooklyn"
+   },
+   {
+    "containment": "NEAR",
+    "name": "Greene Avenue Senior"
+   }
+  ]
+ },
+ {
+  "query": "Union Square Cafe New York",
+  "displayName": "Union Square Cafe",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Gramercy Park"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Midtown Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Odeon Tribeca New York",
+  "displayName": "The Odeon",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Tribeca"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Rubirosa New York",
+  "displayName": "Rubirosa",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Nolita"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Il Cortile New York",
+  "displayName": "Il Cortile",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Little Italy"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Pastis New York",
+  "displayName": "Pastis",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "West Village"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Greenwich Village"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Lower Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Eataly Flatiron New York",
+  "displayName": "Eataly - Flatiron",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Flatiron District"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Midtown Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ },
+ {
+  "query": "Sant Ambroeus Madison Avenue New York",
+  "displayName": "Sant Ambroeus Madison",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Upper East Side"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   },
+   {
+    "containment": "NEAR",
+    "name": "Institute of Fine Arts, New York University"
+   }
+  ]
+ },
+ {
+  "query": "Cafe Mogador Williamsburg Brooklyn",
+  "displayName": "Cafe Mogador",
+  "components": [
+   {
+    "longText": "Williamsburg",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Williamsburg"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn"
+   }
+  ]
+ },
+ {
+  "query": "Cobble Hill Brooklyn Chez Moi",
+  "displayName": "Chez Moi",
+  "components": [
+   {
+    "longText": "Brooklyn Heights",
+    "types": [
+     "neighborhood"
+    ]
+   },
+   {
+    "longText": "Brooklyn",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "Kings County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn Heights"
+   },
+   {
+    "containment": "OUTSKIRTS",
+    "name": "Brooklyn"
+   },
+   {
+    "containment": "NEAR",
+    "name": "Perlmutter Cancer Center at Joseph S. & Diane H. Steinberg Ambulatory Care Center at NYU Langone"
+   }
+  ]
+ },
+ {
+  "query": "Joe's Shanghai New York",
+  "displayName": "Joe's Shanghai",
+  "components": [
+   {
+    "longText": "Manhattan",
+    "types": [
+     "sublocality_level_1",
+     "sublocality"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "locality"
+    ]
+   },
+   {
+    "longText": "New York County",
+    "types": [
+     "administrative_area_level_2"
+    ]
+   },
+   {
+    "longText": "New York",
+    "types": [
+     "administrative_area_level_1"
+    ]
+   }
+  ],
+  "areas": [
+   {
+    "containment": "WITHIN",
+    "name": "Chinatown"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Lower Manhattan"
+   },
+   {
+    "containment": "WITHIN",
+    "name": "Manhattan"
+   }
+  ]
+ }
+]
