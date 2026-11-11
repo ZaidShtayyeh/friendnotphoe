@@ -15,7 +15,7 @@ Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **n
 5. **Deploy → New deployment → type: Web app**.
    - Execute as: **Me**
    - Who has access: **Anyone**
-6. Authorize when Google asks. The script needs the spreadsheet and Drive. It only creates **Friend Submissions** (if that tab is missing) and appends rows there. The photo goes in a Drive folder named **FNF Friend Photos** (created in your Drive the first time, then remembered). The script does not share those files.
+6. Authorize when Google asks. The script needs the spreadsheet, Drive, and permission to send email. It only creates **Friend Submissions** (if that tab is missing) and appends rows there. The photo goes in a Drive folder named **FNF Friend Photos** (created in your Drive the first time, then remembered). The script does not share those files. After the row and the photo are saved, it emails you (the account the script runs as) about the new card. If that mail fails, the submission still counts as saved.
 7. Copy the web app URL. It ends in `/exec`.
 8. Open that URL once. The browser should show `{"ok":true,"ready":true}` and the sheet should gain no row.
 9. Put that URL in `betweenusfriends/index.html` as `FORM_ENDPOINT` if it is not already the one there. That constant is what connects the form.
@@ -29,7 +29,7 @@ To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drink
 
 `doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, three special moves are required at 24 characters or fewer each, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page sends the 3:2 window the friend framed on the card, as an 1800 × 1200 jpeg. A HEIC the browser cannot decode is sent as-is.
 
-It then takes a script lock, saves the photo, and appends one row.
+It then takes a script lock, saves the photo, and appends one row. After both of those succeed it emails `Session.getEffectiveUser().getEmail()` through `MailApp.sendEmail`. The subject is `New FNF card: <Restaurant> from <Name>`. The body has the restaurant, who sent it, city and area, HP, category, a link to that row (`#gid=1940091207&range=A<row>`), and the Drive photo link. The mail is in a try/catch, so a mail problem never fails the save.
 
 The Drive file is named `yyyy-MM-dd HHmm - Restaurant - Submitted by.ext` in America/New_York, for example `2026-11-10 1649 - C + B - Sam.jpg`. The folder id is stored in Script Properties as `FNF_FRIEND_PHOTOS_FOLDER_ID` after the first save. Nothing calls `setSharing`, so the file stays private to the account that owns the script.
 

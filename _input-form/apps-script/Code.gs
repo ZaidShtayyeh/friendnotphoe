@@ -283,6 +283,8 @@ if (typeof module === 'object' && module.exports) module.exports = NoBallValidat
 // --- end shared validation ---
 
 var SHEET_NAME = 'Friend Submissions';
+// Friend Submissions tab. The row link in the alert mail uses this gid.
+var SHEET_GID = '1940091207';
 var TIMEZONE = 'America/New_York';
 var PHOTO_FOLDER_NAME = 'FNF Friend Photos';
 var PHOTO_FOLDER_KEY = 'FNF_FRIEND_PHOTOS_FOLDER_ID';
@@ -397,6 +399,29 @@ function append_(value) {
     value.move3
   ];
   sheet.appendRow(row.map(plainCell_));
+  notify_(ss, value, file.getUrl(), sheet.getLastRow());
+}
+
+// The row and the photo are already saved. A mail failure must not undo that.
+function notify_(ss, value, photoUrl, rowNumber) {
+  try {
+    var to = Session.getEffectiveUser().getEmail();
+    if (!to) return;
+    var where = value.area ? value.city + ' / ' + value.area : value.city;
+    var link = String(ss.getUrl() || '').split('#')[0] + '#gid=' + SHEET_GID + '&range=A' + rowNumber;
+    var subject = 'New FNF card: ' + value.restaurant + ' from ' + value.submittedBy;
+    var body = [
+      value.restaurant,
+      'From ' + value.submittedBy,
+      where,
+      'HP ' + value.hp,
+      value.category,
+      '',
+      'Row: ' + link,
+      'Photo: ' + photoUrl
+    ].join('\n');
+    MailApp.sendEmail(to, subject, body);
+  } catch (err) {}
 }
 
 function ensureHeaders_(sheet) {

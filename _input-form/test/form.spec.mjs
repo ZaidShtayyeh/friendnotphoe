@@ -243,6 +243,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("text=optional, saves a search").count(), 0, `${label} no maps hint`);
   assert.equal(await page.locator('label[for="friend"] .hint, label[for="place"] .hint, label[for="maps"] .hint').count(), 0);
   assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
+  assert.equal(await page.locator("input[placeholder], textarea[placeholder]").count(), 0, `${label} no placeholder example text`);
   const shotNote = "Must be your own photo (of the food, drinks or scene you picked, not a pulled pic)";
   assert.equal(await page.locator("#shot-field .hint").textContent(), shotNote);
   assert.equal(await page.locator("#drop").isVisible(), true, `${label} callout shows before upload`);
@@ -306,7 +307,9 @@ async function exercise(page, label, base) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   await quiet(page);
   await settle(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(ARTIFACTS, `input_form_v5_${label}_empty.png`) });
+  await page.locator(".fields").screenshot({ path: path.join(ARTIFACTS, `empty_form_${label}.png`) });
 
   await page.locator('.stat[data-stat="food"] .bar').fill("35");
   assert.equal(await page.inputValue("#food"), "35", `${label} slider writes the number`);
@@ -568,7 +571,8 @@ async function exercise(page, label, base) {
   await page.click("#send");
   await page.waitForFunction(() => {
     const status = document.getElementById("status").textContent;
-    return status.startsWith("Locked in.") && !document.getElementById("send").disabled;
+    const another = document.getElementById("another");
+    return status.startsWith("Locked in.") && another && !another.hidden && document.getElementById("send").hidden;
   });
   assert.equal(calls.length, 2, `${label} one more post`);
   assert.equal(calls[1].method, "POST");
@@ -600,16 +604,41 @@ async function exercise(page, label, base) {
   assert.equal(sent.token, "");
   assert.equal(typeof sent.startedAt, "number");
 
+  // The card they sent stays up, with a way to start the next one.
+  assert.equal(await page.locator("#status").textContent(), "Locked in. Zaid's got it.");
+  assert.equal(await page.locator("#another").isVisible(), true);
+  assert.equal(await page.locator("#send").isHidden(), true);
   assert.equal(await page.inputValue("#friend"), "Sam");
+  assert.equal(await page.inputValue("#place"), "C + B");
+  assert.equal(await page.inputValue("#city"), "NYC");
+  assert.equal(await page.locator("#card-photo").getAttribute("opacity"), "1");
+  await page.locator("#actions").evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: path.join(ARTIFACTS, `success_${label}.png`) });
+  await page.locator("#actions").screenshot({ path: path.join(ARTIFACTS, `success_actions_${label}.png`) });
+
+  await page.click("#another");
+  await page.waitForFunction(() => document.getElementById("another").hidden && document.activeElement.id === "place");
+  assert.equal(await page.inputValue("#friend"), "Sam");
+  assert.equal(await page.inputValue("#city"), "NYC");
   assert.equal(await page.inputValue("#place"), "");
-  assert.equal(await page.inputValue("#city"), "");
+  assert.equal(await page.inputValue("#maps"), "");
+  assert.equal(await page.inputValue("#area"), "");
   assert.equal(await page.inputValue("#score"), "");
   assert.equal(await page.inputValue("#vibes"), "");
   assert.equal(await page.inputValue("#move1"), "");
+  assert.equal(await page.inputValue("#move2"), "");
+  assert.equal(await page.inputValue("#move3"), "");
+  assert.equal(await page.inputValue("#food"), "");
+  assert.equal(await page.inputValue("#drinks"), "");
+  assert.equal(await page.inputValue("#scene"), "");
   assert.equal(await page.locator('input[name="category"]:checked').count(), 0);
-  assert.equal(await page.evaluate(() => document.activeElement.id), "place");
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), "Sam");
+  assert.equal(await page.locator("#send").isVisible(), true);
   assert.equal(await page.locator("#send").isEnabled(), true);
   assert.equal(await page.locator("#card-name").textContent(), "The spot");
+  assert.equal(await page.locator("#card-city").textContent(), "NYC");
+  assert.equal(await page.locator("#card-area").textContent(), "New York");
   assert.deepEqual(await cardText(page, "card-move-1"), ["Move one"]);
   assert.equal(await page.locator("#card").getAttribute("data-color"), "neutral");
   assert.equal(await page.locator("#card").getAttribute("data-crop"), null);
@@ -617,6 +646,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#drop").isVisible(), true);
   assert.equal(await page.locator("#framer").isHidden(), true);
   assert.equal(await page.locator('.stat[data-stat="food"]').evaluate((el) => el.classList.contains("unset")), true);
+  await page.locator("section.block").first().screenshot({ path: path.join(ARTIFACTS, `another_${label}.png`) });
 
   // No photo: the card can't be made.
   await fill(page, { shot: null });
@@ -651,6 +681,14 @@ async function exercise(page, label, base) {
   assert.equal(calls.length, 3, `${label} honeypot must not send`);
   assert.equal(await page.inputValue("#place"), "Forsythia");
   assert.deepEqual(errors, [], `${label} page errors`);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#friend").waitFor();
+  assert.equal(await page.inputValue("#friend"), "Sam", `${label} the name is waiting next visit`);
+  await page.fill("#friend", "Alex");
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), "Alex");
+  await page.fill("#friend", "   ");
+  assert.equal(await page.evaluate(() => localStorage.getItem("fnf-name")), null);
 }
 
 function peak(box) {
@@ -1005,9 +1043,13 @@ async function areaFlow(page, label, base) {
     await page.click("#send");
     await page.waitForFunction(() => {
       const status = document.getElementById("status").textContent;
-      return status.startsWith("Locked in.") && !document.getElementById("send").disabled;
+      const another = document.getElementById("another");
+      return status.startsWith("Locked in.") && another && !another.hidden;
     });
-    return posts[posts.length - 1];
+    const body = posts[posts.length - 1];
+    await page.click("#another");
+    await page.waitForFunction(() => document.getElementById("another").hidden);
+    return body;
   }
 
   const results = [];

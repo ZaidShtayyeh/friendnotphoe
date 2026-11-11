@@ -336,6 +336,8 @@
     .send:hover { transform: translateY(-2px); background: #1a202c; box-shadow: 0 10px 24px rgba(45,55,72,0.25); }
     .send:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
     .send:disabled { opacity: 0.6; cursor: progress; transform: none; box-shadow: none; }
+    .send[hidden] { display: none; }
+    .actions .status { margin-top: 0; margin-bottom: 0.85rem; }
     .fine { margin-top: 0.7rem; font-size: 0.8rem; font-style: italic; color: var(--faint); }
 
     /* ---------- The live card: the real card art, filled in as they type ---------- */
@@ -563,21 +565,19 @@
 
     <form id="entry" novalidate>
       <div class="fields">
-        <p id="status" class="status" role="status"></p>
-
         <section class="block">
           <h2>The spot <span class="aside">who, what, where</span></h2>
 
           <div class="field">
             <label for="friend">Your name</label>
-            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Zaid">
+            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next">
             <p class="error" id="err-submittedBy"></p>
           </div>
 
           <div class="field">
             <label for="place">What's it called</label>
             <div class="place-combo">
-              <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Time Again" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
+              <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
               <ul id="place-list" class="place-list" role="listbox" hidden></ul>
             </div>
             <p class="error" id="err-restaurant"></p>
@@ -585,19 +585,19 @@
 
           <div class="field">
             <label for="maps">Google Maps link</label>
-            <input class="text" id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="Paste the share link" enterkeyhint="next">
+            <input class="text" id="maps" name="maps" type="url" inputmode="url" maxlength="500" autocomplete="off" enterkeyhint="next">
             <p class="error" id="err-maps"></p>
           </div>
 
           <div class="pair">
             <div class="field">
               <label for="city">City</label>
-              <input class="text" id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="NYC">
+              <input class="text" id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next">
               <p class="error" id="err-city"></p>
             </div>
             <div class="field">
               <label for="area">Neighborhood</label>
-              <input class="text" id="area" name="area" maxlength="80" autocomplete="off" enterkeyhint="next" placeholder="Lower East Side">
+              <input class="text" id="area" name="area" maxlength="80" autocomplete="off" enterkeyhint="next">
               <p class="error" id="err-area"></p>
             </div>
           </div>
@@ -636,7 +636,7 @@
 
           <div class="field">
             <label class="inline-hint" for="score">HP <span class="hint">300 max</span></label>
-            <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next" placeholder="280"></span></div>
+            <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next"></span></div>
             <p class="error" id="err-hp"></p>
           </div>
 
@@ -653,7 +653,7 @@
 
           <div class="field">
             <div class="label-row"><label for="vibes">Vibes</label><button type="button" class="inspo-btn" data-inspo><span class="spark" aria-hidden="true">✦</span>Need inspo?</button></div>
-            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="Say it like you'd text the group chat. What it is, who it's for, when to go."></textarea>
+            <textarea id="vibes" name="vibes" maxlength="250" required></textarea>
             <p class="counter" id="counter">0/250</p>
             <p class="error" id="err-vibes"></p>
           </div>
@@ -664,17 +664,17 @@
           <div class="moves">
             <div class="field">
               <label class="sr-only" for="move1">Move 1</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">1</span><input id="move1" name="move1" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Bread &amp; Olive Oil"><span class="move-left" id="left-move1"></span></div>
+              <div class="move-box"><span class="move-num" aria-hidden="true">1</span><input id="move1" name="move1" maxlength="24" required autocomplete="off" enterkeyhint="next"><span class="move-left" id="left-move1"></span></div>
               <p class="error" id="err-move1"></p>
             </div>
             <div class="field">
               <label class="sr-only" for="move2">Move 2</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">2</span><input id="move2" name="move2" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Dirty Martini"><span class="move-left" id="left-move2"></span></div>
+              <div class="move-box"><span class="move-num" aria-hidden="true">2</span><input id="move2" name="move2" maxlength="24" required autocomplete="off" enterkeyhint="next"><span class="move-left" id="left-move2"></span></div>
               <p class="error" id="err-move2"></p>
             </div>
             <div class="field">
               <label class="sr-only" for="move3">Move 3</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">3</span><input id="move3" name="move3" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Orange Wine"><span class="move-left" id="left-move3"></span></div>
+              <div class="move-box"><span class="move-num" aria-hidden="true">3</span><input id="move3" name="move3" maxlength="24" required autocomplete="off" enterkeyhint="next"><span class="move-left" id="left-move3"></span></div>
               <p class="error" id="err-move3"></p>
             </div>
           </div>
@@ -686,21 +686,21 @@
           <div class="stat unset" data-stat="food">
             <label for="food">Food</label>
             <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="food">
-            <input class="num" id="food" name="food" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+            <input class="num" id="food" name="food" inputmode="numeric" maxlength="3" required autocomplete="off">
           </div>
           <p class="error stat-err" id="err-food"></p>
 
           <div class="stat unset" data-stat="drink">
             <label for="drinks">Drink</label>
             <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="drinks">
-            <input class="num" id="drinks" name="drink" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+            <input class="num" id="drinks" name="drink" inputmode="numeric" maxlength="3" required autocomplete="off">
           </div>
           <p class="error stat-err" id="err-drink"></p>
 
           <div class="stat unset" data-stat="scene">
             <label for="scene">Scene</label>
             <input class="bar" type="range" min="0" max="100" step="1" value="0" tabindex="-1" aria-hidden="true" data-for="scene">
-            <input class="num" id="scene" name="scene" inputmode="numeric" maxlength="3" required autocomplete="off" placeholder="0–100">
+            <input class="num" id="scene" name="scene" inputmode="numeric" maxlength="3" required autocomplete="off">
           </div>
           <p class="error stat-err" id="err-scene"></p>
         </section>
@@ -774,9 +774,11 @@
         <p class="stage-tip" id="stageTip">Fills in as you go.</p>
       </aside>
 
-      <div class="actions">
+      <div class="actions" id="actions">
+        <p id="status" class="status" role="status"></p>
         <button type="submit" class="send" id="send">Send it</button>
-        <p class="fine">Goes straight to Zaid. Your name sticks around for the next one.</p>
+        <button type="button" class="send" id="another" hidden>Make another</button>
+        <p class="fine">Goes straight to Zaid. Your name and city stick around for the next one.</p>
       </div>
     </form>
   </main>
@@ -808,7 +810,7 @@
       sending: 'Sending…',
       fixIt: 'Almost. Fix the red bits.',
       notConnected: "Not hooked up yet, nothing got sent. Hang on to this one.",
-      saved: "Locked in. Zaid's got it. Got another spot?",
+      saved: "Locked in. Zaid's got it.",
       unsure: "Not sure that landed. Nothing's cleared, check with Zaid before you send it again.",
       offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
       bounced: 'The sheet bounced that. Try again.',
@@ -875,6 +877,7 @@
     var form = $('entry');
     var statusEl = $('status');
     var sendBtn = $('send');
+    var anotherBtn = $('another');
     var place = $('place');
     var vibes = $('vibes');
     var counter = $('counter');
@@ -888,6 +891,26 @@
     var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var mobileQuery = window.matchMedia('(max-width: 959px)');
     window.formStartedAt = Date.now();
+    var holding = false;
+    var NAME_KEY = 'fnf-name';
+
+    function rememberName() {
+      try {
+        var name = String($('friend').value || '').replace(/^\s+|\s+$/g, '');
+        if (name) localStorage.setItem(NAME_KEY, name);
+        else localStorage.removeItem(NAME_KEY);
+      } catch (err) {}
+    }
+
+    function recallName() {
+      try {
+        var saved = localStorage.getItem(NAME_KEY);
+        if (saved && !String($('friend').value || '').replace(/^\s+|\s+$/g, '')) $('friend').value = saved;
+      } catch (err) {}
+    }
+
+    recallName();
+    $('friend').addEventListener('input', rememberName);
 
     function selectedCategory() {
       var picked = form.querySelector('input[name="category"]:checked');
@@ -1967,6 +1990,44 @@
       };
     }
 
+    // The card they just sent stays up. Make another clears it, except the name and the city.
+    function showSaved() {
+      holding = true;
+      rememberName();
+      sendBtn.hidden = true;
+      anotherBtn.hidden = false;
+      setStage(false);
+      showStatus(COPY.saved, 'ok');
+      anotherBtn.focus();
+    }
+
+    function resetForAnother() {
+      var name = $('friend').value;
+      var city = $('city').value;
+      form.reset();
+      forgetPick();
+      clearShot();
+      $('friend').value = name;
+      $('city').value = city;
+      rememberName();
+      Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
+      refresh();
+      clearFieldErrors();
+      clearStatus();
+      setStage(false);
+      wrap.classList.remove('pop', 'landed');
+      void wrap.offsetWidth;
+      if (!prefersReducedMotion) wrap.classList.add('landed');
+      window.formStartedAt = Date.now() - limits.minFillMs;
+      holding = false;
+      sendBtn.hidden = false;
+      anotherBtn.hidden = true;
+      setBusy(false);
+      place.focus();
+    }
+
+    anotherBtn.addEventListener('click', resetForAnother);
+
     function finish(body) {
       var checked = NoBallValidate.validateSubmission(body);
       var errors = fitErrors(checked.ok ? {} : checked.errors);
@@ -1999,21 +2060,7 @@
         });
       }).then(function (reply) {
         if (reply.kind === 'success') {
-          var friendName = $('friend').value;
-          form.reset();
-          forgetPick();
-          clearShot();
-          $('friend').value = friendName;
-          Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
-          refresh();
-          clearFieldErrors();
-          setStage(false);
-          wrap.classList.remove('pop', 'landed');
-          void wrap.offsetWidth;
-          if (!prefersReducedMotion) wrap.classList.add('landed');
-          window.formStartedAt = Date.now() - limits.minFillMs;
-          showStatus(COPY.saved, 'ok');
-          place.focus();
+          showSaved();
           return;
         }
         if (reply.kind === 'opaque') {
@@ -2028,6 +2075,7 @@
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
+      if (holding) return;
       clearStatus();
       clearFieldErrors();
       if (photoBusy) {
