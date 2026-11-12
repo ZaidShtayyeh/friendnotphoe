@@ -112,3 +112,33 @@ body[data-focus=heart] .home-sticky{background:var(--home-bg)}
 /* Never expose a canvas until its texture and first frame render correctly. */
 #soft-heart{visibility:hidden}.heart-object.is-ready #soft-heart{visibility:visible}
 .heart-fallback{inset:auto;left:50%;top:50%;width:auto;height:76%;max-width:none;transform:translate(-50%,-50%)}
+
+/* Explore: clear sorting, the card's Wasta circle, and a living card count. */
+.collection-intro{justify-content:space-between;gap:28px;margin:14px 0 28px;align-items:flex-end}
+.collection-intro .collection-note{display:flex;flex-direction:column;gap:6px;margin:0;max-width:430px;font-size:13px;line-height:1.6}
+.collection-note strong{font-weight:500;font-size:15px;color:var(--ink)}
+.collection-note>span{color:#626b5c}
+.collection-intro .text-button{flex-shrink:0}
+.browse-tools{align-items:flex-end}
+.browse-tools .search{align-self:center}
+.sort-label{flex-direction:column;align-items:stretch;gap:7px;font-size:11px;letter-spacing:0;flex:0 0 180px;color:var(--ink)}
+.sort-control{display:block;position:relative}
+.sort-label select{display:block;appearance:none;-webkit-appearance:none;width:100%;max-width:none;min-height:46px;border:1px solid #78846f;border-radius:5px;background:#fcfbf6;color:var(--ink);padding:10px 32px 10px 12px;font-size:14px;font-weight:500;line-height:1.3;cursor:pointer}
+.sort-control svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;pointer-events:none}
+.sort-label select:hover{border-color:var(--ink);background:#fffef9}
+.wasta-key{gap:7px;white-space:nowrap}
+.wasta-key .wasta-dot{display:inline-block;width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:#cd726e;border:1px solid #ad585b;box-shadow:inset 0 0 0 1px #ffffff22}
+@media(max-width:700px){
+ .collection-intro{display:flex;flex-direction:column;align-items:stretch;gap:12px;margin:12px 0 18px}
+ .collection-intro .collection-note{font-size:12px;max-width:100%;gap:4px;line-height:1.6}
+ .collection-note strong{font-size:14px}
+ .collection-intro .text-button{align-self:flex-end;font-size:10px;min-height:36px;padding:7px 0}
+ .browse-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 12px;align-items:end}
+ .browse-tools .search{grid-column:1/-1;min-width:0}
+ .sort-label{min-width:0;gap:6px;font-size:11px}
+ .sort-label select{font-size:12px;min-height:46px;padding-left:10px;padding-right:28px}
+ .sort-control svg{right:10px;width:12px}
+ .view-switch{align-self:end}.view-switch button{padding:6px 7px;min-height:38px}
+ .results-line{font-size:10px}
+}
+@media(max-width:360px){.browse-tools{grid-template-columns:1fr;gap:12px}.sort-label{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px}.sort-label select{font-size:13px}.view-switch{width:100%}.view-switch button{flex:1;justify-content:center}}

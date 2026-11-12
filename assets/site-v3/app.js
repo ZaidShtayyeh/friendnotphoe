@@ -76,7 +76,7 @@ for(const b of $$('.category')){const src=root+`assets/site-v3/backs/${backs[b.d
 $('#all-count').textContent=cards.length+' places & counting';
 const cities=[...new Set(cards.map(c=>c.city))];
 $('#city-options').innerHTML=[{id:'all',name:'DUNYA',caption:'Everywhere'},...cities.map(c=>({id:c,name:cityNames[c]||c,caption:c}))].map(c=>`<button class="city-option" data-city="${c.id}"><span><strong>${c.name}</strong><small>${c.caption}</small></span><span>${cards.filter(card=>c.id==='all'||card.city===c.id).length} cards <b>↗</b></span></button>`).join('');
-$('#city-count').textContent=cards.length+' places';
+$('#city-count').textContent=cards.length+' cards & counting.';
 $('#city-picker').addEventListener('click',()=>$('#city-dialog').showModal());
 $('.city-close').addEventListener('click',()=>$('#city-dialog').close());
 $('#city-options').addEventListener('click',e=>{const b=e.target.closest('[data-city]');if(!b)return;state.city=b.dataset.city;renderCollection(true);if(state.view==='map')fitAll();if(state.view==='globe')window.FnpGlobe?.reset();$('#city-dialog').close();});
