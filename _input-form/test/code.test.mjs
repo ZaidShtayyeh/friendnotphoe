@@ -52,7 +52,7 @@ function sheetCells(rows) {
 }
 
 function boot(options = {}) {
-  const calls = { names: [], inserts: [], locks: [], tz: null, fmts: [] };
+  const calls = { names: [], inserts: [], locks: [], openedIds: [], tz: null, fmts: [] };
   const sheets = new Map();
   const files = [];
   const folders = [];
@@ -95,6 +95,7 @@ function boot(options = {}) {
     };
   }
   const ss = {
+    getName() { return 'FNF intake form'; },
     getSheetByName(name) {
       calls.names.push(name);
       return sheets.get(name) || null;
@@ -108,7 +109,6 @@ function boot(options = {}) {
   };
   if (options.existing) sheets.set("Friend Submissions", options.existing);
   const context = {
-    URL,
     JSON,
     Date,
     Number,
@@ -119,7 +119,15 @@ function boot(options = {}) {
     RegExp,
     Math,
     isFinite,
-    SpreadsheetApp: { getActiveSpreadsheet: () => ss },
+    SpreadsheetApp: {
+      getActiveSpreadsheet() { throw new Error('No active spreadsheet in a web app'); },
+      openById(id) {
+        calls.openedIds.push(id);
+        if (options.sheetUnavailable) throw new Error('Access denied');
+        assert.equal(id, '1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ');
+        return ss;
+      },
+    },
     LockService: {
       getScriptLock: () => ({
         waitLock(ms) {
@@ -241,6 +249,8 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     const { context, calls, sheets, files, folders, props, sharing } = boot();
     const body = reply(context.doPost(event(entry())));
     assert.deepEqual(body, { ok: true });
+    assert.equal(context.URL, undefined);
+    assert.deepEqual(calls.openedIds, ['1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ']);
     assert.deepEqual(calls.names, ["Friend Submissions"]);
     assert.deepEqual(calls.inserts, ["Friend Submissions"]);
     assert.equal(calls.tz, "America/New_York");
@@ -478,7 +488,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   Date.now = () => now;
   try {
     const { context, sheets } = boot();
-    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true });
+    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-12-submission-fix' });
     assert.equal(sheets.size, 0);
     assert.equal(reply(context.doPost(event(entry({ restaurant: "=HYPERLINK(\"https://evil.test\")" })))).ok, true);
     const restaurant = sheets.get("Friend Submissions").rows[1][2];
@@ -486,4 +496,15 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   } finally {
     Date.now = realNow;
   }
+});
+
+test('an unavailable tracker fails the read-only health check and cannot claim a saved submission', () => {
+  const { context, calls, sheets, files } = boot({ sheetUnavailable: true });
+  assert.deepEqual(reply(context.doGet()), {
+    ok: false, ready: false, version: '2026-11-12-submission-fix', error: 'The submission sheet is unavailable.',
+  });
+  assert.equal(reply(context.doPost(event(entry()))).ok, false);
+  assert.equal(sheets.size, 0);
+  assert.equal(files.length, 0);
+  assert.equal(calls.openedIds.length, 2);
 });

@@ -59,16 +59,18 @@ var NoBallValidate = (function () {
     var raw = String(value == null ? '' : value).trim();
     if (!raw) return true;
     if (raw.length > LIMITS.maps) return false;
-    var url;
-    try {
-      url = new URL(raw);
-    } catch (e) {
-      return false;
+    // Apps Script has no browser URL constructor. Parse only the narrow set of
+    // Google Maps links we accept, identically in the browser and on the server.
+    if (/[\s\\\u0000-\u001f\u007f]/.test(raw) || /%(?![0-9a-f]{2})/i.test(raw)) return false;
+    var parts = /^https:\/\/([a-z0-9.-]+)(?::443)?(\/[^?#]*)?(?:\?[^#]*)?(?:#.*)?$/i.exec(raw);
+    if (!parts) return false;
+    var host = parts[1].toLowerCase();
+    var path = parts[2] || '/';
+    // Reject dot segments, including encoded dots, before checking the path.
+    var segments = path.replace(/%2e/ig, '.').split('/');
+    for (var i = 0; i < segments.length; i++) {
+      if (segments[i] === '.' || segments[i] === '..') return false;
     }
-    if (url.protocol !== 'https:') return false;
-    if (url.username || url.password) return false;
-    var host = url.hostname.toLowerCase();
-    var path = url.pathname;
     if (host === 'maps.google.com') return true;
     if (host === 'maps.app.goo.gl') return path.length > 1;
     if (host === 'goo.gl') return path === '/maps' || path.indexOf('/maps/') === 0;

@@ -12,6 +12,9 @@
  * Leave both empty to disable the check. Change colors only in CATEGORY_COLORS below.
  */
 var SHARED_TOKEN = '';
+// Web apps have no active spreadsheet context, even when bound to a Sheet.
+var SPREADSHEET_ID = '1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ';
+var BACKEND_VERSION = '2026-11-12-submission-fix';
 
 // --- shared validation: keep identical to betweenusfriends/validate.js ---
 
@@ -76,16 +79,18 @@ var NoBallValidate = (function () {
     var raw = String(value == null ? '' : value).trim();
     if (!raw) return true;
     if (raw.length > LIMITS.maps) return false;
-    var url;
-    try {
-      url = new URL(raw);
-    } catch (e) {
-      return false;
+    // Apps Script has no browser URL constructor. Parse only the narrow set of
+    // Google Maps links we accept, identically in the browser and on the server.
+    if (/[\s\\\u0000-\u001f\u007f]/.test(raw) || /%(?![0-9a-f]{2})/i.test(raw)) return false;
+    var parts = /^https:\/\/([a-z0-9.-]+)(?::443)?(\/[^?#]*)?(?:\?[^#]*)?(?:#.*)?$/i.exec(raw);
+    if (!parts) return false;
+    var host = parts[1].toLowerCase();
+    var path = parts[2] || '/';
+    // Reject dot segments, including encoded dots, before checking the path.
+    var segments = path.replace(/%2e/ig, '.').split('/');
+    for (var i = 0; i < segments.length; i++) {
+      if (segments[i] === '.' || segments[i] === '..') return false;
     }
-    if (url.protocol !== 'https:') return false;
-    if (url.username || url.password) return false;
-    var host = url.hostname.toLowerCase();
-    var path = url.pathname;
     if (host === 'maps.google.com') return true;
     if (host === 'maps.app.goo.gl') return path.length > 1;
     if (host === 'goo.gl') return path === '/maps' || path.indexOf('/maps/') === 0;
@@ -330,7 +335,13 @@ var TEXT_COLUMNS = {
 };
 
 function doGet() {
-  return json_({ ok: true, ready: true });
+  try {
+    // Read-only: verify access to the tracker without creating a tab or photo.
+    SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+    return json_({ ok: true, ready: true, version: BACKEND_VERSION });
+  } catch (err) {
+    return json_({ ok: false, ready: false, version: BACKEND_VERSION, error: 'The submission sheet is unavailable.' });
+  }
 }
 
 function doPost(e) {
@@ -370,7 +381,7 @@ function doPost(e) {
 }
 
 function append_(value) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
   ensureHeaders_(sheet);

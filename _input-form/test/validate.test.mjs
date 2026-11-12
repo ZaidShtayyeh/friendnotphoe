@@ -101,6 +101,7 @@ test("maps link is optional and limited to https Google Maps hosts", () => {
     "https://maps.app.goo.gl/abcDEF",
     "https://goo.gl/maps/abc",
     "https://goo.gl/maps",
+    "HTTPS://WWW.GOOGLE.COM:443/maps/place/Caf%C3%A9?query=coffee#details",
   ];
   for (const maps of ok) assert.equal(v.isMapsUrl(maps), true, maps);
 
@@ -117,6 +118,13 @@ test("maps link is optional and limited to https Google Maps hosts", () => {
     "https://user:pass@maps.google.com/",
     "ftp://maps.google.com/",
     "https://www.google.com/maps/../../etc",
+    "https://www.google.com/maps/%2e%2e/etc",
+    "https://www.google.com/maps/.%2e/etc",
+    "https://www.google.com:444/maps",
+    "https://www.google.com/maps\\@evil.test",
+    "https://www.google.com/maps\n/elsewhere",
+    "https://www.google.com/maps/%zz",
+    "https://www.google.com@evil.test/maps",
   ];
   for (const maps of bad) {
     assert.equal(v.isMapsUrl(maps), false, maps);
