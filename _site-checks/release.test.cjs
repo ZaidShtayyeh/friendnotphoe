@@ -28,12 +28,16 @@ test('the twenty new tracker cards have unique links, correct categories and val
   }
   assert.deepEqual(Object.fromEntries(['NYC','Boston','London'].map(city=>[city,data.cards.filter(c=>c.city===city).length])),{NYC:80,Boston:8,London:9});
 });
-test('the homepage entrance lands into one consecutive city group',()=>{
+test('the homepage entrance lands in the first four positions in both layouts',()=>{
   const source=fs.readFileSync(path.join(root,'assets/site-v3/app.js'),'utf8');
-  const declaration=source.match(/const featured=([^;]+);/)[1];
-  const newest=[...data.cards].reverse(),featured=vm.runInNewContext(declaration,{newest});
-  assert.equal(featured.length,4);assert.equal(new Set(featured.map(c=>c.city)).size,1);
-  assert.deepEqual(featured.map(c=>c.id),newest.filter(c=>c.city===newest[0].city).slice(0,4).map(c=>c.id));
+  const declaration=source.match(/function getFeaturedCards\(\)\{([^}]+)\}/)[0];
+  const newest=[...data.cards].reverse();
+  for(const groupByCity of [true,false]){
+    const ctx={newest,state:{groupByCity}};
+    vm.runInNewContext(declaration+';this.featured=getFeaturedCards()',ctx);
+    const firstGroup=newest.filter(c=>c.city===newest[0].city);
+    assert.deepEqual(ctx.featured.map(c=>c.id),(groupByCity?firstGroup:newest).slice(0,4).map(c=>c.id));
+  }
 });
 test('published stories survive exactly and drafts stay private',()=>{
   assert.deepEqual(data.posts,original('blogPosts').filter(p=>p.status==='live'));

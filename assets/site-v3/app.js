@@ -9,22 +9,22 @@ const asset=p=>/^(data:|https?:)/.test(p)?p:root+p;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const types={food:'Food',drink:'Vibes',special:'Legendary'},cityNames={NYC:'New York'};
 const query=new URLSearchParams(location.search),motion=matchMedia('(prefers-reduced-motion: reduce)');
-const state={page:'home',palette:query.get('palette')==='original'?'original':'forest',city:query.get('city')||'all',category:query.get('category')||'all',search:query.get('q')||'',sort:query.get('sort')||'recent',view:['map','globe'].includes(query.get('view'))?query.get('view'):'cards',motionOff:motion.matches};
+const state={page:'home',palette:query.get('palette')==='original'?'original':'forest',city:query.get('city')||'all',category:query.get('category')||'all',search:query.get('q')||'',sort:query.get('sort')||'recent',groupByCity:query.get('group')!=='none',view:['map','globe'].includes(query.get('view'))?query.get('view'):'cards',motionOff:motion.matches};
 if(state.city!=='all'&&!cards.some(c=>c.city===state.city))state.city='all';
 if(!['all','food','drink','special'].includes(state.category))state.category='all';
 if(!['recent','hp','name'].includes(state.sort))state.sort='recent';
 let filtered=[],inView=[],map=null,markers=[],selectedId=null,detailDeck=[],detailId=null,detailToken=0,returnFocus=null,frame=0,lastTime=0,phase=0,mapReady=false,journeyDistance=0,journeyFinishStarted=0,journeyFinishFrom=0;
 let journeyGeometry=null,journeyProgress=0,mapCity=null,mapMarkerIds='';
 const newest=[...cards].reverse(),addedOrder=new Map(cards.map((c,i)=>[c.id,i]));
-// The entrance lands in the first city group, so all four targets must be
-// consecutive cards there rather than scattered across different cities.
-const featured=newest.filter(c=>c.city===newest[0]?.city).slice(0,4);
+// Entrance cards match the first four grid positions in either layout.
+let featured=[],flightNodes=[];
+function getFeaturedCards(){return (state.groupByCity?newest.filter(c=>c.city===newest[0]?.city):newest).slice(0,4);}
 const picture=c=>`<img src="${esc(asset(c.thumb))}" alt="${esc(c.name)} collectible card, ${c.hp} HP" loading="lazy" decoding="async" width="1500" height="2100">`;
-function syncURL(){const q=new URLSearchParams();q.set('palette',state.palette);if(query.get('lettering'))q.set('lettering',query.get('lettering'));if(query.get('focus')==='heart')q.set('focus','heart');if(state.city!=='all')q.set('city',state.city);if(state.category!=='all')q.set('category',state.category);if(state.search)q.set('q',state.search);if(state.sort!=='recent')q.set('sort',state.sort);if(state.view!=='cards')q.set('view',state.view);history.replaceState(history.state,'',location.pathname+(q.size?'?'+q:'')+location.hash);}
+function syncURL(){const q=new URLSearchParams();q.set('palette',state.palette);if(query.get('lettering'))q.set('lettering',query.get('lettering'));if(query.get('focus')==='heart')q.set('focus','heart');if(state.city!=='all')q.set('city',state.city);if(state.category!=='all')q.set('category',state.category);if(state.search)q.set('q',state.search);if(state.sort!=='recent')q.set('sort',state.sort);if(state.view!=='cards')q.set('view',state.view);if(!state.groupByCity)q.set('group','none');history.replaceState(history.state,'',location.pathname+(q.size?'?'+q:'')+location.hash);}
 function navigate(page,{push=true,y=0}={}){
  if(!['home','explore','adventures','article'].includes(page))page='home';
  if(push){history.replaceState({page:state.page,y:scrollY},'');history.pushState({page,y:0},'',location.pathname+location.search+'#'+page);}
- state.page=page;if(page==='home'){journeyDistance=0;journeyGeometry=null;journeyProgress=0;journeyFinishStarted=0;state.city='all';state.category='all';state.search='';state.sort='recent';state.view='cards';$('#search').value='';$('#sort').value='recent';}if(!['home','explore'].includes(page))window.FnpGlobe?.hide();document.body.dataset.page=page;$('#explore-page').classList.toggle('from-home',page==='home');$('#journey-cards').hidden=page!=='home';
+ state.page=page;if(page==='home'){journeyDistance=0;journeyGeometry=null;journeyProgress=0;journeyFinishStarted=0;state.city='all';state.category='all';state.search='';state.sort='recent';state.view='cards';$('#search').value='';$('#sort').value='recent';resetJourneyCards();}if(!['home','explore'].includes(page))window.FnpGlobe?.hide();document.body.dataset.page=page;$('#explore-page').classList.toggle('from-home',page==='home');$('#journey-cards').hidden=page!=='home';
  for(const el of $$('.page'))el.hidden=el.id!==page+'-page'&&!(page==='home'&&el.id==='explore-page');
  $('.page-dock').hidden=page==='home';
  for(const a of $$('.page-dock a'))a.setAttribute('aria-current',a.hash==='#'+page?'page':'false');
@@ -86,6 +86,7 @@ $('#city-dialog').addEventListener('close',()=>$('#city-picker').focus({preventS
 $('#search').value=state.search;$('#sort').value=state.sort;
 $('#search').addEventListener('input',e=>{state.search=e.target.value;renderCollection(true);});
 $('#sort').addEventListener('change',e=>{state.sort=e.target.value;renderCollection(false);});
+$('#group-by-city').addEventListener('change',e=>{state.groupByCity=e.target.checked;if(state.page==='home')resetJourneyCards();renderCollection(false);});
 for(const b of $$('[data-view]'))b.addEventListener('click',()=>{state.view=b.dataset.view;renderCollection(false);});
 function resetFilters(){state.category='all';state.search='';state.sort='recent';$('#search').value='';$('#sort').value='recent';renderCollection(true);}
 $('#reset-filters').addEventListener('click',resetFilters);
@@ -100,6 +101,7 @@ function stars(seed,count=6){let html='',photos=0;let n=seed*9301+49297;const ra
 const visibleCards=new Set(),effectObserver=new IntersectionObserver(entries=>{for(const entry of entries){entry.target.classList.toggle('effects-visible',entry.isIntersecting);if(entry.isIntersecting)visibleCards.add(entry.target);else visibleCards.delete(entry.target);}},{rootMargin:'50px'});
 function renderCollection(markersChanged){
  filtered=getFiltered();
+ $('#group-by-city').checked=state.groupByCity;
  $('#city-heading').textContent=state.city==='all'?'DUNYA':cityNames[state.city]||state.city;
  $('#city-picker').setAttribute('aria-label',(state.city==='all'?'DUNYA':cityNames[state.city]||state.city)+' — choose a city');
  for(const b of $$('.city-option'))b.setAttribute('aria-pressed',b.dataset.city===state.city);
@@ -112,7 +114,7 @@ function renderCollection(markersChanged){
  syncURL();
 }
 function cardMarkup(c){return `<div class="card-item${selectedId===c.id?' map-selected':''}" data-id="${c.id}"><button class="card-button" data-card="${c.id}" aria-label="Open ${esc(c.name)} card, ${c.hp} HP"><span class="card-art">${picture(c)}<span class="card-foil" aria-hidden="true"></span>${stars(c.id)}</span>${c.wasta?'<span class="wasta-glow" aria-label="WASTAAAAA"></span>':''}</button></div>`;}
-function renderList(list){journeyGeometry=null;effectObserver.disconnect();visibleCards.clear();inView=list;const groups=[...new Set(list.map(c=>c.city))];$('#cards').innerHTML=groups.map((city,i)=>{const group=list.filter(c=>c.city===city);return `<section class="city-group" aria-label="${esc(cityNames[city]||city)} collection">${state.city==='all'?`<header class="city-group-heading"><div><span class="eyebrow">${String(i+1).padStart(2,'0')} / ${esc(city)}</span><h3>${esc(cityNames[city]||city)}</h3></div><span>${group.length} ${group.length===1?'card':'cards'}</span></header>`:''}<div class="cards-grid">${group.map(cardMarkup).join('')}</div></section>`;}).join('');
+function renderList(list){journeyGeometry=null;effectObserver.disconnect();visibleCards.clear();inView=list;const groups=[...new Set(list.map(c=>c.city))];$('#cards').innerHTML=state.groupByCity?groups.map((city,i)=>{const group=list.filter(c=>c.city===city);return `<section class="city-group" aria-label="${esc(cityNames[city]||city)} collection">${state.city==='all'?`<header class="city-group-heading"><div><span class="eyebrow">${String(i+1).padStart(2,'0')} / ${esc(city)}</span><h3>${esc(cityNames[city]||city)}</h3></div><span>${group.length} ${group.length===1?'card':'cards'}</span></header>`:''}<div class="cards-grid">${group.map(cardMarkup).join('')}</div></section>`;}).join(''):`<div class="cards-grid">${list.map(cardMarkup).join('')}</div>`;
  for(const el of $$('#cards .card-item'))effectObserver.observe(el);
  $('#result-count').textContent=state.view==='map'?`${list.length} in this view / ${filtered.length} matching places`:`${list.length} ${list.length===1?'card':'cards'}${state.category==='all'?'':' in '+types[state.category]}`;
  $('#collection-total').textContent=state.view==='map'?`${list.length} cards in this map view.`:`${list.length} places${state.search||state.category!=='all'?' match your filters':''}.`;
@@ -123,10 +125,13 @@ function rebuildMarkers(){if(!map){$('#map-error').hidden=false;return;}mapMarke
 function fitAll(){if(!map||!filtered.length)return;const points=filtered.map(c=>[c.lat,c.lng]);mapCity=state.city;mapReady=true;map.invalidateSize();map.fitBounds(points,{padding:[35,35],maxZoom:15,animate:!state.motionOff});syncMapCards();}
 function syncMapCards(){if(!map)return;const bounds=map.getBounds();renderList(filtered.filter(c=>bounds.contains([c.lat,c.lng])));$('.cards-column').scrollTop=0;}
 $('#cards').addEventListener('click',e=>{const cityButton=e.target.closest('[data-group-city]');if(cityButton){state.city=cityButton.dataset.groupCity;renderCollection(true);if(state.view==='map')fitAll();$('#city-picker').scrollIntoView({behavior:state.motionOff?'instant':'smooth',block:'center'});return;}const b=e.target.closest('[data-card]');if(b)openCard(Number(b.dataset.card),inView);});
-$('#journey-cards').innerHTML=featured.map(c=>`<div class="flight-card effects-visible" data-flight="${c.id}"><span class="card-art"><img src="${esc(asset(c.thumb))}" alt="">${stars(c.id)}</span></div>`).join('');
+function resetJourneyCards(){
+ featured=getFeaturedCards();journeyGeometry=null;
+ $('#journey-cards').innerHTML=featured.map(c=>`<div class="flight-card effects-visible" data-flight="${c.id}"><span class="card-art"><img src="${esc(asset(c.thumb))}" alt="">${stars(c.id)}</span></div>`).join('');
 // Decode the four entrance images before they are needed; keep their pixels identical to the grid.
-const flightNodes=featured.map(c=>$(`[data-flight="${c.id}"]`));
+flightNodes=featured.map(c=>$(`[data-flight="${c.id}"]`));
 for(const flight of flightNodes)flight.querySelector('img').decode().catch(()=>{});
+}
 function measureJourney(){
  // All layout reads happen together. Only scrolling offsets these cached grid positions.
  const entries=featured.map((c,i)=>{
