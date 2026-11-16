@@ -84,3 +84,6 @@ form{padding-top:44px}
  .submission-success .send{width:auto}
 }
 @media(max-width:420px){.form-sections a{gap:5px}.form-sections a.is-complete:after{position:absolute;right:-10px;top:0}.header-note{max-width:130px;text-align:center;line-height:1.5}.stage-tab{max-width:calc(100vw - 32px)}}
+
+.photo-status{font-size:12px;line-height:1.5;color:var(--sage);margin:10px 0 0}
+.photo-status[hidden]{display:none}
