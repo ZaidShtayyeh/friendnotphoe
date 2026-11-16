@@ -1,0 +1,59 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "friendnotphoe-visit-alerts",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-06",
+  "upload_source_maps": true,
+
+  // Served only from <worker>.<subdomain>.workers.dev. No zone routes: friendnotphoe.com
+  // stays on GitHub Pages with its current DNS.
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Forwarding stays off until secrets are set and an operator flips FORWARDING_ENABLED.
+  "vars": {
+    "FORWARDING_ENABLED": "false",
+    "FORWARD_TEST_EVENTS": "false",
+    "ALLOWED_ORIGINS": "https://friendnotphoe.com,https://www.friendnotphoe.com",
+    "SITE": "friendnotphoe.com",
+    "UPSTREAM_TIMEOUT_MS": "5000"
+  },
+
+  // ROUTINE_WEBHOOK_URL and ROUTINE_WEBHOOK_BEARER are secrets entered by the site owner
+  // after the first deploy (see src/secrets.d.ts). They are intentionally not listed under
+  // "secrets.required": Wrangler refuses a first deploy until required secrets are supplied.
+
+  // Counters are approximate and kept separately in each Cloudflare location.
+  "ratelimits": [
+    {
+      "name": "CLIENT_LIMITER",
+      "namespace_id": "47101",
+      "simple": { "limit": 4, "period": 60 }
+    },
+    {
+      "name": "EVENT_DEDUPE_LIMITER",
+      "namespace_id": "47102",
+      "simple": { "limit": 1, "period": 60 }
+    },
+    {
+      "name": "FORWARD_LIMITER",
+      "namespace_id": "47103",
+      "simple": { "limit": 2, "period": 60 }
+    }
+  ],
+
+  // Invocation logs record the request URL and metadata, and traces record visitor
+  // user agent and geo plus the outbound url.full (the routine webhook URL), so both
+  // stay off. Only the Worker's own minimal JSON logs are kept.
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": false
+    },
+    "traces": {
+      "enabled": false
+    }
+  }
+}

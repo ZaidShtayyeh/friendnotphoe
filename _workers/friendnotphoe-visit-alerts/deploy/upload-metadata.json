@@ -1,0 +1,20 @@
+{
+  "main_module": "index.js",
+  "compatibility_date": "2026-11-06",
+  "bindings": [
+    { "type": "plain_text", "name": "FORWARDING_ENABLED", "text": "false" },
+    { "type": "plain_text", "name": "FORWARD_TEST_EVENTS", "text": "false" },
+    { "type": "plain_text", "name": "ALLOWED_ORIGINS", "text": "https://friendnotphoe.com,https://www.friendnotphoe.com" },
+    { "type": "plain_text", "name": "SITE", "text": "friendnotphoe.com" },
+    { "type": "plain_text", "name": "UPSTREAM_TIMEOUT_MS", "text": "5000" },
+    { "type": "ratelimit", "name": "CLIENT_LIMITER", "namespace_id": "47101", "simple": { "limit": 4, "period": 60 } },
+    { "type": "ratelimit", "name": "EVENT_DEDUPE_LIMITER", "namespace_id": "47102", "simple": { "limit": 1, "period": 60 } },
+    { "type": "ratelimit", "name": "FORWARD_LIMITER", "namespace_id": "47103", "simple": { "limit": 2, "period": 60 } }
+  ],
+  "keep_bindings": ["secret_text"],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false },
+    "traces": { "enabled": false }
+  }
+}

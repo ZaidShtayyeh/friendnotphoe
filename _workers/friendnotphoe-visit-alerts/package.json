@@ -1,0 +1,17 @@
+{
+  "name": "friendnotphoe-visit-alerts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "types": "wrangler types --strict-vars=false",
+    "typecheck": "wrangler types --strict-vars=false --check && tsc --noEmit -p . && tsc --noEmit -p test",
+    "test": "vitest run && node --test test/client.test.mjs test/config.test.mjs",
+    "check": "npm run typecheck && npm test && wrangler deploy --dry-run --outdir dist"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.6.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0",
+    "wrangler": "4.158.0"
+  }
+}
