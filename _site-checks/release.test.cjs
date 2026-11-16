@@ -7,9 +7,33 @@ const original=name=>JSON.parse(JSON.stringify(vm.runInNewContext(before.match(n
 const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/site-v3/data.js'),'utf8'),context);
 const data=JSON.parse(JSON.stringify(context.window.FNP_DATA));
 test('every existing live card and its metadata survive, with real HD files and thumbnails',()=>{
-  assert.equal(data.cards.length,77);
-  assert.deepEqual(data.cards.map(({thumb,...c})=>c),original('restaurantCards').filter(c=>c.image));
+  const originals=original('restaurantCards').filter(c=>c.image),ids=new Set(originals.map(c=>c.id));
+  assert.deepEqual(data.cards.filter(c=>ids.has(c.id)).map(({thumb,...c})=>c),originals);
   for(const c of data.cards){assert.ok(fs.existsSync(path.join(root,c.image)));assert.ok(fs.existsSync(path.join(root,c.thumb)));}
+});
+test('the twenty new tracker cards have unique links, correct categories and valid city locations',()=>{
+  const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'new-cards-2026-11-15.json'),'utf8'));
+  assert.equal(data.cards.length,77+expected.length);
+  assert.equal(new Set(data.cards.map(c=>c.id)).size,data.cards.length);
+  const slug=c=>c.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  assert.equal(new Set(data.cards.map(slug)).size,data.cards.length);
+  const ctx={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/site-v3/search-data.js'),'utf8'),ctx);
+  const bounds={NYC:[40,41,-75,-73],Boston:[42,43,-72,-70],London:[51,52,-1,1]};
+  for(const e of expected){
+    const c=data.cards.find(c=>c.id===e.id);assert.ok(c,e.name);
+    assert.deepEqual([c.name,c.city,c.hp,c.vibes[0]],[e.name,e.city,e.hp,e.type]);
+    assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp');assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp');
+    const [south,north,west,east]=bounds[c.city];assert.ok(c.lat>south&&c.lat<north&&c.lng>west&&c.lng<east,e.name);
+    for(const field of ['area','vibes','moves'])assert.ok(ctx.window.FNP_SEARCH[c.id][field],e.name+' '+field);
+  }
+  assert.deepEqual(Object.fromEntries(['NYC','Boston','London'].map(city=>[city,data.cards.filter(c=>c.city===city).length])),{NYC:80,Boston:8,London:9});
+});
+test('the homepage entrance lands into one consecutive city group',()=>{
+  const source=fs.readFileSync(path.join(root,'assets/site-v3/app.js'),'utf8');
+  const declaration=source.match(/const featured=([^;]+);/)[1];
+  const newest=[...data.cards].reverse(),featured=vm.runInNewContext(declaration,{newest});
+  assert.equal(featured.length,4);assert.equal(new Set(featured.map(c=>c.city)).size,1);
+  assert.deepEqual(featured.map(c=>c.id),newest.filter(c=>c.city===newest[0].city).slice(0,4).map(c=>c.id));
 });
 test('published stories survive exactly and drafts stay private',()=>{
   assert.deepEqual(data.posts,original('blogPosts').filter(p=>p.status==='live'));

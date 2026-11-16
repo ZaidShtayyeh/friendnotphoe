@@ -1,0 +1,162 @@
+[
+  {
+    "id": 80,
+    "name": "Kava",
+    "city": "Boston",
+    "hp": 270,
+    "type": "drink",
+    "key": "kava"
+  },
+  {
+    "id": 81,
+    "name": "Neptune Oyster",
+    "city": "Boston",
+    "hp": 310,
+    "type": "special",
+    "key": "neptune-oyster"
+  },
+  {
+    "id": 82,
+    "name": "Saltie Girl",
+    "city": "Boston",
+    "hp": 320,
+    "type": "special",
+    "key": "saltie-girl"
+  },
+  {
+    "id": 83,
+    "name": "La Voile",
+    "city": "Boston",
+    "hp": 265,
+    "type": "food",
+    "key": "la-voile"
+  },
+  {
+    "id": 84,
+    "name": "Fox and the Knife",
+    "city": "Boston",
+    "hp": 275,
+    "type": "drink",
+    "key": "fox-and-the-knife"
+  },
+  {
+    "id": 85,
+    "name": "Berenjak",
+    "city": "London",
+    "hp": 270,
+    "type": "drink",
+    "key": "berenjak"
+  },
+  {
+    "id": 86,
+    "name": "Akub",
+    "city": "London",
+    "hp": 260,
+    "type": "special",
+    "key": "akub"
+  },
+  {
+    "id": 87,
+    "name": "Toscanini's",
+    "city": "Boston",
+    "hp": 260,
+    "type": "special",
+    "key": "toscaninis"
+  },
+  {
+    "id": 88,
+    "name": "Barrafina",
+    "city": "London",
+    "hp": 265,
+    "type": "special",
+    "key": "barrafina"
+  },
+  {
+    "id": 89,
+    "name": "BRAT",
+    "city": "London",
+    "hp": 260,
+    "type": "drink",
+    "key": "brat"
+  },
+  {
+    "id": 90,
+    "name": "Black Bear Burger",
+    "city": "London",
+    "hp": 250,
+    "type": "food",
+    "key": "black-bear-burger"
+  },
+  {
+    "id": 91,
+    "name": "Cadogan Arms",
+    "city": "London",
+    "hp": 270,
+    "type": "special",
+    "key": "cadogan-arms"
+  },
+  {
+    "id": 92,
+    "name": "Flat Iron",
+    "city": "London",
+    "hp": 275,
+    "type": "special",
+    "key": "flat-iron"
+  },
+  {
+    "id": 93,
+    "name": "Monsieur",
+    "city": "NYC",
+    "hp": 250,
+    "type": "food",
+    "key": "monsieur"
+  },
+  {
+    "id": 94,
+    "name": "Mountain",
+    "city": "London",
+    "hp": 280,
+    "type": "special",
+    "key": "mountain"
+  },
+  {
+    "id": 95,
+    "name": "Oleana",
+    "city": "Boston",
+    "hp": 280,
+    "type": "special",
+    "key": "oleana"
+  },
+  {
+    "id": 96,
+    "name": "Swan Room",
+    "city": "NYC",
+    "hp": 270,
+    "type": "drink",
+    "key": "swan-room"
+  },
+  {
+    "id": 97,
+    "name": "Smoking Goat",
+    "city": "London",
+    "hp": 260,
+    "type": "drink",
+    "key": "smoking-goat"
+  },
+  {
+    "id": 98,
+    "name": "Sam LaGrassa's",
+    "city": "Boston",
+    "hp": 250,
+    "type": "food",
+    "key": "sam-lagrassas"
+  },
+  {
+    "id": 99,
+    "name": "GEM Home",
+    "city": "NYC",
+    "hp": 270,
+    "type": "drink",
+    "key": "gem-home"
+  }
+]
