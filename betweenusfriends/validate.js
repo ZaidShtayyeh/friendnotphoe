@@ -174,10 +174,13 @@ var NoBallValidate = (function () {
     MOVE_FIELDS.forEach(function (pair) {
       var key = pair[0];
       var move = trimmed(input, key);
-      if (!move) errors[key] = pair[1] + ' is required.';
-      else if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
+      if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
       else moves[key] = move;
     });
+
+    if (!MOVE_FIELDS.some(function (pair) { return moves[pair[0]]; })) {
+      errors.move1 = errors.move1 || 'Add at least one special move.';
+    }
 
     var ranks = {};
     RANK_FIELDS.forEach(function (pair) {

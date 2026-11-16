@@ -426,7 +426,7 @@ test("invalid fields, honeypot, and too-fast posts write nothing", () => {
       entry({ photoData: "" }),
       entry({ photoType: "image/gif" }),
       entry({ photoData: b64OfBytes(5 * 1024 * 1024 + 1) }),
-      entry({ move1: "" }),
+      entry({ move1: "", move2: "", move3: "" }),
       entry({ move3: "m".repeat(25) }),
     ];
     for (const body of cases) {
@@ -488,7 +488,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   Date.now = () => now;
   try {
     const { context, sheets } = boot();
-    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-12-submission-fix' });
+    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-15-one-move' });
     assert.equal(sheets.size, 0);
     assert.equal(reply(context.doPost(event(entry({ restaurant: "=HYPERLINK(\"https://evil.test\")" })))).ok, true);
     const restaurant = sheets.get("Friend Submissions").rows[1][2];
@@ -501,10 +501,19 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
 test('an unavailable tracker fails the read-only health check and cannot claim a saved submission', () => {
   const { context, calls, sheets, files } = boot({ sheetUnavailable: true });
   assert.deepEqual(reply(context.doGet()), {
-    ok: false, ready: false, version: '2026-11-12-submission-fix', error: 'The submission sheet is unavailable.',
+    ok: false, ready: false, version: '2026-11-15-one-move', error: 'The submission sheet is unavailable.',
   });
   assert.equal(reply(context.doPost(event(entry()))).ok, false);
   assert.equal(sheets.size, 0);
   assert.equal(files.length, 0);
   assert.equal(calls.openedIds.length, 2);
+});
+
+ test("one move is saved with blank optional move cells", () => {
+  const realNow = Date.now; Date.now = () => now;
+  try {
+    const {context,sheets} = boot();
+    assert.equal(reply(context.doPost(event(entry({move1:"Pasta",move2:"",move3:""})))).ok,true);
+    assert.deepEqual(Array.from(sheets.get("Friend Submissions").rows[1].slice(14)),["Pasta","",""]);
+  } finally { Date.now = realNow; }
 });

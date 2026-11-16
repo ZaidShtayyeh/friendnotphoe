@@ -49,7 +49,7 @@ test('the creator uses its existing live integration settings',()=>{
     const re=new RegExp('var '+name+' = ([^;]+);');assert.equal(form.match(re)[1],old.match(re)[1]);
   }
   assert.ok(!form.includes('Design preview'));assert.ok(!form.includes('Nothing is sent'));
-  assert.ok(form.includes('See your card as you build'));assert.match(form, /<textarea id="vibes"[^>]+placeholder="inspo&#10;&#10;/);
+  assert.ok(form.includes('See your card as you build'));assert.match(form, /<textarea id="vibes"[^>]+placeholder="Casual bar/);
 });
 test('grid and detail glints retain the live count and limits',()=>{
   const source=fs.readFileSync(path.join(root,'assets/site-v3/app.js'),'utf8');

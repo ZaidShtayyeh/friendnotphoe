@@ -546,7 +546,7 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261115-heic1">
+  <link rel="stylesheet" href="refinement.css?v=20261115-review1">
 </head>
 <body>
   <header>
@@ -620,13 +620,12 @@
           <h2><span class="section-heading"><span class="section-number">02</span>The card</span></h2>
 
           <div class="field" id="shot-field">
-            <label for="photo">Picture</label>
+            <label class="picture-label" for="photo">Picture <span class="hint">Use your own photo of the place or food.</span></label>
             <input id="photo" class="sr-only" name="photo" type="file" accept="image/*,.heic,.heif" required>
             <label for="photo" class="drop" id="drop">
               <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
               <span class="drop-copy">
                 <span class="drop-main"><span class="mouse">Add your picture</span><span class="touch">Add your picture</span></span>
-                <span class="drop-sub">Please use your own photo of the place or food.</span>
               </span>
             </label>
             <div class="framer" id="framer" hidden>
@@ -667,7 +666,7 @@
 
           <div class="field">
             <label for="vibes">Vibes</label>
-            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="inspo&#10;&#10;Casual bar that does not try as hard as their customers do. Plastic chairs and free-for-all seating. Go for a long sip, try and sit outside and be ready to chat - type of place you meet people"></textarea>
+            <textarea id="vibes" name="vibes" maxlength="250" required placeholder="Casual bar that does not try as hard as their customers do. Plastic chairs and free-for-all seating. Go for a long sip, try and sit outside and be ready to chat - type of place you meet people"></textarea>
             <p class="counter" id="counter">0/250</p>
             <p class="error" id="err-vibes"></p>
           </div>
@@ -675,20 +674,21 @@
 
         <section class="block" id="the-moves">
           <h2><span class="section-heading"><span class="section-number">03</span>The moves</span></h2>
+          <p class="moves-hint" id="moves-hint">At least one special move. Add up to three.</p>
           <div class="moves">
             <div class="field">
               <label class="sr-only" for="move1">Move 1</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">1</span><input id="move1" name="move1" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Bread &amp; Olive Oil"><span class="move-left" id="left-move1"></span></div>
+              <div class="move-box"><span class="move-num" aria-hidden="true">1</span><input id="move1" name="move1" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Bread &amp; Olive Oil"><span class="move-left" id="left-move1"></span></div>
               <p class="error" id="err-move1"></p>
             </div>
             <div class="field">
-              <label class="sr-only" for="move2">Move 2</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">2</span><input id="move2" name="move2" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Dirty Martini"><span class="move-left" id="left-move2"></span></div>
+              <label class="sr-only" for="move2">Move 2 (optional)</label>
+              <div class="move-box"><span class="move-num" aria-hidden="true">2</span><input id="move2" name="move2" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Dirty Martini"><span class="move-optional">optional</span><span class="move-left" id="left-move2"></span></div>
               <p class="error" id="err-move2"></p>
             </div>
             <div class="field">
-              <label class="sr-only" for="move3">Move 3</label>
-              <div class="move-box"><span class="move-num" aria-hidden="true">3</span><input id="move3" name="move3" maxlength="24" required autocomplete="off" enterkeyhint="next" placeholder="Orange Wine"><span class="move-left" id="left-move3"></span></div>
+              <label class="sr-only" for="move3">Move 3 (optional)</label>
+              <div class="move-box"><span class="move-num" aria-hidden="true">3</span><input id="move3" name="move3" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Orange Wine"><span class="move-optional">optional</span><span class="move-left" id="left-move3"></span></div>
               <p class="error" id="err-move3"></p>
             </div>
           </div>
@@ -789,11 +789,21 @@
       </aside>
 
       <div class="actions">
-        <button type="submit" class="send" id="send">Send it</button>
-        <p class="fine">Goes straight to Zaid. Your name sticks around for the next one.</p>
+        <button type="submit" class="send" id="send">Review your card</button>
       </div>
     </form>
   </main>
+
+  <dialog class="card-review" id="card-review" aria-labelledby="review-heading">
+    <h2 id="review-heading" tabindex="-1">Review your card</h2>
+    <div class="review-card-mount" id="review-card-mount"></div>
+    <p class="review-author" id="review-author"></p>
+    <p class="status" id="review-status" role="status"></p>
+    <div class="review-actions">
+      <button type="button" class="review-edit" id="review-edit">Edit card</button>
+      <button type="button" class="send" id="review-submit">Submit card</button>
+    </div>
+  </dialog>
 
   <dialog class="inspo" id="inspo" aria-label="A real card for inspo: Time Again">
     <button type="button" class="inspo-close" id="inspoClose" aria-label="Close">✕</button>
@@ -803,7 +813,7 @@
 
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
-  <script src="validate.js?v=20261112-submission-fix"></script>
+  <script src="validate.js?v=20261115-one-move"></script>
   <script src="places.js"></script>
   <script>
     // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
@@ -818,7 +828,7 @@
     var SHARED_TOKEN = '';
 
     var COPY = {
-      send: 'Send it',
+      send: 'Review your card',
       sending: 'Sending…',
       fixIt: 'Almost. Fix the red bits.',
       notConnected: "The form isn’t connected right now. Please try again later.",
@@ -855,7 +865,7 @@
         case 'move2':
         case 'move3':
           if (fit) return "Won't fit the card. Shorter.";
-          return long ? '24 max, it has to fit the card.' : 'Need three moves. What do you order?';
+          return long ? '24 max, it has to fit the card.' : 'Add at least one special move. What do you order?';
         case 'food': return 'Food is 0 to 100, whole numbers.';
         case 'drink': return 'Drink is 0 to 100, whole numbers.';
         case 'scene': return 'Scene is 0 to 100, whole numbers.';
@@ -871,7 +881,7 @@
     var SERVER_KEYS = [
       [/^Your name/, 'submittedBy'], [/^Place name/, 'restaurant'], [/^A photo|^Photo/, 'photo'], [/^Maps link/, 'maps'],
       [/^City/, 'city'], [/^Area/, 'area'], [/^Score/, 'hp'], [/category/, 'category'],
-      [/^Vibes/, 'vibes'], [/^Move 1/, 'move1'], [/^Move 2/, 'move2'], [/^Move 3/, 'move3'],
+      [/^Vibes/, 'vibes'], [/^Move 1|^Add at least one special move/, 'move1'], [/^Move 2/, 'move2'], [/^Move 3/, 'move3'],
       [/^Food/, 'food'], [/^Drinks/, 'drink'], [/^Scene/, 'scene']
     ];
     function friendlyServer(message) {
@@ -889,6 +899,11 @@
     var statusEl = $('status');
     var sendBtn = $('send');
     var submissionComplete = false;
+    var reviewDialog = $('card-review');
+    var reviewSubmit = $('review-submit');
+    var reviewBody = null;
+    var reviewSignature = '';
+    var reviewSending = false;
     var place = $('place');
     var vibes = $('vibes');
     var counter = $('counter');
@@ -1129,9 +1144,10 @@
       var vlh = shown.length <= 3 ? CARD.vibes.lh3 : CARD.vibes.lh4;
       setLines($('card-vibes'), shown, CARD.vibes.x, CARD.vibes.baseline, vlh, CARD.vibes.size, !vibesRaw);
 
+      var hasMoves = [1, 2, 3].some(function (i) { return clean($('move' + i).value); });
       for (var m = 0; m < 3; m++) {
         var moveRaw = clean($('move' + (m + 1)).value);
-        var lines = wrapLines(moveRaw || GHOST.moves[m], 400, false, CARD.moves.size, CARD.moves.width);
+        var lines = wrapLines(moveRaw || (hasMoves ? '' : GHOST.moves[m]), 400, false, CARD.moves.size, CARD.moves.width);
         cardFit.moves[m] = lines.length;
         var mshown = lines.slice(0, CARD.moves.maxLines);
         var first = CARD.moves.center - mshown.length * CARD.moves.lh / 2 + CARD.moves.size;
@@ -1619,11 +1635,15 @@
     function showStatus(message, kind) {
       statusEl.textContent = message;
       statusEl.className = 'status show ' + (kind === 'ok' ? 'ok' : 'bad');
+      $('review-status').textContent = message;
+      $('review-status').className = statusEl.className;
     }
 
     function clearStatus() {
       statusEl.textContent = '';
       statusEl.className = 'status';
+      $('review-status').textContent = '';
+      $('review-status').className = 'status';
     }
 
     function fitErrors(errors) {
@@ -1659,7 +1679,7 @@
 
     function setBusy(busy) {
       sendBtn.disabled = busy;
-      sendBtn.textContent = busy ? COPY.sending : COPY.send;
+      sendBtn.textContent = busy ? 'Preparing…' : COPY.send;
     }
 
     Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (row) {
@@ -2074,6 +2094,7 @@
     });
 
     function showSubmitted() {
+      closeReview(false);
       submissionComplete = true;
       clearStatus();
       setStage(false);
@@ -2179,25 +2200,95 @@
       });
     }
 
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      if (submissionComplete || sendBtn.disabled) return;
+    // Review the exact framed card before sending. The first click never posts.
+    function cardSignature() {
+      var body = payload();
+      body.photoData = '';
+      return JSON.stringify([body, photo && photo.url, photo && cropRect()]);
+    }
+
+    function closeReview(restoreFocus) {
+      if (wrap.parentNode === $('review-card-mount')) stage.insertBefore(wrap, $('stageTip'));
+      if (reviewDialog.open) reviewDialog.close();
+      reviewBody = null;
+      reviewSignature = '';
+      if (restoreFocus !== false) sendBtn.focus({ preventScroll: true });
+    }
+
+    function requestReview() {
+      if (submissionComplete || sendBtn.disabled || reviewDialog.open) return Promise.resolve();
       clearStatus();
       clearFieldErrors();
       if (photoBusy) {
         showStatus(COPY.squishing, 'bad');
-        return;
+        return Promise.resolve();
       }
+      renderCard();
+      var candidate = Object.assign({}, payload(), { photoData: photo ? 'AAAA' : '', photoType: 'image/jpeg', photoName: 'preview.jpg' });
+      var errors = fitErrors(NoBallValidate.validateSubmission(candidate).errors);
+      if (Object.keys(errors).length) {
+        showErrors(errors);
+        showStatus(COPY.fixIt, 'bad');
+        return Promise.resolve();
+      }
+      var before = cardSignature();
       setBusy(true);
-      exportShot().then(function (shot) {
+      return exportShot().then(function (shot) {
+        if (before !== cardSignature() || photoBusy) {
+          showStatus('Your card changed. Review it again before sending.', 'bad');
+          return;
+        }
         photoState = shot;
-      }, function () {
-        photoState = { data: '', name: '', type: '' };
-      }).then(function () {
-        return finish(payload());
-      }).then(function () {
-        setBusy(false);
+        var body = payload();
+        var checked = NoBallValidate.validateSubmission(body);
+        if (!checked.ok) {
+          showErrors(checked.errors);
+          showStatus(COPY.fixIt, 'bad');
+          return;
+        }
+        setStage(false);
+        holoReset();
+        reviewBody = body;
+        reviewSignature = cardSignature();
+        $('review-author').textContent = 'Made by ' + body.submittedBy.trim();
+        $('review-card-mount').appendChild(wrap);
+        reviewDialog.showModal();
+        $('review-heading').focus({ preventScroll: true });
+      }).catch(function () {
+        closeReview(false);
+        showStatus("Couldn't prepare that photo. Please try again.", 'bad');
+      }).then(function () { setBusy(false); });
+    }
+
+    function confirmReview() {
+      if (reviewSending || !reviewDialog.open || !reviewBody) return Promise.resolve();
+      if (reviewSignature !== cardSignature() || photoBusy) {
+        closeReview();
+        showStatus('Your card changed. Review it again before sending.', 'bad');
+        return Promise.resolve();
+      }
+      reviewSending = true;
+      reviewSubmit.disabled = true;
+      $('review-edit').disabled = true;
+      reviewSubmit.textContent = COPY.sending;
+      clearStatus();
+      return finish(reviewBody).finally(function () {
+        reviewSending = false;
+        reviewSubmit.disabled = false;
+        $('review-edit').disabled = false;
+        reviewSubmit.textContent = 'Submit card';
       });
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      requestReview();
+    });
+    $('review-edit').addEventListener('click', function () { if (!reviewSending) closeReview(); });
+    reviewSubmit.addEventListener('click', confirmReview);
+    reviewDialog.addEventListener('cancel', function (event) {
+      event.preventDefault();
+      if (!reviewSending) closeReview();
     });
   </script>
   <noscript><p style="max-width:40rem;margin:1rem auto;padding:0 1.5rem;">This one needs JavaScript on.</p></noscript>

@@ -14,7 +14,7 @@
 var SHARED_TOKEN = '';
 // Web apps have no active spreadsheet context, even when bound to a Sheet.
 var SPREADSHEET_ID = '1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ';
-var BACKEND_VERSION = '2026-11-12-submission-fix';
+var BACKEND_VERSION = '2026-11-15-one-move';
 
 // --- shared validation: keep identical to betweenusfriends/validate.js ---
 
@@ -194,10 +194,13 @@ var NoBallValidate = (function () {
     MOVE_FIELDS.forEach(function (pair) {
       var key = pair[0];
       var move = trimmed(input, key);
-      if (!move) errors[key] = pair[1] + ' is required.';
-      else if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
+      if (move.length > LIMITS.move) errors[key] = pair[1] + ' must be 24 characters or fewer.';
       else moves[key] = move;
     });
+
+    if (!MOVE_FIELDS.some(function (pair) { return moves[pair[0]]; })) {
+      errors.move1 = errors.move1 || 'Add at least one special move.';
+    }
 
     var ranks = {};
     RANK_FIELDS.forEach(function (pair) {

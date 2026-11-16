@@ -17,7 +17,7 @@ Nothing here contains a Google credential. `SHARED_TOKEN` is optional and is **n
    - Who has access: **Anyone**
 6. Authorize when Google asks. The script needs the spreadsheet and Drive. It only creates **Friend Submissions** (if that tab is missing) and appends rows there. The photo goes in a Drive folder named **FNF Friend Photos** (created in your Drive the first time, then remembered). The script does not share those files.
 7. Copy the web app URL. It ends in `/exec`.
-8. Open that URL once. The browser should show `{"ok":true,"ready":true,"version":"2026-11-12-submission-fix"}` and the sheet should gain no row. This checks read access to the tracker. Photo creation and row writes still require the end-to-end submission test below. An unavailable tracker returns `ok:false, ready:false`.
+8. Open that URL once. The browser should show `{"ok":true,"ready":true,"version":"2026-11-15-one-move"}` and the sheet should gain no row. This checks read access to the tracker. Photo creation and row writes still require the end-to-end submission test below. An unavailable tracker returns `ok:false, ready:false`.
 9. Put that URL in `betweenusfriends/index.html` as `FORM_ENDPOINT` if it is not already the one there. That constant is what connects the form.
 10. After you replace `Code.gs`, use **Deploy → Manage deployments → pencil → Version: New version → Deploy** so the existing URL runs this version. Then submit one test from `https://friendnotphoe.com/betweenusfriends/` with a photo. Confirm the row is on **Friend Submissions**, the **Photo** cell is a Drive link you can open, the file is in **FNF Friend Photos** and is not shared publicly, and that Master Reference and Sheet1 did not change.
 
@@ -29,7 +29,7 @@ To change colors, edit `CATEGORY_COLORS` in `Code.gs` (Food first = Green, Drink
 
 ## What the script does
 
-`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, three special moves are required at 24 characters or fewer each, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page sends the 3:2 window the friend framed on the card, as an 1800 × 1200 jpeg. A HEIC the browser cannot decode is sent as-is.
+`doPost` reads a JSON body (`Content-Type: text/plain` from the page, so the browser does not send a CORS preflight). It rejects a body over 8 MB, a token mismatch, a filled honeypot (`company`), a submission faster than 3 seconds after the page loaded, and any field that fails the same checks as the page (score is a whole number from 1 to 300, vibes are at most 50 words and 250 characters, rankings are whole numbers from 0 to 100, at least one special move is required, with up to three moves at 24 characters or fewer each, the maps link is blank or an https Google Maps URL). The photo is required. Its type has to be jpeg, png, webp, or heic, and the decoded file has to be 5 MB or smaller. The page sends the 3:2 window the friend framed on the card, as an 1800 × 1200 jpeg. HEIC/HEIF photos use native decoding where available and a local browser decoder otherwise, so they can be previewed and framed too.
 
 It then takes a script lock, saves the photo, and appends one row.
 
@@ -39,9 +39,9 @@ The row is:
 
 `Submitted at` (America/New_York), `Submitted by`, `Restaurant`, `HP`, `Category`, `Color`, `City`, `Area`, `Vibes`, `Food`, `Drink`, `Scene`, `Google Maps link`, `Photo`, `Move 1`, `Move 2`, `Move 3`.
 
-Every column has a fixed position. On a tab that already exists, the script fills in only header cells that are blank, so an older tab gains `Photo` and then `Move 1` to `Move 3` after it. It never inserts or moves a column and never overwrites a header someone typed. Older rows keep blank move cells. The `Photo` cell is the Drive file URL. The moves are the three things to order, in the order they show on the card.
+Every column has a fixed position. On a tab that already exists, the script fills in only header cells that are blank, so an older tab gains `Photo` and then `Move 1` to `Move 3` after it. It never inserts or moves a column and never overwrites a header someone typed. Older rows keep blank move cells. The `Photo` cell is the Drive file URL. The moves are up to three things to order, in the order they show on the card. Unused move cells stay blank.
 
-`Submitted by` is the friend’s name from the form (required, 60 characters or fewer). After a successful send the page keeps that name and clears the rest, so the same person can add another place.
+`Submitted by` is the friend’s name from the form (required, 60 characters or fewer). The page requires a card review before submission. After a successful send, the submitted card remains visible; “I’ve got more” starts a fresh card while keeping the friend’s name.
 
 Text that starts with `=`, `+`, `-`, or `@` is prefixed with a quote so it cannot run as a formula.
 

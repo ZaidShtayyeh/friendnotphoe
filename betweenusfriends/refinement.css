@@ -87,3 +87,23 @@ form{padding-top:44px}
 
 .photo-status{font-size:12px;line-height:1.5;color:var(--sage);margin:10px 0 0}
 .photo-status[hidden]{display:none}
+.picture-label{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.picture-label .hint{max-width:none;font-weight:400;font-size:11px;line-height:1.45;text-align:right}
+.moves-hint{font-size:12px;color:var(--muted);margin:-10px 0 16px;line-height:1.5}
+.move-optional{font-size:10px;color:var(--muted);padding-right:12px}
+.move-box:focus-within .move-optional,.move-box:has(input:not(:placeholder-shown)) .move-optional{display:none}
+.card-review{margin:auto;border:1px solid var(--line);border-radius:18px;background:var(--cream);color:var(--ink);padding:22px;width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box}
+.card-review::backdrop{background:#182018d9}
+.card-review h2{font:400 29px/1.15 Georgia,serif;letter-spacing:-.03em;margin:0 0 16px;text-align:center}
+.card-review h2:focus{outline:none}
+.review-card-mount{display:flex;justify-content:center}
+.card-review .card-wrap{width:min(100%,320px,calc((100dvh - 250px)*.714));max-width:100%;visibility:visible;flex-shrink:0;margin:0;animation:none}
+.card-review .photo-hit{display:none}
+.review-author{font-size:11px;line-height:1.5;color:var(--muted);text-align:center;margin:12px 0 18px}
+.review-actions{display:flex;gap:12px}
+.review-actions button{flex:1;width:auto;justify-content:center;min-height:48px;font-size:13px}
+.review-edit{font:inherit;border:1px solid var(--line-hover);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
+.review-edit:focus-visible{outline:3px solid var(--sage);outline-offset:3px}
+.review-edit:disabled{opacity:.6;cursor:progress}
+.card-review .status.show{margin:0 0 16px}
+@media(max-width:420px){.picture-label .hint{max-width:220px;font-size:10px}.card-review{padding:18px 14px}.card-review h2{font-size:26px}.review-actions .send{padding:0 16px}.move-optional{font-size:9px;padding-right:8px}}

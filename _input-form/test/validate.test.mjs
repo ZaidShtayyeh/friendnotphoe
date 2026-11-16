@@ -211,7 +211,7 @@ test("a photo is required, must be an allowed image, and must be 5 MB or smaller
   assert.equal(v.validateSubmission(valid({ photoData: b64OfBytes(limit + 1) })).errors.photo, "Photo must be 5 MB or smaller.");
 });
 
-test("three special moves are required, trimmed, and capped at 24 characters so they fit the card", () => {
+test("at least one special move is required; optional moves are trimmed and capped at 24 characters", () => {
   const ok = v.validateSubmission(valid({ move1: "  Bread & Olive Oil  ", move3: "x".repeat(24) }));
   assert.equal(ok.ok, true);
   assert.equal(ok.value.move1, "Bread & Olive Oil");
@@ -221,9 +221,15 @@ test("three special moves are required, trimmed, and capped at 24 characters so 
 
   const missing = v.validateSubmission(valid({ move1: "", move2: "   ", move3: undefined }));
   assert.equal(missing.ok, false);
-  assert.equal(missing.errors.move1, "Move 1 is required.");
-  assert.equal(missing.errors.move2, "Move 2 is required.");
-  assert.equal(missing.errors.move3, "Move 3 is required.");
+  assert.equal(missing.errors.move1, "Add at least one special move.");
+  assert.equal(missing.errors.move2, undefined);
+  assert.equal(missing.errors.move3, undefined);
+  for (const key of ["move1", "move2", "move3"]) {
+    const result = v.validateSubmission(valid({move1: "", move2: "", move3: "", [key]: "Bread"}));
+    assert.equal(result.ok, true);
+    assert.equal(result.value[key], "Bread");
+    for (const other of ["move1", "move2", "move3"].filter(k => k !== key)) assert.equal(result.value[other], "");
+  }
 
   const long = v.validateSubmission(valid({ move2: "y".repeat(25) }));
   assert.equal(long.ok, false);

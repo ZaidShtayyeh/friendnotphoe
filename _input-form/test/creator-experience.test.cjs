@@ -11,7 +11,7 @@ const progress=(body=valid,photo=true,fit)=>JSON.parse(JSON.stringify(progressCo
 
 test('section progress requires valid fields, including a loaded photo and three stats',()=>{
  assert.deepEqual(progress(),{'the-spot':true,'the-card':true,'the-moves':true,'the-stats':true});
- const incomplete={...valid,area:'',hp:'301',move2:'',drink:''};
+ const incomplete={...valid,area:'',hp:'301',move1:'',move2:'',move3:'',drink:''};
  assert.deepEqual(progress(incomplete,false),{'the-spot':false,'the-card':false,'the-moves':false,'the-stats':false});
  assert.equal(progress(valid,false)['the-card'],false);
  assert.equal(progress({...valid,submittedBy:''})['the-spot'],true); // Author is separate from the spot.
