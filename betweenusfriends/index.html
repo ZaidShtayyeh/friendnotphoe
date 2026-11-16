@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#f2f0e7">
-  <title>For us amongst friends</title>
+  <title>From a friend to infinity — Friend Not Phoe</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="../assets/fonts/GeneralSans-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="../assets/fonts/GeneralSans-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -546,36 +546,41 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css">
+  <link rel="stylesheet" href="refinement.css?v=20261115-creator2">
 </head>
 <body>
   <header>
     <div class="header-content">
       <a class="coin-link" href="../#home"><img src="../assets/heart-spin-160.webp" alt="Friend not Phoe — back to home" class="corner-coin"></a>
-      <span class="header-note">FOR US AMONGST FRIENDS</span>
-      <a class="back-link" href="../#exploration">Explore <span aria-hidden="true">↗</span></a>
+      <span class="header-note">FROM A FRIEND TO INFINITY</span>
+      <a class="back-link" href="../#explore">Explore <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
   <main>
+    <form id="entry" novalidate>
     <div class="page-header">
       <span class="page-kicker">MAKE A CARD</span>
-      <h1>For us...<br><em>amongst friends.</em></h1>
-      <nav class="form-sections" aria-label="Form sections"><a href="#the-spot">01 <span>The spot</span></a><a href="#the-card">02 <span>The card</span></a><a href="#the-moves">03 <span>Special moves</span></a><a href="#the-stats">04 <span>The stats</span></a></nav>
+      <h1>From a friend<br><em>to infinity.</em></h1>
+          <div class="field creator-identity">
+            <label for="friend">Made by</label>
+            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Your name or nickname">
+            <p class="error" id="err-submittedBy"></p>
+          </div>
+      <nav class="form-sections" aria-label="Form sections"><a href="#the-spot">01 <span>The spot</span></a><a href="#the-card">02 <span>The card</span></a><a href="#the-moves">03 <span>The moves</span></a><a href="#the-stats">04 <span>The stats</span></a></nav>
     </div>
 
-    <form id="entry" novalidate>
+      <section class="submission-success" id="submission-success" aria-labelledby="submitted-heading" hidden>
+        <img class="submitted-logo" src="../assets/logo-lockup.webp" width="96" height="96" alt="Friend Not Phoe">
+        <h2 id="submitted-heading" tabindex="-1">Submitted.</h2>
+        <button type="button" class="send" id="make-another">I’ve got more <span aria-hidden="true">↻</span></button>
+      </section>
       <div class="fields">
         <p id="status" class="status" role="status"></p>
 
         <section class="block" id="the-spot">
           <h2><span class="section-heading"><span class="section-number">01</span>The spot</span></h2>
 
-          <div class="field">
-            <label for="friend">Your name</label>
-            <input class="text" id="friend" name="submittedBy" maxlength="60" required autocomplete="name" enterkeyhint="next" placeholder="Your name or nickname">
-            <p class="error" id="err-submittedBy"></p>
-          </div>
 
           <div class="field">
             <label for="place">Place</label>
@@ -668,7 +673,7 @@
         </section>
 
         <section class="block" id="the-moves">
-          <h2><span class="section-heading"><span class="section-number">03</span>Special moves</span></h2>
+          <h2><span class="section-heading"><span class="section-number">03</span>The moves</span></h2>
           <div class="moves">
             <div class="field">
               <label class="sr-only" for="move1">Move 1</label>
@@ -722,11 +727,11 @@
       <div class="stage-scrim" id="stageScrim"></div>
       <aside class="stage" id="stage" aria-label="Your card">
         <button type="button" class="stage-tab" id="stageTab" aria-expanded="false" aria-controls="cardWrap">
-          <span class="peek-label">See your card as you build</span><span class="open-label">Back to the form</span>
+          <span class="stage-mini" aria-hidden="true"><svg viewBox="0 0 1500 2100" focusable="false"><use href="#card"/></svg></span><span class="peek-label">See your card as you build</span><span class="open-label">Back to the form</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
         </button>
         <div class="stage-head">
-          <span class="stage-title"><span class="live-dot" aria-hidden="true"></span>Your card</span>
+          <span class="stage-title"><span class="live-dot" aria-hidden="true"></span><span id="stage-label">Your card</span></span>
           <button type="button" class="inspo-btn" data-inspo><span class="spark" aria-hidden="true">✦</span>See a real one</button>
         </div>
         <div class="card-wrap" id="cardWrap">
@@ -816,7 +821,6 @@
       sending: 'Sending…',
       fixIt: 'Almost. Fix the red bits.',
       notConnected: "The form isn’t connected right now. Please try again later.",
-      saved: "Locked in. Zaid's got it. Got another spot?",
       unsure: "Not sure that landed. Nothing's cleared, check with Zaid before you send it again.",
       offline: "Couldn't reach the sheet. Your stuff's still here, try again.",
       bounced: 'The sheet bounced that. Try again.',
@@ -883,6 +887,7 @@
     var form = $('entry');
     var statusEl = $('status');
     var sendBtn = $('send');
+    var submissionComplete = false;
     var place = $('place');
     var vibes = $('vibes');
     var counter = $('counter');
@@ -1485,6 +1490,7 @@
           : (mobileQuery.matches ? 'Drag it around to frame it.' : 'On the card. Drag it around to frame it.');
         renderPhoto();
         popCard();
+        updateProgress();
         if (next.kind === 'image' && !prefersReducedMotion) {
           wrap.classList.add('nudge');
           framer.classList.add('nudge');
@@ -1498,6 +1504,7 @@
         photoBusy = false;
         drop.classList.remove('busy');
         errEl.textContent = shotError(err);
+        updateProgress();
       }).then(function () {
         if (photoInput.value) photoInput.value = '';
       });
@@ -1635,6 +1642,7 @@
       renderCard();
       updateCounter();
       updateMoveCounts();
+      updateProgress();
     }
     form.addEventListener('input', refresh);
     form.addEventListener('change', refresh);
@@ -1993,6 +2001,79 @@
     window.initPlaces = initPlaces;
     initPlaces(MAPS_API_KEY);
 
+    // Section checks reuse submission rules, without re-reading a large photo on every keystroke.
+    function sectionProgress(body, hasPhoto, fit) {
+      var candidate = Object.assign({}, body, { photoData: hasPhoto ? 'AAAA' : '', photoType: 'image/jpeg', photoName: 'preview.jpg' });
+      var errors = NoBallValidate.validateSubmission(candidate).errors;
+      if (fit) {
+        if (!fit.name) errors.restaurant = 'fit';
+        if (fit.vibes > CARD.vibes.maxLines) errors.vibes = 'fit';
+        fit.moves.forEach(function (lines, i) { if (lines > CARD.moves.maxLines) errors['move' + (i + 1)] = 'fit'; });
+      }
+      var sections = {
+        'the-spot': ['restaurant', 'maps', 'city', 'area'],
+        'the-card': ['photo', 'hp', 'category', 'vibes'],
+        'the-moves': ['move1', 'move2', 'move3'],
+        'the-stats': ['food', 'drink', 'scene']
+      };
+      return Object.fromEntries(Object.entries(sections).map(function (entry) {
+        return [entry[0], entry[1].every(function (key) { return !errors[key]; })];
+      }));
+    }
+
+    function updateProgress() {
+      var completed = sectionProgress(payload(), !!photo && !photoBusy, cardFit);
+      document.querySelectorAll('.form-sections a').forEach(function (link) {
+        var done = completed[link.hash.slice(1)];
+        link.classList.toggle('is-complete', done);
+        var label = link.querySelector('span').textContent;
+        link.setAttribute('aria-label', label + (done ? ' — complete' : ''));
+      });
+    }
+    form.addEventListener('focusin', function (event) {
+      var block = event.target.closest('.block');
+      if (!block) return;
+      document.querySelectorAll('.form-sections a').forEach(function (link) {
+        if (link.hash === '#' + block.id) link.setAttribute('aria-current', 'step');
+        else link.removeAttribute('aria-current');
+      });
+    });
+
+    function showSubmitted() {
+      submissionComplete = true;
+      clearStatus();
+      setStage(false);
+      holoReset();
+      form.classList.add('is-submitted');
+      $('submission-success').hidden = false;
+      $('stage-label').textContent = 'Your submitted card';
+      wrap.classList.remove('pop', 'landed');
+      void wrap.offsetWidth;
+      if (!prefersReducedMotion) wrap.classList.add('landed');
+      $('submission-success').scrollIntoView({ block: 'start', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      $('submitted-heading').focus({ preventScroll: true });
+    }
+
+    function startAnotherCard() {
+      var friendName = $('friend').value;
+      form.reset();
+      clearShot();
+      $('friend').value = friendName;
+      submissionComplete = false;
+      form.classList.remove('is-submitted');
+      $('submission-success').hidden = true;
+      $('stage-label').textContent = 'Your card';
+      previewNudged = false;
+      wrap.classList.remove('pop', 'landed');
+      Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
+      clearFieldErrors();
+      clearStatus();
+      refresh();
+      window.formStartedAt = Date.now() - limits.minFillMs;
+      place.focus();
+    }
+    $('make-another').addEventListener('click', startAnotherCard);
+
     // ==================== SEND ====================
     function payload() {
       return {
@@ -2051,20 +2132,7 @@
         });
       }).then(function (reply) {
         if (reply.kind === 'success') {
-          var friendName = $('friend').value;
-          form.reset();
-          clearShot();
-          $('friend').value = friendName;
-          Array.prototype.forEach.call(document.querySelectorAll('.stat'), syncBar);
-          refresh();
-          clearFieldErrors();
-          setStage(false);
-          wrap.classList.remove('pop', 'landed');
-          void wrap.offsetWidth;
-          if (!prefersReducedMotion) wrap.classList.add('landed');
-          window.formStartedAt = Date.now() - limits.minFillMs;
-          showStatus(COPY.saved, 'ok');
-          place.focus();
+          showSubmitted();
           return;
         }
         if (reply.kind === 'opaque') {
@@ -2079,6 +2147,7 @@
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
+      if (submissionComplete || sendBtn.disabled) return;
       clearStatus();
       clearFieldErrors();
       if (photoBusy) {

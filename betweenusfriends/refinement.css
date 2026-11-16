@@ -35,3 +35,52 @@ footer{max-width:1142px;width:calc(100% - 88px);margin:55px auto 0;padding:24px 
 .frame-inline{display:block}.frame-inline .hit-hud{opacity:1;transform:translate(-50%,0)}
 .frame-inline{border-radius:10px;box-shadow:0 0 0 1px var(--line)}.frame-bar{border-radius:10px}.frame-tip{font-size:11px;font-weight:400}.swap{font-size:11px}
 @media(max-width:959px){.stage-tab{min-width:200px;min-height:48px;padding:12px 20px;font-size:14px;font-weight:700;border:1px solid #ffffff24;justify-content:space-between;gap:22px}.stage.open .stage-tab{font-weight:400}.stage:not(.open){background:linear-gradient(transparent 0,var(--cream) 35px)}.stage:not(.open) .stage-tab{box-shadow:0 4px 20px #20291e25}}
+
+/* The invitation sits beside the live card, in the existing cream palette. */
+form{padding-top:44px}
+.page-header{padding:0;scroll-margin-top:105px}
+.page-header h1{font-size:clamp(50px,5.1vw,69px);line-height:1.02}
+.creator-identity{margin:28px 0 0;max-width:340px}
+.creator-identity label{font-weight:400;color:var(--muted)}
+.form-sections{gap:18px;justify-content:space-between;margin-top:28px}
+.form-sections a{position:relative;gap:7px;padding-bottom:4px;border-bottom:1px solid transparent}
+.form-sections a[aria-current="step"]{border-bottom-color:var(--sage);color:var(--ink)}
+.form-sections a.is-complete{color:var(--sage)}
+.form-sections a.is-complete:after{content:'✓';font-size:10px}
+.stage-mini{display:none}
+.submission-success[hidden]{display:none}
+.submission-success{padding:38px 0 30px;scroll-margin-top:100px}
+.submitted-logo{display:block;width:82px;height:72px;object-fit:contain;margin-bottom:18px}
+.submission-success h2{font:400 clamp(35px,4vw,49px)/1.1 Georgia,serif;letter-spacing:-.04em;margin-bottom:24px}
+.submission-success h2:focus{outline:none}
+.submission-success .send{gap:20px}
+.is-submitted .page-header,.is-submitted .fields,.is-submitted .actions,.is-submitted .creator-identity,.is-submitted .form-sections{display:none}
+.is-submitted .photo-hit{pointer-events:none}
+.is-submitted .inspo-btn{display:none}
+@media(min-width:960px){
+ form{grid-template-areas:"intro stage" "fields stage" "actions stage"}
+ .page-header{grid-area:intro}
+ .page-header h1 br{display:block}.page-header h1 em:before{content:none}
+ .stage{margin-top:0}
+ .submission-success{grid-area:fields}
+ form.is-submitted{min-height:calc(100svh - 200px)}
+}
+@media(max-width:959px){
+ :root{--peek:86px}
+ form{padding-top:32px}
+ .page-header h1{font-size:clamp(43px,10vw,62px)}
+ .creator-identity{max-width:none;margin-top:24px}
+ .form-sections{gap:10px}
+ .stage-tab{min-height:60px;padding:8px 14px;gap:12px;border-radius:12px}
+ .stage-tab .stage-mini{display:block;width:27px;aspect-ratio:5/7;flex:0 0 27px;border-radius:2px;overflow:hidden;box-shadow:0 1px 4px #0003;background:var(--cream)}
+ .stage-mini svg{display:block;width:100%;height:100%}
+ .stage.open .stage-mini{display:none}
+ .stage.open .stage-tab{min-height:48px}
+ .stage-tab .peek-label{font-size:12px}
+ .is-submitted .stage{position:relative;inset:auto;height:auto;transform:none;padding:10px 0 0;background:none;pointer-events:auto;z-index:auto}
+ .is-submitted .stage .card-wrap{visibility:visible;cursor:default;max-width:100%}
+ .is-submitted .stage-tab,.is-submitted .stage-head{display:none}
+ .submission-success{padding:28px 0 12px}
+ .submission-success .send{width:auto}
+}
+@media(max-width:420px){.form-sections a{gap:5px}.form-sections a.is-complete:after{position:absolute;right:-10px;top:0}.header-note{max-width:130px;text-align:center;line-height:1.5}.stage-tab{max-width:calc(100vw - 32px)}}
