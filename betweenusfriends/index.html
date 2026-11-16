@@ -541,7 +541,14 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261115-editorial2">
+  <link rel="stylesheet" href="refinement.css?v=20261115-scenes1">
+  <link rel="stylesheet" href="forest-proposal.css?v=20261115-forest1">
+  <script>
+    if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
+      document.documentElement.dataset.surface = 'forest';
+      document.querySelector('meta[name="theme-color"]').content = '#20291e';
+    }
+  </script>
 </head>
 <body>
   <header>
@@ -651,12 +658,12 @@
           </div>
 
           <fieldset class="field">
-            <legend>What's it for</legend>
-            <div class="chips category-picker">
-              <label class="chip kind-vibes"><input type="radio" name="category" value="Vibes first"><span class="kind-face"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="kind-disc" cx="20" cy="20" r="19"/><path d="M10 17c4-8 6 8 10 0s6 8 10 0M10 24c4-8 6 8 10 0s6 8 10 0"/></svg><strong>Vibes first</strong></span></label>
-              <label class="chip kind-drink"><input type="radio" name="category" value="Drinks first"><span class="kind-face"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="kind-disc" cx="20" cy="20" r="19"/><path d="m11 12 9 11 9-11H11m9 11v8m-5 0h10"/></svg><strong>Drinks first</strong></span></label>
-              <label class="chip kind-food"><input type="radio" name="category" value="Food first"><span class="kind-face"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="kind-disc" cx="20" cy="20" r="19"/><path d="M11 11v9m4-9v20m4-20v9h-8m18 11V11c-5 3-5 10 0 10"/></svg><strong>Food first</strong></span></label>
-              <label class="chip kind-gold"><input type="radio" name="category" value="Legendary"><span class="kind-face"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="kind-disc" cx="20" cy="20" r="19"/><path d="m20 9 3.5 7.5L31 20l-7.5 3.5L20 31l-3.5-7.5L9 20l7.5-3.5Z"/></svg><strong>Legendary</strong></span></label>
+            <legend>Scenes</legend>
+            <!-- Keep existing submission values compatible with the tracker. -->
+            <div class="scenes">
+              <label class="scene-choice scene-food"><input type="radio" name="category" value="Food first"><span>Food forward</span></label>
+              <label class="scene-choice scene-drink"><input type="radio" name="category" value="Drinks first"><span>Drinks</span></label>
+              <label class="scene-choice scene-gold"><input type="radio" name="category" value="Legendary"><span>Legendary</span></label>
             </div>
             <p class="error" id="err-category"></p>
           </fieldset>

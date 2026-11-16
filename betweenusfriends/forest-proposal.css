@@ -1,0 +1,49 @@
+/* Opt-in visual proposal: /betweenusfriends/?surface=forest. Card artwork stays unchanged. */
+:root[data-surface=forest]{color-scheme:dark;--sage:#c6dce8;--sage-dark:#20291e;--ink:#e9ede4;--body:#d2d9cb;--muted:#abb7a7;--faint:#a5b29e;--line:#4b5845;--line-hover:#a2b398;--soft:#34432e;--cream:#20291e;--wasta:#f19eaa}
+[data-surface=forest] body{background:#20291e}
+[data-surface=forest] header{background:#20291ef5;color:#c6dce8;border-bottom-color:#c6dce81c}
+[data-surface=forest] .creator-invitation{padding-left:0;padding-right:0;background:transparent}
+[data-surface=forest] .creator-invitation h1{color:#f2f0e7}
+[data-surface=forest] .page-header h1 em span{color:#c6dce8}
+[data-surface=forest] .form-sections a[aria-current=step]{border-bottom-color:#c6dce8}
+[data-surface=forest] .block h2{color:#c6dce8}
+[data-surface=forest] .text{border-bottom-color:#65735d}
+[data-surface=forest] .text:hover,[data-surface=forest] .text:focus{border-bottom-color:#c6dce8}
+[data-surface=forest] .text::placeholder,[data-surface=forest] textarea::placeholder,[data-surface=forest] .move-box input::placeholder{color:#a5b29e}
+[data-surface=forest] textarea,[data-surface=forest] .move-box,[data-surface=forest] .hp-box{background:#293426;border-color:#53614b;box-shadow:none}
+[data-surface=forest] textarea:focus{background:#2c3927;box-shadow:0 0 0 2px #c6dce822;border-color:#c6dce8}
+[data-surface=forest] #score::placeholder{color:#899982}
+[data-surface=forest] .hp-box>span{color:#b5c4ad}
+[data-surface=forest] .place-list{background:#293426;border-color:#65735d;box-shadow:0 12px 30px #0e150b55}
+[data-surface=forest] .place-option:hover,[data-surface=forest] .place-option[aria-selected=true]{background:#3b4b33}
+[data-surface=forest] .field>label.drop{background:#293426;border-color:#7a8c6e}
+[data-surface=forest] .drop-icon{background:#c6dce8;color:#20291e}
+[data-surface=forest] .scene-choice{--scene:#b3c9d5;--scene-wash:#34444a}
+[data-surface=forest] .scene-food{--scene:#a9bd88;--scene-wash:#35452c}
+[data-surface=forest] .scene-gold{--scene:#d4bd7b;--scene-wash:#49432d}
+[data-surface=forest] .scene-choice>span{color:var(--scene)}
+[data-surface=forest] .scene-choice:hover>span{background:#c6dce80b}
+[data-surface=forest] .scene-choice input:checked+span{background:var(--scene-wash);color:#f2f0e7}
+[data-surface=forest] .stat .bar{background:linear-gradient(#c6dce8,#c6dce8) 0 0/var(--v) 100% no-repeat,#46533e}
+[data-surface=forest] .stat .bar::-webkit-slider-thumb{background:#20291e;border-color:#c6dce8;box-shadow:none}
+[data-surface=forest] .stat .bar::-moz-range-thumb{background:#20291e;border-color:#c6dce8;box-shadow:none}
+[data-surface=forest] .stat.unset .bar::-webkit-slider-thumb{border-color:#a5b29e}
+[data-surface=forest] .stat.unset .bar::-moz-range-thumb{border-color:#a5b29e}
+[data-surface=forest] .stat .num{border-color:#65735d;color:#c6dce8;box-shadow:none}
+[data-surface=forest] .stat.unset .num{border-color:#4b5845}
+[data-surface=forest] .inspo-btn{color:#c6dce8;border-color:#71836a}
+[data-surface=forest] .live-dot{background:#c6dce8}
+[data-surface=forest] .send{background:#c6dce8;color:#20291e}
+[data-surface=forest] .send:hover{background:#dbe9ef}
+[data-surface=forest] .hold-progress{background:#9fbba4}
+[data-surface=forest] .card-review{background:#20291e}
+[data-surface=forest] .review-edit{color:#c6dce8}
+[data-surface=forest] .status{background:#293426}
+[data-surface=forest] .status.bad,[data-surface=forest] .error{color:#f5a9b2}
+[data-surface=forest] .invalid .text,[data-surface=forest] .invalid textarea,[data-surface=forest] .invalid .hp-box,[data-surface=forest] .invalid .num,[data-surface=forest] .invalid .drop,[data-surface=forest] .invalid .move-box{border-color:#f19eaa}
+[data-surface=forest] .counter.over{color:#f5a9b2}
+[data-surface=forest] .frame-bar{background:#293426;border-color:#53614b}
+[data-surface=forest] .frame-tip,[data-surface=forest] .swap{color:#c6dce8}
+[data-surface=forest] footer{color:#abb7a7}
+@media(min-width:960px){[data-surface=forest] .stage{background:#263222;border-color:#3e4d36;box-shadow:0 20px 60px #10180b20}}
+@media(max-width:959px){[data-surface=forest] .stage:not(.open){background:linear-gradient(transparent 0,#20291e 35px)}[data-surface=forest] .stage-tab{background:#c6dce8;color:#20291e;border-color:#c6dce8}[data-surface=forest] .stage.open .stage-tab{background:#c6dce8;color:#20291e}[data-surface=forest] .is-submitted .stage{background:none}}

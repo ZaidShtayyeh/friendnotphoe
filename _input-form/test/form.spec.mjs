@@ -311,14 +311,9 @@ async function exercise(page, label, base) {
   await page.fill("#drinks", "20");
   assert.equal(await page.locator("#card").getAttribute("data-icon"), "food");
   await page.fill("#drinks", "50");
-  await page.locator('input[value="Vibes first"]').check();
+  await page.locator('input[value="Drinks first"]').check();
   assert.equal(await page.locator("#card").getAttribute("data-color"), "blue");
-  const dots = await page.evaluate(() => ({
-    vibes: getComputedStyle(document.querySelector(".chip.kind-vibes span"), "::before").backgroundColor,
-    drinks: getComputedStyle(document.querySelector(".chip.kind-drink span"), "::before").backgroundColor,
-  }));
-  assert.equal(dots.vibes, "rgb(97, 183, 244)");
-  assert.equal(dots.vibes, dots.drinks);
+  assert.deepEqual(await page.locator('.scene-choice > span').allTextContents(), ['Food forward', 'Drinks', 'Legendary']);
   await page.locator('input[value="Legendary"]').check();
   assert.equal(await page.locator("#card").getAttribute("data-color"), "gold");
   await page.locator('input[value="Food first"]').check();

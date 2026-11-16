@@ -10,7 +10,7 @@ Prepared November 15, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12
 
 | Component | Status at this handoff |
 | --- | --- |
-| Website and card creator | Live on GitHub Pages; root `main` branch. The creator has mandatory review, one required special move, HEIC preview/cropping, and hold-to-submit with the spinning logo. The final visual pass adds the forest-green invitation, pale-blue “infinity,” editorial labels, a 2×2 category picker, unnumbered move fields, and initially blank stats. |
+| Website and card creator | Live on GitHub Pages; root `main` branch. The creator has mandatory review, one required special move, HEIC preview/cropping, and hold-to-submit with the spinning logo. The final visual pass adds the forest-green invitation, pale-blue “infinity,” editorial labels, a three-option Scenes selector, unnumbered move fields, and initially blank stats. |
 | Google Sheet submission saving | Working backend, deployment version **5**, health version **`2026-11-15-one-move`**. Read-only health returned `ok:true, ready:true`. |
 | Cloudflare analytics | Existing Web Analytics beacon remains in root HTML. This is traffic analytics, not a Grok bot alert integration. No claim is made here about dashboard traffic counts. |
 | Visit Worker | **Confirmed in the authenticated Cloudflare dashboard**, not merely found in a branch. Name `friendnotphoe-visit-alerts`, production version prefix **`46ee1783`**, deployed 9 days before this audit. |
