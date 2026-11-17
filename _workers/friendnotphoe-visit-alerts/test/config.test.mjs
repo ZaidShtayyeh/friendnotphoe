@@ -13,7 +13,7 @@ test("the public page includes the verified endpoint once, enabled", () => {
   const tag = '<script src="assets/visit-note.js" data-enabled="true" data-endpoint="https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit" defer></script>';
   assert.equal(index.split(tag).length - 1, 1);
   assert.equal(admin.includes("visit-note"), false);
-  assert.equal(config.vars.FORWARDING_ENABLED, "false");
+  assert.equal(config.vars.FORWARDING_ENABLED, "true");
   assert.equal(config.vars.FORWARD_TEST_EVENTS, "false");
 });
 
@@ -24,7 +24,7 @@ test("wrangler config is inert and privacy-safe as shipped", () => {
   assert.equal(config.preview_urls, false);
   assert.equal(config.routes, undefined);
   assert.equal(config.route, undefined);
-  assert.equal(config.vars.FORWARDING_ENABLED, "false");
+  assert.equal(config.vars.FORWARDING_ENABLED, "true");
   assert.equal(config.vars.FORWARD_TEST_EVENTS, "false");
   assert.equal(config.observability.logs.invocation_logs, false);
   assert.equal(config.observability.traces.enabled, false);

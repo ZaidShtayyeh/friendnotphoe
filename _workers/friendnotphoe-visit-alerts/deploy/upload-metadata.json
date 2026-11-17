@@ -2,7 +2,7 @@
   "main_module": "index.js",
   "compatibility_date": "2026-11-06",
   "bindings": [
-    { "type": "plain_text", "name": "FORWARDING_ENABLED", "text": "false" },
+    { "type": "plain_text", "name": "FORWARDING_ENABLED", "text": "true" },
     { "type": "plain_text", "name": "FORWARD_TEST_EVENTS", "text": "false" },
     { "type": "plain_text", "name": "ALLOWED_ORIGINS", "text": "https://friendnotphoe.com,https://www.friendnotphoe.com" },
     { "type": "plain_text", "name": "SITE", "text": "friendnotphoe.com" },

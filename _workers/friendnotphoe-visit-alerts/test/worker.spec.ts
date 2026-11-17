@@ -39,7 +39,10 @@ function payload(overrides: Record<string, unknown> = {}): Record<string, unknow
   };
 }
 
-function visit(body: unknown, init: { origin?: string | null; method?: string; ctype?: string; ip?: string } = {}) {
+function visit(
+  body: unknown,
+  init: { origin?: string | null; method?: string; ctype?: string; ip?: string; cf?: IncomingRequestCfProperties } = {},
+) {
   const headers = new Headers({
     "Content-Type": init.ctype ?? "application/json",
     "CF-Connecting-IP": init.ip ?? VISITOR_IP,
@@ -51,6 +54,7 @@ function visit(body: unknown, init: { origin?: string | null; method?: string; c
     method,
     headers,
     body: method === "POST" ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,
+    cf: init.cf,
   });
 }
 
@@ -230,8 +234,8 @@ describe("fail closed", () => {
     expect(upstream).not.toHaveBeenCalled();
   });
 
-  it("wrangler.jsonc ships with forwarding off and no secret values", () => {
-    expect(env.FORWARDING_ENABLED).toBe("false");
+  it("wrangler.jsonc ships with forwarding on, test events off, and no secret values", () => {
+    expect(env.FORWARDING_ENABLED).toBe("true");
     expect(env.FORWARD_TEST_EVENTS).toBe("false");
     expect(env.ROUTINE_WEBHOOK_URL).toBeUndefined();
     expect(env.ROUTINE_WEBHOOK_BEARER).toBeUndefined();
@@ -315,12 +319,112 @@ describe("forwarding", () => {
   });
 });
 
+const PLACE_CF = {
+  city: "Brooklyn",
+  region: "New York",
+  country: "US",
+  postalCode: "11225",
+  latitude: "40.6782",
+  longitude: "-73.9442",
+  asn: 14061,
+  asOrganization: "Example ISP",
+  colo: "EWR",
+  metroCode: "501",
+  timezone: "America/New_York",
+} as unknown as IncomingRequestCfProperties;
+
+function forwardedBody(): Record<string, unknown> {
+  const init = upstream.mock.calls.at(-1)![1] as RequestInit;
+  return JSON.parse(init.body as string) as Record<string, unknown>;
+}
+
+describe("approximate location", () => {
+  it("forwards only city, region and country", async () => {
+    const body = payload();
+    const res = await worker.fetch(visit(body, { cf: PLACE_CF }), testEnv());
+    expect(res.status).toBe(200);
+    const sent = forwardedBody();
+    expect(sent.location).toEqual({ city: "Brooklyn", region: "New York", country: "US" });
+    const raw = JSON.stringify(sent);
+    for (const leak of [
+      VISITOR_IP,
+      VISITOR_UA,
+      "40.6782",
+      "-73.9442",
+      "11225",
+      "14061",
+      "Example ISP",
+      "EWR",
+      "501",
+      "America/New_York",
+    ]) {
+      expect(raw).not.toContain(leak);
+    }
+    expect(sent).toMatchObject(body);
+  });
+
+  it("includes only the string fields that are present", async () => {
+    await worker.fetch(visit(payload(), { cf: { city: "Brooklyn", region: "", country: 1 } as unknown as IncomingRequestCfProperties }), testEnv());
+    expect(forwardedBody().location).toEqual({ city: "Brooklyn" });
+  });
+
+  it("omits location when nothing usable is left", async () => {
+    const body = payload();
+    await worker.fetch(visit(body, { cf: { city: "---", region: "   ", country: "!!!" } as unknown as IncomingRequestCfProperties }), testEnv());
+    expect(forwardedBody()).toEqual(body);
+    expect(forwardedBody().location).toBeUndefined();
+  });
+
+  it("omits location when cf is missing", async () => {
+    const body = payload();
+    await worker.fetch(visit(body), testEnv());
+    expect(forwardedBody()).toEqual(body);
+  });
+
+  it("strips characters and caps each field at 60", async () => {
+    const city = `  Brooklyn!!! ${"A".repeat(80)}  `;
+    await worker.fetch(
+      visit(payload(), {
+        cf: { city, region: "New   York @ home", country: "U.S." } as unknown as IncomingRequestCfProperties,
+      }),
+      testEnv(),
+    );
+    const location = forwardedBody().location as { city: string; region: string; country: string };
+    expect(location.city).toBe(`Brooklyn ${"A".repeat(51)}`);
+    expect(location.city).toHaveLength(60);
+    expect(location.region).toBe("New York home");
+    expect(location.country).toBe("U.S.");
+  });
+
+  it("rejects a client-sent location with 400", async () => {
+    const res = await worker.fetch(visit(payload({ location: { city: "Brooklyn" } }), { cf: PLACE_CF }), testEnv());
+    expect(res.status).toBe(400);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it("adds nothing for test or disabled outcomes", async () => {
+    const testRes = await worker.fetch(visit(payload({ test: true }), { cf: PLACE_CF }), testEnv());
+    expect(await testRes.json()).toEqual({ ok: true, forwarded: false, reason: "test" });
+    const disabled = await worker.fetch(visit(payload(), { cf: PLACE_CF }), testEnv({ FORWARDING_ENABLED: "false" }));
+    expect(disabled.status).toBe(503);
+    expect(await disabled.json()).toMatchObject({ forwarded: false, reason: "disabled" });
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it("carries location on forwarded test events when those are enabled", async () => {
+    await worker.fetch(visit(payload({ test: true }), { cf: PLACE_CF }), testEnv({ FORWARD_TEST_EVENTS: "true" }));
+    const sent = forwardedBody();
+    expect(sent.test).toBe(true);
+    expect(sent.location).toEqual({ city: "Brooklyn", region: "New York", country: "US" });
+  });
+});
+
 describe("privacy-safe logs", () => {
   it("never log secrets, IP, user agent, URLs or event ids", async () => {
     const ids: string[] = [];
     const run = async (overrides: Partial<Env>, body = payload()) => {
       ids.push(body.event_id as string);
-      await worker.fetch(visit(body), testEnv(overrides));
+      await worker.fetch(visit(body, { cf: PLACE_CF }), testEnv(overrides));
     };
     await run({});
     upstream.mockResolvedValueOnce(new Response(null, { status: 401 }));
@@ -329,11 +433,22 @@ describe("privacy-safe logs", () => {
     await run({});
     await run({ FORWARDING_ENABLED: "false" });
     await run({ ROUTINE_WEBHOOK_URL: "" });
-    await worker.fetch(visit(payload(), { origin: "https://evil.test" }), testEnv());
+    await worker.fetch(visit(payload(), { origin: "https://evil.test", cf: PLACE_CF }), testEnv());
 
     expect(logs.length).toBeGreaterThanOrEqual(6);
     const all = logs.join("\n");
-    for (const forbidden of [SECRET_URL, "routine.test.invalid", SECRET_TOKEN, VISITOR_IP, VISITOR_UA, "evil.test", ...ids]) {
+    for (const forbidden of [
+      SECRET_URL,
+      "routine.test.invalid",
+      SECRET_TOKEN,
+      VISITOR_IP,
+      VISITOR_UA,
+      "evil.test",
+      "Brooklyn",
+      "New York",
+      "11225",
+      ...ids,
+    ]) {
       expect(all).not.toContain(forbidden);
     }
     for (const line of logs) expect(JSON.parse(line).msg).toBe("visit_note");

@@ -8,6 +8,39 @@ const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 // Pathname only: no query, hash, percent-escapes, or spaces can pass.
 export const PATH_RE = /^\/[A-Za-z0-9._~\-/]{0,63}$/;
 const PAYLOAD_KEYS = ["event_id", "occurred_at", "path", "site", "test", "type"];
+export const MAX_LOCATION_FIELD_CHARS = 60;
+const LOCATION_FIELDS = ["city", "region", "country"] as const;
+
+function placeName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const clean = raw
+    .normalize("NFC")
+    .replace(/[^\p{L}\p{M}\p{N} .'\u2019-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_LOCATION_FIELD_CHARS)
+    .trim();
+  return /[\p{L}\p{N}]/u.test(clean) ? clean : null;
+}
+
+// Approximate place only, added server-side from Cloudflare's request.cf. Never IP,
+// coordinates, postal code, ASN, timezone or anything else that fingerprints a visitor.
+export function approximateLocation(cf: unknown): VisitLocation | undefined {
+  if (typeof cf !== "object" || cf === null) return undefined;
+  const src = cf as Record<string, unknown>;
+  const loc: VisitLocation = {};
+  for (const field of LOCATION_FIELDS) {
+    const v = placeName(src[field]);
+    if (v) loc[field] = v;
+  }
+  return Object.keys(loc).length > 0 ? loc : undefined;
+}
+
+export interface VisitLocation {
+  city?: string;
+  region?: string;
+  country?: string;
+}
 
 export interface VisitPayload {
   type: "visit";
@@ -16,6 +49,7 @@ export interface VisitPayload {
   occurred_at: string;
   path: string;
   test: boolean;
+  location?: VisitLocation;
 }
 
 type Outcome =
@@ -232,7 +266,8 @@ export default {
       return json(429, { ok: false, forwarded: false }, { ...cors, "Retry-After": "60" });
     }
 
-    const outcome = await forward(env, url, token, payload);
+    const location = approximateLocation(request.cf);
+    const outcome = await forward(env, url, token, location ? { ...payload, location } : payload);
     if (outcome === "forwarded") return json(200, { ok: true, forwarded: true }, cors);
     return json(502, { ok: false, forwarded: false }, cors);
   },
