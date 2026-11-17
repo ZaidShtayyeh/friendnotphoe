@@ -7,10 +7,10 @@ const stripComments = (s) => s.replace(/^\s*\/\/.*$/gm, "");
 const config = JSON.parse(stripComments(read("../wrangler.jsonc")));
 const metadata = JSON.parse(read("../deploy/upload-metadata.json"));
 
-test("the public page stages the verified endpoint once, disabled until the Grok bot handoff", () => {
+test("the public page includes the verified endpoint once, enabled", () => {
   const index = read("../../../index.html");
   const admin = read("../../../admin.html");
-  const tag = '<script src="assets/visit-note.js" data-enabled="false" data-endpoint="https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit" defer></script>';
+  const tag = '<script src="assets/visit-note.js" data-enabled="true" data-endpoint="https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit" defer></script>';
   assert.equal(index.split(tag).length - 1, 1);
   assert.equal(admin.includes("visit-note"), false);
   assert.equal(config.vars.FORWARDING_ENABLED, "false");
