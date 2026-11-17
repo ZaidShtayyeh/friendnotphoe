@@ -1,16 +1,24 @@
 /**
- * Friendnotphoe "No Ball" submissions.
+ * Friendnotphoe "No Ball" submissions, with saved-submission notifications.
  *
  * Paste this whole file into the sheet: Extensions > Apps Script, replace Code.gs, save.
- * Deploy as a Web app: Execute as Me, Who has access: Anyone.
+ * KEEP the live project's extra helpers authorizeDrive() and debugSave(). They are not in
+ * this file; paste this file around them (or re-add them below) instead of deleting them.
+ * Never run debugSave.
+ * Deploy as a Web app: Execute as Me, Who has access: Anyone. Update the existing
+ * deployment with a new version so the /exec URL does not change.
  *
  * Rows are appended only to the "Friend Submissions" tab (created with headers if missing).
- * The same submissionId is one card: a retry does not add another row or another notification.
- * Each new card is queued on "Notification Outbox". processNotificationOutbox sends it.
- * installNotificationTrigger creates the minute timer for that queue.
- * The chat webhook lives in Script Property FNF_CHAT_WEBHOOK_URL. It is not in this file.
+ * Columns A-Q are unchanged. Notification state lives in its own "Notification Outbox" tab.
  * The photo is saved in a private Drive folder named "FNF Friend Photos". Files are not shared.
- * This script does not read or write "Master Reference" or "Sheet1".
+ * This script does not read or write "Master Reference", "Sheet1" or "UAE".
+ *
+ * Notifications (all Script Properties, server-side only, never in the page):
+ *   FNF_SUBMISSION_WEBHOOK_URL            receiver URL
+ *   FNF_SUBMISSION_WEBHOOK_BEARER         receiver key
+ *   FNF_SUBMISSION_NOTIFICATIONS_ENABLED  "true" to send. Anything else = off (default).
+ * Cards saved while off are recorded as "disabled" and are never sent later (no backfill).
+ * Run installNotificationTrigger() once from the editor to add the 10-minute retry job.
  *
  * SHARED_TOKEN is optional and not a secret. The page contains the same value.
  * Leave both empty to disable the check. Change colors only in CATEGORY_COLORS below.
@@ -18,7 +26,7 @@
 var SHARED_TOKEN = '';
 // Web apps have no active spreadsheet context, even when bound to a Sheet.
 var SPREADSHEET_ID = '1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ';
-var BACKEND_VERSION = '2026-11-16-notify';
+var BACKEND_VERSION = '2026-11-16-notify-hp-boost';
 
 // --- shared validation: keep identical to betweenusfriends/validate.js ---
 
@@ -47,6 +55,8 @@ var NoBallValidate = (function () {
     move: 24,
     scoreMin: 0,
     scoreMax: 300,
+    hpBoostPoints: 20,
+    hpBoostMax: 3,
     rankMin: 0,
     rankMax: 100,
     minFillMs: 3000,
@@ -147,7 +157,9 @@ var NoBallValidate = (function () {
   }
 
   // Partial totals are useful while dragging; submission still requires all three stats.
-  function hpFromStats(input) {
+  function hpFromStats(input, boosts) {
+    var count = wholeNumber(boosts == null ? 0 : boosts, 0, LIMITS.hpBoostMax);
+    if (count === null) return null;
     var total = 0, rated = 0;
     for (var i = 0; i < RANK_FIELDS.length; i++) {
       var raw = trimmed(input, RANK_FIELDS[i][0]);
@@ -157,7 +169,7 @@ var NoBallValidate = (function () {
       total += value;
       rated += 1;
     }
-    return rated ? total : null;
+    return rated ? Math.min(LIMITS.scoreMax, total + count * LIMITS.hpBoostPoints) : null;
   }
 
   function validateSubmission(input) {
@@ -171,6 +183,8 @@ var NoBallValidate = (function () {
     var vibes = trimmed(input, 'vibes');
     var category = trimmed(input, 'category');
     var photo = readPhoto(input);
+    var hpBoosts = wholeNumber(input.hpBoosts == null ? 0 : input.hpBoosts, 0, LIMITS.hpBoostMax);
+    if (hpBoosts === null) errors.hp = 'Use up to three HP boosts.';
 
     if (!submittedBy) errors.submittedBy = 'Your name is required.';
     else if (submittedBy.length > LIMITS.friend) errors.submittedBy = 'Your name must be 60 characters or fewer.';
@@ -241,7 +255,8 @@ var NoBallValidate = (function () {
         maps: maps,
         city: city,
         area: area,
-        hp: hpFromStats(ranks),
+        hp: hpFromStats(ranks, hpBoosts),
+        hpBoosts: hpBoosts,
         category: category,
         color: CATEGORY_COLORS[category],
         vibes: vibes,
@@ -307,8 +322,6 @@ if (typeof module === 'object' && module.exports) module.exports = NoBallValidat
 // --- end shared validation ---
 
 var SHEET_NAME = 'Friend Submissions';
-var OUTBOX_NAME = 'Notification Outbox';
-var CHAT_WEBHOOK_KEY = 'FNF_CHAT_WEBHOOK_URL';
 var TIMEZONE = 'America/New_York';
 var PHOTO_FOLDER_NAME = 'FNF Friend Photos';
 var PHOTO_FOLDER_KEY = 'FNF_FRIEND_PHOTOS_FOLDER_ID';
@@ -337,16 +350,7 @@ var HEADERS = [
   'Photo',
   'Move 1',
   'Move 2',
-  'Move 3',
-  'Submission ID'
-];
-var OUTBOX_HEADERS = [
-  'Submission ID',
-  'Status',
-  'Created at',
-  'Sent at',
-  'Attempts',
-  'Text'
+  'Move 3'
 ];
 var TEXT_COLUMNS = {
   0: true,
@@ -361,15 +365,7 @@ var TEXT_COLUMNS = {
   13: true,
   14: true,
   15: true,
-  16: true,
-  17: true
-};
-var OUTBOX_TEXT_COLUMNS = {
-  0: true,
-  1: true,
-  2: true,
-  3: true,
-  5: true
+  16: true
 };
 
 function doGet() {
@@ -404,13 +400,24 @@ function doPost(e) {
     if (!spam.ok) return fail_(spam.error);
     var result = NoBallValidate.validateSubmission(input);
     if (!result.ok) return fail_(firstError_(result.errors));
+    var id = readSubmissionId_(input);
+    if (id === null) return fail_("That didn't go through. Please try again.");
 
+    var saved;
     var lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      append_(result.value, submissionId_(input));
+      saved = save_(result.value, id);
     } finally {
       lock.releaseLock();
+    }
+    // The card is saved. Nothing below may change the ok:true reply.
+    if (saved && saved.notify) {
+      try {
+        deliverOutboxRow_(saved.outboxRow);
+      } catch (err) {
+        // Left pending; processNotificationOutbox retries it.
+      }
     }
     return ok_();
   } catch (err) {
@@ -418,24 +425,171 @@ function doPost(e) {
   }
 }
 
-function submissionId_(input) {
-  var raw = input && input.submissionId;
-  var id = raw == null ? '' : String(raw).trim();
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return '';
-  return id;
+// --- submission ids and the outbox ---
+
+var OUTBOX_SHEET_NAME = 'Notification Outbox';
+var OUTBOX_HEADERS = [
+  'Submission ID',
+  'Status',
+  'Saved row',
+  'Saved at (UTC)',
+  'Submitted by',
+  'Restaurant',
+  'City',
+  'Photo',
+  'Attempts',
+  'Next attempt (UTC)',
+  'Last attempt (UTC)',
+  'Last result',
+  'Tab ID'
+];
+var OB = {
+  id: 1, status: 2, row: 3, savedAt: 4, by: 5, restaurant: 6, city: 7, photo: 8,
+  attempts: 9, next: 10, last: 11, result: 12, gid: 13
+};
+// saving: reserved, card not confirmed saved yet. pending: saved, waiting to send.
+// sending: an attempt is in flight. accepted: receiver returned 2xx.
+// failed: permanent 4xx or out of attempts. disabled: saved while notifications were off.
+// abandoned: a reservation whose card was never saved.
+var SAVED_STATUSES = { pending: true, sending: true, accepted: true, failed: true, disabled: true };
+var NOTIFY_ENABLED_KEY = 'FNF_SUBMISSION_NOTIFICATIONS_ENABLED';
+var NOTIFY_URL_KEY = 'FNF_SUBMISSION_WEBHOOK_URL';
+var NOTIFY_BEARER_KEY = 'FNF_SUBMISSION_WEBHOOK_BEARER';
+var NOTIFY_MAX_ATTEMPTS = 8;
+var NOTIFY_BASE_DELAY_MS = 10 * 60 * 1000;
+var NOTIFY_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
+var STALE_SENDING_MS = 15 * 60 * 1000;
+var STALE_SAVING_MS = 30 * 60 * 1000;
+var UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+// Returns the lower-case id, a fresh one for older pages that send none, or null if malformed.
+function readSubmissionId_(input) {
+  var raw = input.submissionId;
+  if (raw == null || raw === '') return String(Utilities.getUuid()).toLowerCase();
+  var id = String(raw).trim().toLowerCase();
+  return UUID_PATTERN.test(id) ? id : null;
 }
 
-function append_(value, submissionId) {
+function notificationsEnabled_() {
+  var value = PropertiesService.getScriptProperties().getProperty(NOTIFY_ENABLED_KEY);
+  return String(value == null ? '' : value).trim().toLowerCase() === 'true';
+}
+
+function outboxSheet_(ss) {
+  var sheet = ss.getSheetByName(OUTBOX_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(OUTBOX_SHEET_NAME);
+    sheet.appendRow(OUTBOX_HEADERS);
+  }
+  return sheet;
+}
+
+function outboxFind_(outbox, id) {
+  var last = outbox.getLastRow();
+  if (last < 2) return 0;
+  var ids = outbox.getRange(2, OB.id, last - 1, 1).getValues();
+  for (var i = ids.length - 1; i >= 0; i--) {
+    if (String(ids[i][0]) === id) return i + 2;
+  }
+  return 0;
+}
+
+function outboxRead_(outbox, row) {
+  return outbox.getRange(row, 1, 1, OUTBOX_HEADERS.length).getValues()[0];
+}
+
+function outboxSet_(outbox, row, changes) {
+  var current = outboxRead_(outbox, row);
+  Object.keys(changes).forEach(function (key) {
+    current[OB[key] - 1] = changes[key];
+  });
+  outbox.getRange(row, 1, 1, OUTBOX_HEADERS.length).setValues([current.map(outboxCell_)]);
+}
+
+function outboxCell_(value) {
+  if (typeof value !== 'string') return value;
+  return /^[=+\-@]/.test(value) ? "'" + value : value;
+}
+
+// The saved Friend Submissions row whose Photo cell (column N) holds this URL, or 0.
+function rowWithPhoto_(sheet, url) {
+  if (!url) return 0;
+  var last = sheet.getLastRow();
+  if (last < 2) return 0;
+  var cells = sheet.getRange(2, 14, last - 1, 1).getValues();
+  for (var i = cells.length - 1; i >= 0; i--) {
+    if (String(cells[i][0]) === url) return i + 2;
+  }
+  return 0;
+}
+
+// Runs inside the script lock. Returns { notify, outboxRow } once the card is saved.
+function save_(value, id) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
   ensureHeaders_(sheet);
-  if (submissionId && alreadySaved_(sheet, submissionId)) {
-    enqueueNotification_(ss, value, submissionId);
-    return;
+
+  var outbox = null;
+  var obRow = 0;
+  var photoUrl = '';
+  try {
+    outbox = outboxSheet_(ss);
+    obRow = outboxFind_(outbox, id);
+    if (obRow) {
+      var prior = outboxRead_(outbox, obRow);
+      var status = String(prior[OB.status - 1]);
+      // Same card sent again after a lost reply: it is already saved. No new row or photo.
+      if (SAVED_STATUSES[status]) return { notify: false, outboxRow: obRow };
+      photoUrl = String(prior[OB.photo - 1] || '');
+      var found = rowWithPhoto_(sheet, photoUrl);
+      if (found) return markSaved_(outbox, obRow, sheet, found, value, isoDate_(prior[OB.savedAt - 1]));
+    } else {
+      outbox.appendRow([id, 'saving', '', new Date().toISOString()].map(outboxCell_));
+      obRow = outbox.getLastRow();
+    }
+  } catch (err) {
+    // Saving the card matters more than the outbox. Continue without dedupe or alert.
+    outbox = null;
+    obRow = 0;
   }
+
   var when = new Date();
-  var file = savePhoto_(value, when);
+  if (!photoUrl) {
+    photoUrl = savePhoto_(value, when).getUrl();
+    if (outbox) {
+      try { outboxSet_(outbox, obRow, { photo: photoUrl }); } catch (err) { /* recovered by photo search */ }
+    }
+  }
+  appendRow_(sheet, value, when, photoUrl);
+  var savedRow = sheet.getLastRow();
+  if (!outbox) return { notify: false, outboxRow: 0 };
+  try {
+    return markSaved_(outbox, obRow, sheet, savedRow, value, when);
+  } catch (err) {
+    // Left as "saving" with its photo URL; a retry or the trigger reconciles it.
+    return { notify: false, outboxRow: 0 };
+  }
+}
+
+function markSaved_(outbox, obRow, sheet, savedRow, value, when) {
+  var enabled = notificationsEnabled_();
+  outboxSet_(outbox, obRow, {
+    status: enabled ? 'pending' : 'disabled',
+    row: savedRow,
+    savedAt: when.toISOString(),
+    by: value.submittedBy,
+    restaurant: value.restaurant,
+    city: value.city,
+    attempts: 0,
+    next: enabled ? when.toISOString() : '',
+    result: enabled ? '' : 'Notifications were off when this card was saved',
+    gid: sheet.getSheetId()
+  });
+  return { notify: enabled, outboxRow: obRow };
+}
+
+function appendRow_(sheet, value, when, photoUrl) {
   var submitted = Utilities.formatDate(when, TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
   var row = [
     submitted,
@@ -451,105 +605,181 @@ function append_(value, submissionId) {
     value.drink,
     value.scene,
     value.maps,
-    file.getUrl(),
+    photoUrl,
     value.move1,
     value.move2,
-    value.move3,
-    submissionId
+    value.move3
   ];
   sheet.appendRow(row.map(plainCell_));
-  enqueueNotification_(ss, value, submissionId, submitted);
 }
 
-function alreadySaved_(sheet, submissionId) {
-  var last = sheet.getLastRow();
-  if (last < 2) return false;
-  var col = HEADERS.indexOf('Submission ID') + 1;
-  var values = sheet.getRange(2, col, last - 1, 1).getValues();
-  var want = submissionId.toLowerCase();
-  for (var i = 0; i < values.length; i++) {
-    if (String(values[i][0] == null ? '' : values[i][0]).trim().toLowerCase() === want) return true;
-  }
-  return false;
+// Sheets may turn an ISO string into a Date. Read either back as a Date (now if blank).
+function isoDate_(value) {
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) return value;
+  var ms = Date.parse(String(value == null ? '' : value));
+  return isNaN(ms) ? new Date() : new Date(ms);
 }
 
-function noticeText_(value) {
-  var where = [value.area, value.city].filter(function (part) { return part; }).join(', ');
-  return 'New card: ' + value.restaurant + ' — ' + value.submittedBy + (where ? ' (' + where + ')' : '');
+function timeMs_(value) {
+  if (value === '' || value == null) return 0;
+  return isoDate_(value).getTime();
 }
 
-function enqueueNotification_(ss, value, submissionId, submitted) {
-  try {
-    var sheet = ss.getSheetByName(OUTBOX_NAME);
-    if (!sheet) sheet = ss.insertSheet(OUTBOX_NAME);
-    if (sheet.getLastRow() === 0) sheet.appendRow(OUTBOX_HEADERS);
-    if (submissionId && outboxHas_(sheet, submissionId)) return;
-    var when = submitted || Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
-    var row = [submissionId, 'pending', when, '', 0, noticeText_(value)];
-    sheet.appendRow(row.map(function (cell, index) {
-      if (!OUTBOX_TEXT_COLUMNS[index]) return cell;
-      return plainCell_(cell, 0);
-    }));
-  } catch (err) {
-    // The card is already saved. A missed queue row can be repaired on the next retry.
-  }
+function plainText_(value) {
+  var text = String(value == null ? '' : value);
+  return text.charAt(0) === "'" && /^'[=+\-@]/.test(text) ? text.slice(1) : text;
 }
 
-function outboxHas_(sheet, submissionId) {
-  var last = sheet.getLastRow();
-  if (last < 2) return false;
-  var values = sheet.getRange(2, 1, last - 1, 1).getValues();
-  var want = submissionId.toLowerCase();
-  for (var i = 0; i < values.length; i++) {
-    if (String(values[i][0] == null ? '' : values[i][0]).trim().toLowerCase() === want) return true;
-  }
-  return false;
+function submissionEvent_(r) {
+  var row = Number(r[OB.row - 1]);
+  return {
+    type: 'submission.created',
+    site: 'friendnotphoe.com',
+    event_id: String(r[OB.id - 1]),
+    occurred_at: isoDate_(r[OB.savedAt - 1]).toISOString(),
+    submitted_by: plainText_(r[OB.by - 1]),
+    restaurant: plainText_(r[OB.restaurant - 1]),
+    city: plainText_(r[OB.city - 1]),
+    sheet_row_url: 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit#gid=' +
+      r[OB.gid - 1] + '&range=A' + row + ':Q' + row,
+    test: false
+  };
 }
 
-function processNotificationOutbox() {
+function backoffMs_(attempts) {
+  return Math.min(NOTIFY_BASE_DELAY_MS * Math.pow(2, Math.max(0, attempts - 1)), NOTIFY_MAX_DELAY_MS);
+}
+
+// Sends one pending outbox row. Claims it under the lock so two runs never send it at once.
+function deliverOutboxRow_(obRow) {
+  if (!obRow || !notificationsEnabled_()) return 'skipped';
+  var props = PropertiesService.getScriptProperties();
+  var url = props.getProperty(NOTIFY_URL_KEY);
+  var bearer = props.getProperty(NOTIFY_BEARER_KEY);
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var outbox = ss.getSheetByName(OUTBOX_SHEET_NAME);
+  if (!outbox) return 'skipped';
+
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  var r;
+  var attempts;
+  var now = new Date();
+  lock.waitLock(10000);
   try {
-    var url = PropertiesService.getScriptProperties().getProperty(CHAT_WEBHOOK_KEY);
-    if (!url) return;
-    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName(OUTBOX_NAME);
-    if (!sheet || sheet.getLastRow() < 2) return;
-    var last = sheet.getLastRow();
-    var rows = sheet.getRange(2, 1, last - 1, OUTBOX_HEADERS.length).getValues();
+    r = outboxRead_(outbox, obRow);
+    if (String(r[OB.status - 1]) !== 'pending') return 'skipped';
+    attempts = Number(r[OB.attempts - 1]) || 0;
+    if (!url || !bearer) {
+      outboxSet_(outbox, obRow, { result: 'Missing webhook URL or key in Script Properties', next: new Date(now.getTime() + NOTIFY_BASE_DELAY_MS).toISOString() });
+      return 'pending';
+    }
+    attempts += 1;
+    outboxSet_(outbox, obRow, { status: 'sending', attempts: attempts, last: now.toISOString() });
+  } finally {
+    lock.releaseLock();
+  }
+
+  var code = 0;
+  var note = '';
+  try {
+    var res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + bearer },
+      payload: JSON.stringify(submissionEvent_(r)),
+      muteHttpExceptions: true,
+      followRedirects: false
+    });
+    code = res.getResponseCode();
+    note = 'HTTP ' + code;
+  } catch (err) {
+    note = 'Network error or timeout';
+  }
+
+  var status;
+  var changes;
+  if (code >= 200 && code < 300) {
+    status = 'accepted';
+    changes = { status: status, next: '', result: note + ' accepted' };
+  } else if (code >= 400 && code < 500 && code !== 408 && code !== 429) {
+    status = 'failed';
+    changes = { status: status, next: '', result: note + ' permanent failure, not retried' };
+  } else if (attempts >= NOTIFY_MAX_ATTEMPTS) {
+    status = 'failed';
+    changes = { status: status, next: '', result: note + ' gave up after ' + attempts + ' attempts' };
+  } else {
+    status = 'pending';
+    changes = { status: status, next: new Date(Date.now() + backoffMs_(attempts)).toISOString(), result: note + ' will retry' };
+  }
+  lock.waitLock(10000);
+  try {
+    outboxSet_(outbox, obRow, changes);
+  } finally {
+    lock.releaseLock();
+  }
+  return status;
+}
+
+// Time-driven retry job. Also reconciles rows interrupted between saving and recording state.
+function processNotificationOutbox() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var outbox = ss.getSheetByName(OUTBOX_SHEET_NAME);
+  if (!outbox || outbox.getLastRow() < 2) return { sent: 0 };
+  var enabled = notificationsEnabled_();
+  var nowMs = Date.now();
+  var due = [];
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ss.getSheetByName(SHEET_NAME);
+    var rows = outbox.getRange(2, 1, outbox.getLastRow() - 1, OUTBOX_HEADERS.length).getValues();
     for (var i = 0; i < rows.length; i++) {
-      if (String(rows[i][1] || '') !== 'pending') continue;
-      var attempts = Number(rows[i][4]) || 0;
-      if (attempts >= 5) continue;
-      try {
-        var response = UrlFetchApp.fetch(url, {
-          method: 'post',
-          contentType: 'application/json',
-          muteHttpExceptions: true,
-          payload: JSON.stringify({ text: String(rows[i][5] || '') })
-        });
-        var code = response.getResponseCode();
-        if (code >= 200 && code < 300) {
-          sheet.getRange(i + 2, 2).setValue('sent');
-          sheet.getRange(i + 2, 4).setValue(Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss'));
-        } else {
-          sheet.getRange(i + 2, 5).setValue(attempts + 1);
+      var obRow = i + 2;
+      var r = rows[i];
+      var status = String(r[OB.status - 1]);
+      if (status === 'saving') {
+        var found = sheet ? rowWithPhoto_(sheet, String(r[OB.photo - 1] || '')) : 0;
+        if (found) {
+          var v = sheet.getRange(found, 1, 1, 17).getValues()[0];
+          markSaved_(outbox, obRow, sheet, found, { submittedBy: plainText_(v[1]), restaurant: plainText_(v[2]), city: plainText_(v[6]) }, isoDate_(r[OB.savedAt - 1]));
+          if (enabled) due.push(obRow);
         }
-      } catch (err) {
-        sheet.getRange(i + 2, 5).setValue(attempts + 1);
+        // Otherwise the card was never saved: leave it so a retry of the same card can finish.
+        continue;
+      }
+      if (status === 'sending') {
+        var lastMs = timeMs_(r[OB.last - 1]);
+        if (nowMs - lastMs > STALE_SENDING_MS) {
+          outboxSet_(outbox, obRow, { status: 'pending', next: new Date(nowMs).toISOString(), result: 'Recovered an interrupted attempt' });
+          status = 'pending';
+          r[OB.next - 1] = new Date(nowMs).toISOString();
+        } else continue;
+      }
+      if (status === 'pending' && enabled) {
+        var nextMs = timeMs_(r[OB.next - 1]);
+        if (nextMs <= nowMs) due.push(obRow);
       }
     }
   } finally {
     lock.releaseLock();
   }
+  var sent = 0;
+  for (var j = 0; j < due.length; j++) {
+    try {
+      if (deliverOutboxRow_(due[j]) === 'accepted') sent += 1;
+    } catch (err) {
+      // Stays pending or sending; picked up next run.
+    }
+  }
+  return { sent: sent };
 }
 
+// Run once from the editor. Safe to run again: it replaces the old trigger.
 function installNotificationTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'processNotificationOutbox') return;
-  }
-  ScriptApp.newTrigger('processNotificationOutbox').timeBased().everyMinutes(1).create();
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'processNotificationOutbox') ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger('processNotificationOutbox').timeBased().everyMinutes(10).create();
 }
 
 function ensureHeaders_(sheet) {

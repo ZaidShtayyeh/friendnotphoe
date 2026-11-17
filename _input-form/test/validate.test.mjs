@@ -265,3 +265,17 @@ test("reply interpreter never treats an opaque or unreadable body as saved", () 
   assert.equal(v.interpretReply({ status: 500, body: "" }).kind, "error");
   assert.equal(v.interpretReply({ status: 200, body: '{"ok":false}' }).error, "The sheet rejected that.");
 });
+
+test('HP boosts add twenty without changing stats, cap at 300 and reject forged counts', () => {
+  for (let hpBoosts=0;hpBoosts<=3;hpBoosts++) {
+    const result=v.validateSubmission(valid({food:80,drink:70,scene:90,hpBoosts}));
+    assert.equal(result.ok,true);
+    assert.equal(result.value.hp,240+hpBoosts*20);
+    assert.deepEqual([result.value.food,result.value.drink,result.value.scene],[80,70,90]);
+  }
+  assert.equal(v.validateSubmission(valid({food:100,drink:100,scene:100,hpBoosts:3})).value.hp,300);
+  for (const hpBoosts of [-1,4,100,1.5,'abc','',true]) {
+    const result=v.validateSubmission(valid({hpBoosts}));
+    assert.equal(result.ok,false,String(hpBoosts));assert.ok(result.errors.hp);
+  }
+});

@@ -31,7 +31,7 @@ test('editing or dismissing review requires another review and preserves the car
  await c.requestReview();assert.equal(c.reviewDialog.open,true);
 });
 test('a changed crop or field invalidates the reviewed card',async()=>{
- for(const change of [c=>c.body.vibes='Changed',c=>c.crop.sy=10,c=>c.photo.url='replacement']){
+ for(const change of [c=>c.body.vibes='Changed',c=>c.body.hpBoosts=1,c=>c.crop.sy=10,c=>c.photo.url='replacement']){
   const c=setup();await c.requestReview();change(c);await c.confirmReview();assert.equal(c.posts,0);assert.equal(c.reviewDialog.open,false);assert.match(c.status,/changed/);
  }
 });
