@@ -16,7 +16,13 @@ test("Code.gs embeds the page validation unchanged and avoids the pipeline sheet
   assert.match(source, /Friend Submissions/);
   assert.match(source, /FNF Friend Photos/);
   assert.match(source, /America\/New_York/);
+  assert.match(source, /BACKEND_VERSION = '2026-11-16-notify'/);
+  assert.match(source, /function processNotificationOutbox/);
+  assert.match(source, /function installNotificationTrigger/);
+  assert.match(source, /Notification Outbox/);
   assert.equal(source.includes("setSharing"), false);
+  assert.equal(source.includes("hooks.slack.com"), false);
+  assert.equal(source.includes("chat.googleapis.com"), false);
 });
 
 function sheetCells(rows) {
@@ -53,6 +59,9 @@ function sheetCells(rows) {
 
 function boot(options = {}) {
   const calls = { names: [], inserts: [], locks: [], openedIds: [], tz: null, fmts: [] };
+  const fetches = [];
+  const triggers = [];
+  const fetchCodes = options.fetchCodes ? options.fetchCodes.slice() : null;
   const sheets = new Map();
   const files = [];
   const folders = [];
@@ -192,9 +201,33 @@ function boot(options = {}) {
         };
       },
     },
+    UrlFetchApp: {
+      fetch(url, opts) {
+        fetches.push({ url, opts });
+        if (options.fetchThrows) throw new Error("chat failed");
+        const code = fetchCodes ? fetchCodes.shift() : (options.fetchCode || 200);
+        return { getResponseCode() { return code; } };
+      },
+    },
+    ScriptApp: {
+      getProjectTriggers() {
+        return triggers.map((item) => ({ getHandlerFunction() { return item.handler; } }));
+      },
+      newTrigger(handler) {
+        return {
+          timeBased() {
+            return {
+              everyMinutes(minutes) {
+                return { create() { triggers.push({ handler, minutes }); } };
+              },
+            };
+          },
+        };
+      },
+    },
   };
   vm.runInContext(source, vm.createContext(context), { filename: "Code.gs" });
-  return { context, calls, sheets, files, folders, props, sharing };
+  return { context, calls, sheets, files, folders, props, sharing, fetches, triggers };
 }
 
 function reply(out) {
@@ -251,8 +284,8 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     assert.deepEqual(body, { ok: true });
     assert.equal(context.URL, undefined);
     assert.deepEqual(calls.openedIds, ['1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ']);
-    assert.deepEqual(calls.names, ["Friend Submissions"]);
-    assert.deepEqual(calls.inserts, ["Friend Submissions"]);
+    assert.deepEqual(calls.names, ["Friend Submissions", "Notification Outbox"]);
+    assert.deepEqual(calls.inserts, ["Friend Submissions", "Notification Outbox"]);
     assert.equal(calls.tz, "America/New_York");
     assert.deepEqual(calls.fmts, ["yyyy-MM-dd HHmm", "yyyy-MM-dd HH:mm:ss"]);
     assert.deepEqual(calls.locks, [["wait", 10000], ["release"]]);
@@ -260,13 +293,14 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     assert.equal(JSON.stringify(rows[0]), JSON.stringify([
       "Submitted at", "Submitted by", "Restaurant", "HP", "Category", "Color", "City", "Area",
       "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo", "Move 1", "Move 2", "Move 3",
+      "Submission ID",
     ]));
     assert.equal(JSON.stringify(rows[1]), JSON.stringify([
       "2026-11-10 09:15:00", "Sam", "C + B", 190, "Food first", "Green", "NYC", "East Village",
       "A short line about the sandwich.", 80, 50, 60,
       "https://www.google.com/maps/search/?api=1&query=C+%2B+B",
       "https://drive.google.com/file/d/file-1/view",
-      "Bread & Olive Oil", "Dirty Martini", "'=Orange Wine",
+      "Bread & Olive Oil", "Dirty Martini", "'=Orange Wine", "",
     ]));
     assert.equal(files.length, 1);
     assert.equal(files[0].name, "2026-11-10 0915 - C + B - Sam.jpg");
@@ -315,7 +349,8 @@ test("a second post does not repeat the header row", () => {
     assert.equal(rows.filter((row) => row[0] === "Submitted at").length, 1);
     assert.equal(rows[0].filter((cell) => cell === "Photo").length, 1);
     assert.equal(rows[0].filter((cell) => cell === "Move 1").length, 1);
-    assert.equal(rows[0].length, 17);
+    assert.equal(rows[0].filter((cell) => cell === "Submission ID").length, 1);
+    assert.equal(rows[0].length, 18);
     assert.equal(rows[2][1], "Sam");
     assert.equal(rows[2][2], "Forsythia");
     assert.equal(folders.length, 1);
@@ -344,14 +379,14 @@ test("an existing tab is appended to and not recreated", () => {
     };
     const { context, calls, files } = boot({ existing });
     assert.equal(reply(context.doPost(event(entry({ restaurant: "C / B", submittedBy: "Sam:me" })))).ok, true);
-    assert.deepEqual(calls.inserts, []);
+    assert.deepEqual(calls.inserts, ["Notification Outbox"]);
     assert.equal(existing.rows.length, 2);
     assert.equal(existing.rows[0][12], "Google Maps link");
     assert.equal(existing.rows[0][13], "Photo");
-    assert.equal(JSON.stringify(existing.rows[0].slice(14)), JSON.stringify(["Move 1", "Move 2", "Move 3"]));
+    assert.equal(JSON.stringify(existing.rows[0].slice(14)), JSON.stringify(["Move 1", "Move 2", "Move 3", "Submission ID"]));
     assert.equal(existing.rows[1][1], "Sam:me");
     assert.equal(existing.rows[1][13], "https://drive.google.com/file/d/file-1/view");
-    assert.equal(JSON.stringify(existing.rows[1].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine"]));
+    assert.equal(JSON.stringify(existing.rows[1].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine", ""]));
     assert.equal(files[0].name, "2026-11-10 0915 - C B - Sam me.jpg");
   } finally {
     Date.now = realNow;
@@ -374,12 +409,12 @@ test("a tab that already has Photo gets the move headers after it, and nothing m
     };
     const { context } = boot({ existing });
     assert.equal(reply(context.doPost(event(entry()))).ok, true);
-    assert.deepEqual(rows[0], [...header, "Move 1", "Move 2", "Move 3"]);
+    assert.deepEqual(rows[0], [...header, "Move 1", "Move 2", "Move 3", "Submission ID"]);
     assert.deepEqual(rows[1], old);
     assert.equal(rows[2][13], "https://drive.google.com/file/d/file-1/view");
-    assert.equal(JSON.stringify(rows[2].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine"]));
+    assert.equal(JSON.stringify(rows[2].slice(14)), JSON.stringify(["Bread & Olive Oil", "Dirty Martini", "'=Orange Wine", ""]));
     assert.equal(reply(context.doPost(event(entry({ restaurant: "Forsythia" })))).ok, true);
-    assert.equal(rows[0].length, 17);
+    assert.equal(rows[0].length, 18);
     assert.equal(rows[0].filter((cell) => cell === "Move 3").length, 1);
   } finally {
     Date.now = realNow;
@@ -401,7 +436,8 @@ test("header cells someone already typed are left alone", () => {
     };
     const { context } = boot({ existing });
     assert.equal(reply(context.doPost(event(entry()))).ok, true);
-    assert.equal(JSON.stringify(rows[0].slice(14)), JSON.stringify(["Order this", "Move 2", "Notes"]));
+    assert.equal(JSON.stringify(rows[0].slice(14, 17)), JSON.stringify(["Order this", "Move 2", "Notes"]));
+    assert.equal(rows[0][17], "Submission ID");
     assert.equal(rows[1][15], "Dirty Martini");
   } finally {
     Date.now = realNow;
@@ -488,7 +524,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   Date.now = () => now;
   try {
     const { context, sheets } = boot();
-    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-16-calculated-hp' });
+    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-16-notify' });
     assert.equal(sheets.size, 0);
     assert.equal(reply(context.doPost(event(entry({ restaurant: "=HYPERLINK(\"https://evil.test\")" })))).ok, true);
     const restaurant = sheets.get("Friend Submissions").rows[1][2];
@@ -501,7 +537,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
 test('an unavailable tracker fails the read-only health check and cannot claim a saved submission', () => {
   const { context, calls, sheets, files } = boot({ sheetUnavailable: true });
   assert.deepEqual(reply(context.doGet()), {
-    ok: false, ready: false, version: '2026-11-16-calculated-hp', error: 'The submission sheet is unavailable.',
+    ok: false, ready: false, version: '2026-11-16-notify', error: 'The submission sheet is unavailable.',
   });
   assert.equal(reply(context.doPost(event(entry()))).ok, false);
   assert.equal(sheets.size, 0);
@@ -525,6 +561,129 @@ test('saved HP is the three-stat total, including zero, regardless of supplied H
   try {
     const {context,sheets} = boot();
     assert.equal(reply(context.doPost(event(entry({move1:"Pasta",move2:"",move3:""})))).ok,true);
-    assert.deepEqual(Array.from(sheets.get("Friend Submissions").rows[1].slice(14)),["Pasta","",""]);
+    assert.deepEqual(Array.from(sheets.get("Friend Submissions").rows[1].slice(14)),["Pasta","","",""]);
   } finally { Date.now = realNow; }
+});
+
+const CARD_A = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+const CARD_B = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff";
+
+test("the same submissionId is one row, one photo, and one queued notification", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets, files, props, fetches } = boot();
+    const first = entry({ submissionId: CARD_A });
+    assert.equal(reply(context.doPost(event(first))).ok, true);
+    assert.equal(reply(context.doPost(event({ ...first, submissionId: CARD_A.toUpperCase() }))).ok, true);
+    const rows = sheets.get("Friend Submissions").rows;
+    assert.equal(rows.length, 2);
+    assert.equal(rows[1][17], CARD_A);
+    assert.equal(files.length, 1);
+    const outbox = sheets.get("Notification Outbox").rows;
+    assert.equal(JSON.stringify(outbox[0]), JSON.stringify(["Submission ID", "Status", "Created at", "Sent at", "Attempts", "Text"]));
+    assert.equal(outbox.length, 2);
+    assert.equal(outbox[1][0], CARD_A);
+    assert.equal(outbox[1][1], "pending");
+    assert.equal(outbox[1][4], 0);
+    assert.equal(outbox[1][5], "New card: C + B — Sam (East Village, NYC)");
+    assert.equal(fetches.length, 0);
+
+    assert.equal(reply(context.doPost(event(entry({ submissionId: CARD_B, restaurant: "Forsythia" })))).ok, true);
+    assert.equal(rows.length, 3);
+    assert.equal(rows[2][17], CARD_B);
+    assert.equal(outbox.length, 3);
+    assert.equal(files.length, 2);
+
+    props.FNF_CHAT_WEBHOOK_URL = "https://chat.test/hook";
+    context.processNotificationOutbox();
+    assert.equal(fetches.length, 2);
+    assert.equal(fetches[0].url, "https://chat.test/hook");
+    assert.equal(fetches[0].opts.method, "post");
+    assert.equal(fetches[0].opts.contentType, "application/json");
+    assert.equal(JSON.parse(fetches[0].opts.payload).text, "New card: C + B — Sam (East Village, NYC)");
+    assert.equal(JSON.parse(fetches[1].opts.payload).text, "New card: Forsythia — Sam (East Village, NYC)");
+    assert.equal(outbox[1][1], "sent");
+    assert.equal(outbox[2][1], "sent");
+    assert.equal(outbox[1][3], "2026-11-10 09:15:00");
+    context.processNotificationOutbox();
+    assert.equal(fetches.length, 2);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a rejected post does not consume the submission id", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets, files } = boot();
+    assert.equal(reply(context.doPost(event(entry({ submissionId: CARD_A, drink: "" })))).ok, false);
+    assert.equal(reply(context.doPost(event(entry({ submissionId: CARD_A })))).ok, true);
+    assert.equal(sheets.get("Friend Submissions").rows.length, 2);
+    assert.equal(sheets.get("Friend Submissions").rows[1][17], CARD_A);
+    assert.equal(files.length, 1);
+    assert.equal(sheets.get("Notification Outbox").rows.length, 2);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a non-uuid submission id is dropped and does not collapse two cards", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets, files } = boot();
+    const body = entry({ submissionId: "=duplicate" });
+    assert.equal(reply(context.doPost(event(body))).ok, true);
+    assert.equal(reply(context.doPost(event(body))).ok, true);
+    const rows = sheets.get("Friend Submissions").rows;
+    assert.equal(rows.length, 3);
+    assert.equal(rows[1][17], "");
+    assert.equal(rows[2][17], "");
+    assert.equal(files.length, 2);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("a failed chat send stays pending and the next pass sends it once", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets, props, fetches } = boot({ fetchCodes: [500, 200] });
+    props.FNF_CHAT_WEBHOOK_URL = "https://chat.test/hook";
+    assert.equal(reply(context.doPost(event(entry({ submissionId: CARD_A })))).ok, true);
+    const outbox = sheets.get("Notification Outbox").rows;
+    context.processNotificationOutbox();
+    assert.equal(outbox[1][1], "pending");
+    assert.equal(outbox[1][4], 1);
+    assert.equal(fetches.length, 1);
+    context.processNotificationOutbox();
+    assert.equal(outbox[1][1], "sent");
+    assert.equal(fetches.length, 2);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("processNotificationOutbox sends nothing until the webhook property is set", () => {
+  const realNow = Date.now;
+  Date.now = () => now;
+  try {
+    const { context, sheets, fetches } = boot();
+    assert.equal(reply(context.doPost(event(entry({ submissionId: CARD_A })))).ok, true);
+    context.processNotificationOutbox();
+    assert.equal(fetches.length, 0);
+    assert.equal(sheets.get("Notification Outbox").rows[1][1], "pending");
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("installNotificationTrigger creates one minute trigger", () => {
+  const { context, triggers } = boot();
+  context.installNotificationTrigger();
+  context.installNotificationTrigger();
+  assert.deepEqual(triggers, [{ handler: "processNotificationOutbox", minutes: 1 }]);
 });

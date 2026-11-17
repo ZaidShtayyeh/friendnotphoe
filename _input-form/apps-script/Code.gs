@@ -5,6 +5,10 @@
  * Deploy as a Web app: Execute as Me, Who has access: Anyone.
  *
  * Rows are appended only to the "Friend Submissions" tab (created with headers if missing).
+ * The same submissionId is one card: a retry does not add another row or another notification.
+ * Each new card is queued on "Notification Outbox". processNotificationOutbox sends it.
+ * installNotificationTrigger creates the minute timer for that queue.
+ * The chat webhook lives in Script Property FNF_CHAT_WEBHOOK_URL. It is not in this file.
  * The photo is saved in a private Drive folder named "FNF Friend Photos". Files are not shared.
  * This script does not read or write "Master Reference" or "Sheet1".
  *
@@ -14,7 +18,7 @@
 var SHARED_TOKEN = '';
 // Web apps have no active spreadsheet context, even when bound to a Sheet.
 var SPREADSHEET_ID = '1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ';
-var BACKEND_VERSION = '2026-11-16-calculated-hp';
+var BACKEND_VERSION = '2026-11-16-notify';
 
 // --- shared validation: keep identical to betweenusfriends/validate.js ---
 
@@ -303,6 +307,8 @@ if (typeof module === 'object' && module.exports) module.exports = NoBallValidat
 // --- end shared validation ---
 
 var SHEET_NAME = 'Friend Submissions';
+var OUTBOX_NAME = 'Notification Outbox';
+var CHAT_WEBHOOK_KEY = 'FNF_CHAT_WEBHOOK_URL';
 var TIMEZONE = 'America/New_York';
 var PHOTO_FOLDER_NAME = 'FNF Friend Photos';
 var PHOTO_FOLDER_KEY = 'FNF_FRIEND_PHOTOS_FOLDER_ID';
@@ -331,7 +337,16 @@ var HEADERS = [
   'Photo',
   'Move 1',
   'Move 2',
-  'Move 3'
+  'Move 3',
+  'Submission ID'
+];
+var OUTBOX_HEADERS = [
+  'Submission ID',
+  'Status',
+  'Created at',
+  'Sent at',
+  'Attempts',
+  'Text'
 ];
 var TEXT_COLUMNS = {
   0: true,
@@ -346,7 +361,15 @@ var TEXT_COLUMNS = {
   13: true,
   14: true,
   15: true,
-  16: true
+  16: true,
+  17: true
+};
+var OUTBOX_TEXT_COLUMNS = {
+  0: true,
+  1: true,
+  2: true,
+  3: true,
+  5: true
 };
 
 function doGet() {
@@ -385,7 +408,7 @@ function doPost(e) {
     var lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      append_(result.value);
+      append_(result.value, submissionId_(input));
     } finally {
       lock.releaseLock();
     }
@@ -395,11 +418,22 @@ function doPost(e) {
   }
 }
 
-function append_(value) {
+function submissionId_(input) {
+  var raw = input && input.submissionId;
+  var id = raw == null ? '' : String(raw).trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return '';
+  return id;
+}
+
+function append_(value, submissionId) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
   ensureHeaders_(sheet);
+  if (submissionId && alreadySaved_(sheet, submissionId)) {
+    enqueueNotification_(ss, value, submissionId);
+    return;
+  }
   var when = new Date();
   var file = savePhoto_(value, when);
   var submitted = Utilities.formatDate(when, TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
@@ -420,9 +454,102 @@ function append_(value) {
     file.getUrl(),
     value.move1,
     value.move2,
-    value.move3
+    value.move3,
+    submissionId
   ];
   sheet.appendRow(row.map(plainCell_));
+  enqueueNotification_(ss, value, submissionId, submitted);
+}
+
+function alreadySaved_(sheet, submissionId) {
+  var last = sheet.getLastRow();
+  if (last < 2) return false;
+  var col = HEADERS.indexOf('Submission ID') + 1;
+  var values = sheet.getRange(2, col, last - 1, 1).getValues();
+  var want = submissionId.toLowerCase();
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0] == null ? '' : values[i][0]).trim().toLowerCase() === want) return true;
+  }
+  return false;
+}
+
+function noticeText_(value) {
+  var where = [value.area, value.city].filter(function (part) { return part; }).join(', ');
+  return 'New card: ' + value.restaurant + ' — ' + value.submittedBy + (where ? ' (' + where + ')' : '');
+}
+
+function enqueueNotification_(ss, value, submissionId, submitted) {
+  try {
+    var sheet = ss.getSheetByName(OUTBOX_NAME);
+    if (!sheet) sheet = ss.insertSheet(OUTBOX_NAME);
+    if (sheet.getLastRow() === 0) sheet.appendRow(OUTBOX_HEADERS);
+    if (submissionId && outboxHas_(sheet, submissionId)) return;
+    var when = submitted || Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
+    var row = [submissionId, 'pending', when, '', 0, noticeText_(value)];
+    sheet.appendRow(row.map(function (cell, index) {
+      if (!OUTBOX_TEXT_COLUMNS[index]) return cell;
+      return plainCell_(cell, 0);
+    }));
+  } catch (err) {
+    // The card is already saved. A missed queue row can be repaired on the next retry.
+  }
+}
+
+function outboxHas_(sheet, submissionId) {
+  var last = sheet.getLastRow();
+  if (last < 2) return false;
+  var values = sheet.getRange(2, 1, last - 1, 1).getValues();
+  var want = submissionId.toLowerCase();
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0] == null ? '' : values[i][0]).trim().toLowerCase() === want) return true;
+  }
+  return false;
+}
+
+function processNotificationOutbox() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var url = PropertiesService.getScriptProperties().getProperty(CHAT_WEBHOOK_KEY);
+    if (!url) return;
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(OUTBOX_NAME);
+    if (!sheet || sheet.getLastRow() < 2) return;
+    var last = sheet.getLastRow();
+    var rows = sheet.getRange(2, 1, last - 1, OUTBOX_HEADERS.length).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][1] || '') !== 'pending') continue;
+      var attempts = Number(rows[i][4]) || 0;
+      if (attempts >= 5) continue;
+      try {
+        var response = UrlFetchApp.fetch(url, {
+          method: 'post',
+          contentType: 'application/json',
+          muteHttpExceptions: true,
+          payload: JSON.stringify({ text: String(rows[i][5] || '') })
+        });
+        var code = response.getResponseCode();
+        if (code >= 200 && code < 300) {
+          sheet.getRange(i + 2, 2).setValue('sent');
+          sheet.getRange(i + 2, 4).setValue(Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss'));
+        } else {
+          sheet.getRange(i + 2, 5).setValue(attempts + 1);
+        }
+      } catch (err) {
+        sheet.getRange(i + 2, 5).setValue(attempts + 1);
+      }
+    }
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function installNotificationTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'processNotificationOutbox') return;
+  }
+  ScriptApp.newTrigger('processNotificationOutbox').timeBased().everyMinutes(1).create();
 }
 
 function ensureHeaders_(sheet) {
