@@ -541,8 +541,8 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261116-hp1">
-  <link rel="stylesheet" href="forest-proposal.css?v=20261116-hp1">
+  <link rel="stylesheet" href="refinement.css?v=20261116-boost1">
+  <link rel="stylesheet" href="forest-proposal.css?v=20261116-boost1">
   <script>
     if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
       document.documentElement.dataset.surface = 'forest';
@@ -701,7 +701,11 @@
               <output id="score" name="hp" for="food drinks scene" aria-labelledby="hp-label" aria-describedby="hp-max hp-note" aria-live="off"></output>
               <span class="hint" id="hp-max">300 max</span>
             </div>
-            <p class="section-note" id="hp-note">This is the power ranking.<span class="sr-only"> Food plus Drink plus Scene.</span></p>
+            <p class="section-note" id="hp-note">This is the power ranking.<span class="sr-only"> Food plus Drink plus Scene, with optional boosts.</span></p>
+            <div class="hp-boost-controls">
+              <button type="button" class="hp-boost" id="hp-boost" aria-describedby="hp-boost-status" disabled>Boost the ting <span>+20</span></button>
+              <span id="hp-boost-status" class="hp-boost-status" role="status" aria-live="polite">Rate all three to boost.</span>
+            </div>
           </div>
           <p class="error" id="err-hp"></p>
 
@@ -827,7 +831,7 @@
 
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
-  <script src="validate.js?v=20261116-hp1"></script>
+  <script src="validate.js?v=20261116-boost1"></script>
   <script src="places.js"></script>
   <script src="hold-submit.js?v=20261115-hold1"></script>
   <script>
@@ -868,7 +872,7 @@
         case 'maps': return "That's not a Google Maps link. Paste one or leave it blank.";
         case 'city': return long ? 'Keep it under 80 characters.' : 'Which city?';
         case 'area': return long ? 'Keep it under 80 characters.' : 'Which part of town?';
-        case 'hp': return 'Rate Food, Drink and Scene to calculate HP.';
+        case 'hp': return /boost/i.test(message) ? 'Use up to three HP boosts.' : 'Rate Food, Drink and Scene to calculate HP.';
         case 'category': return "Pick one. Can't be everything.";
         case 'vibes':
           if (fit) return "That runs past four lines on the card. Trim it.";
@@ -1070,9 +1074,36 @@
       state.raf = requestAnimationFrame(step);
     }
 
+    var hpBoosts = 0;
+    function hpStats() {
+      return { food: $('food').value, drink: $('drinks').value, scene: $('scene').value };
+    }
+    function canBoostHp() {
+      var stats = hpStats();
+      var rated = Object.keys(stats).every(function (key) { return String(stats[key]).trim() !== ''; });
+      var total = NoBallValidate.hpFromStats(stats, hpBoosts);
+      return rated && total !== null && hpBoosts < limits.hpBoostMax && total <= limits.scoreMax - limits.hpBoostPoints;
+    }
+    function updateHpBoost() {
+      var total = NoBallValidate.hpFromStats(hpStats(), hpBoosts);
+      var ready = Object.keys(hpStats()).every(function (key) { return String(hpStats()[key]).trim() !== ''; });
+      $('hp-boost').disabled = !canBoostHp();
+      var note = hpBoosts + ' of ' + limits.hpBoostMax + ' used';
+      if (!ready || total === null) note = 'Rate all three to boost.';
+      else if (hpBoosts < limits.hpBoostMax && total > limits.scoreMax - limits.hpBoostPoints) note += ' · ' + (total === limits.scoreMax ? '300 max reached' : 'Needs 20 HP of room');
+      $('hp-boost-status').textContent = note;
+    }
+    $('hp-boost').addEventListener('click', function () {
+      if (!canBoostHp()) return;
+      hpBoosts += 1;
+      refresh();
+    });
+    form.addEventListener('reset', function () { hpBoosts = 0; });
+
     var currentColor = 'neutral';
     function renderCard() {
-      var totalHp = NoBallValidate.hpFromStats({ food: $('food').value, drink: $('drinks').value, scene: $('scene').value });
+      var totalHp = NoBallValidate.hpFromStats(hpStats(), hpBoosts);
+      updateHpBoost();
       $('score').value = totalHp === null ? '' : String(totalHp);
       var category = selectedCategory();
       var color = CATEGORY_CHASSIS[category] || 'neutral';
@@ -2158,7 +2189,8 @@
         maps: $('maps').value,
         city: $('city').value,
         area: $('area').value,
-        hp: NoBallValidate.hpFromStats({ food: $('food').value, drink: $('drinks').value, scene: $('scene').value }),
+        hp: NoBallValidate.hpFromStats(hpStats(), hpBoosts),
+        hpBoosts: hpBoosts,
         category: selectedCategory(),
         vibes: vibes.value,
         move1: $('move1').value,

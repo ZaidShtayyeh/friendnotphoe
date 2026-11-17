@@ -11,7 +11,7 @@ Updated November 16, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12/
 | Component | Status at this handoff |
 | --- | --- |
 | Website and card creator | Live on GitHub Pages; root `main` branch. The creator has mandatory review, one required special move, HEIC preview/cropping, and hold-to-submit with the spinning logo. The final visual pass adds the forest-green invitation, pale-blue “infinity,” editorial labels, a three-option Scenes selector, unnumbered move fields, and initially blank stats. |
-| Google Sheet submission saving | Working backend, deployment version **6**, health version **`2026-11-16-calculated-hp`**. Read-only health returned `ok:true, ready:true`. HP is calculated from Food + Drink + Scene in both the form and backend, from 0 to 300. |
+| Google Sheet submission saving | Working backend, deployment version **8**, health version **`2026-11-16-notify-hp-boost`**. Read-only health returned `ok:true, ready:true`. HP is calculated from Food + Drink + Scene plus up to three optional 20-point boosts (`hpBoosts`, integer 0–3), capped at 300. The rating scales stay 0–100. |
 | Cloudflare analytics | Existing Web Analytics beacon remains in root HTML. This is traffic analytics, not a Grok bot alert integration. No claim is made here about dashboard traffic counts. |
 | Visit Worker | **Confirmed in the authenticated Cloudflare dashboard**, not merely found in a branch. Name `friendnotphoe-visit-alerts`, production version prefix **`46ee1783`**, deployed 9 days before this audit. |
 | Worker forwarding | **OFF**: `FORWARDING_ENABLED=false`, `FORWARD_TEST_EVENTS=false`. |
@@ -19,7 +19,7 @@ Updated November 16, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12/
 | Bindings | `CLIENT_LIMITER`, `EVENT_DEDUPE_LIMITER`, `FORWARD_LIMITER` exist. No queue consumers or cron triggers configured. |
 | Observability | Workers Logs enabled; invocation logs and traces disabled. Preserve those privacy settings. |
 | Website visit client | Restored to `assets/visit-note.js`, with a root HTML script tag explicitly **`data-enabled="false"`**. It currently sends nothing and does not consume a session ID. Ready for activation after the backend is connected and checked. |
-| Submission notifications | **Not implemented or enabled.** The existing Apps Script saves the photo and row and returns success; it has no outbound notification hook. This is part of your handoff work. |
+| Submission notifications | **Newer notification code was found deployed in version 7 (`2026-11-16-notify`) and preserved in version 8.** It includes submission IDs, an outbox, and retry helpers. Current secrets, triggers, forwarding status, and completed chat pings were not re-audited during the HP update. Do not replace this implementation with the older baseline. |
 | Grok bot routines | Not created or inspected by Codex. No chat alert was sent during this task. |
 
 Cloudflare was inspected in the personal Chrome profile signed in as `zashtayyeh@gmail.com`. The owner completed account verification. No Cloudflare settings, secrets, deployments, DNS, billing, or permissions were changed during the audit.
@@ -98,13 +98,15 @@ Payload currently sent by the browser:
 
 The client omits cookies and referrers, honors DNT/GPC, excludes query/hash data, and only runs on the public HTTPS host. Keep those behaviors. Do not attach it to `admin.html`.
 
-## 3. Add submission alerts to the existing backend
+## 3. Verify and finish the existing submission alerts
+
+**November 16 update:** version 7 already introduced the notification implementation below; version 8 preserves it and adds HP boosts. The tracked `Code.gs` now matches that implementation (the remote helper functions are still preserved separately). Inspect what is already deployed before making changes. The earlier implementation checklist below is now a verification checklist, not an instruction to rebuild it.
 
 Use a trusted server-side hook after persistence, not a browser `fetch` to the bot and not a generic sheet `onEdit` trigger. Script/API writes do not fire normal edit triggers.
 
 Existing flow in `_input-form/apps-script/Code.gs`:
 
-`doPost → validate → script lock → append_(value) → save private photo → append Friend Submissions row → release lock → ok:true`
+`doPost → validate → script lock → save_(value, submissionId) → private photo + Friend Submissions row + outbox state → release lock → attempt delivery if enabled → ok:true`
 
 Implement:
 
@@ -141,14 +143,14 @@ Before uploading code, fetch current Apps Script content. It contains two pre-ex
 
 **Deployment/access detail:** `gws script projects getContent` worked on this machine. `updateContent` returned 403 because the user's Apps Script API write access is not enabled. Codex successfully saved and deployed through the existing personal Chrome editor instead. Do not enable new account permissions merely to avoid using that working UI path. Update the existing deployment with a new version, not a new URL. New outbound `UrlFetchApp` use/time-driven triggers may require owner authorization; handle that explicitly if Google prompts.
 
-Current backend validation must remain: name/place/city/neighborhood/photo/category/vibes/all three numeric stats required; at least **one** move, maximum three, each up to 24 characters; Maps link optional. HP is not a separate input: calculate it server-side as Food + Drink + Scene (each a whole number from 0 to 100), ignoring any caller-supplied HP. Preserve formula escaping, private Drive photos, explicit spreadsheet access, locks, and the `ok:true` success contract.
+Current backend validation must remain: name/place/city/neighborhood/photo/category/vibes/all three numeric stats required; at least **one** move, maximum three, each up to 24 characters; Maps link optional. HP is not a separate input: calculate it server-side as `min(300, Food + Drink + Scene + hpBoosts * 20)`. Each stat is a whole number from 0 to 100; `hpBoosts` is an integer from 0 to 3 (defaults to 0 for older clients). Ignore caller-supplied HP. The button only permits full 20-point boosts with sufficient headroom; raising ratings later still caps the total at 300. Boosts reset for each new card. Preserve formula escaping, private Drive photos, explicit spreadsheet access, locks, and the `ok:true` success contract.
 
 ## Verification and completion receipt
 
 Website regression checks:
 
 ```sh
-node --test _site-checks/*.test.cjs _input-form/test/validate.test.mjs _input-form/test/code.test.mjs _input-form/test/places.test.mjs _input-form/test/place-connection.test.cjs _input-form/test/creator-experience.test.cjs _input-form/test/photo-preview.test.cjs _input-form/test/card-review.test.cjs _input-form/test/hold-submit.test.cjs
+node --test _site-checks/*.test.cjs _input-form/test/validate.test.mjs _input-form/test/code.test.mjs _input-form/test/places.test.mjs _input-form/test/place-connection.test.cjs _input-form/test/creator-experience.test.cjs _input-form/test/photo-preview.test.cjs _input-form/test/card-review.test.cjs _input-form/test/hold-submit.test.cjs _input-form/test/hp-boost.test.cjs
 ```
 
 Add notification tests for persistence failure, webhook failure, retries, deduplication, concurrent requests, disabled notifications, and recovery after a saved row/pending-state interruption.

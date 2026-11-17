@@ -41,6 +41,12 @@ function sheetCells(rows) {
           }
           return out;
         },
+        setValues(values) {
+          for (let r=0;r<height;r++) {
+            if (!rows[row-1+r]) rows[row-1+r]=[];
+            for(let c=0;c<width;c++) rows[row-1+r][col-1+c]=values[r][c];
+          }
+        },
         setValue(val) {
           const target = rows[row - 1];
           while (target.length < col) target.push("");
@@ -52,6 +58,7 @@ function sheetCells(rows) {
 }
 
 function boot(options = {}) {
+  let uuidCounter = 0;
   const calls = { names: [], inserts: [], locks: [], openedIds: [], tz: null, fmts: [] };
   const sheets = new Map();
   const files = [];
@@ -88,6 +95,7 @@ function boot(options = {}) {
         if (options.appendThrows) throw new Error("append failed");
         rows.push(row.slice());
       },
+      getSheetId() { return name === "Friend Submissions" ? 123 : 456; },
       getLastRow() {
         return rows.length;
       },
@@ -146,6 +154,7 @@ function boot(options = {}) {
       },
     },
     Utilities: {
+      getUuid() { return "11111111-2222-4333-8444-" + String(++uuidCounter).padStart(12,"0"); },
       formatDate(_date, tz, fmt) {
         calls.tz = tz;
         calls.fmts.push(fmt);
@@ -251,8 +260,8 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
     assert.deepEqual(body, { ok: true });
     assert.equal(context.URL, undefined);
     assert.deepEqual(calls.openedIds, ['1YwCUA6pW8ImKgc9s4oudzqWQD3vExXWeC3bfHgv2vxQ']);
-    assert.deepEqual(calls.names, ["Friend Submissions"]);
-    assert.deepEqual(calls.inserts, ["Friend Submissions"]);
+    assert.deepEqual(calls.names, ["Friend Submissions", "Notification Outbox"]);
+    assert.deepEqual(calls.inserts, ["Friend Submissions", "Notification Outbox"]);
     assert.equal(calls.tz, "America/New_York");
     assert.deepEqual(calls.fmts, ["yyyy-MM-dd HHmm", "yyyy-MM-dd HH:mm:ss"]);
     assert.deepEqual(calls.locks, [["wait", 10000], ["release"]]);
@@ -339,12 +348,13 @@ test("an existing tab is appended to and not recreated", () => {
       name: "Friend Submissions",
       rows,
       appendRow(row) { this.rows.push(row.slice()); },
+      getSheetId() { return name === "Friend Submissions" ? 123 : 456; },
       getLastRow() { return this.rows.length; },
       ...sheetCells(rows),
     };
     const { context, calls, files } = boot({ existing });
     assert.equal(reply(context.doPost(event(entry({ restaurant: "C / B", submittedBy: "Sam:me" })))).ok, true);
-    assert.deepEqual(calls.inserts, []);
+    assert.deepEqual(calls.inserts, ["Notification Outbox"]);
     assert.equal(existing.rows.length, 2);
     assert.equal(existing.rows[0][12], "Google Maps link");
     assert.equal(existing.rows[0][13], "Photo");
@@ -369,6 +379,7 @@ test("a tab that already has Photo gets the move headers after it, and nothing m
       name: "Friend Submissions",
       rows,
       appendRow(row) { this.rows.push(row.slice()); },
+      getSheetId() { return name === "Friend Submissions" ? 123 : 456; },
       getLastRow() { return this.rows.length; },
       ...sheetCells(rows),
     };
@@ -396,6 +407,7 @@ test("header cells someone already typed are left alone", () => {
       name: "Friend Submissions",
       rows,
       appendRow(row) { this.rows.push(row.slice()); },
+      getSheetId() { return name === "Friend Submissions" ? 123 : 456; },
       getLastRow() { return this.rows.length; },
       ...sheetCells(rows),
     };
@@ -488,7 +500,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   Date.now = () => now;
   try {
     const { context, sheets } = boot();
-    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-16-calculated-hp' });
+    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-16-notify-hp-boost' });
     assert.equal(sheets.size, 0);
     assert.equal(reply(context.doPost(event(entry({ restaurant: "=HYPERLINK(\"https://evil.test\")" })))).ok, true);
     const restaurant = sheets.get("Friend Submissions").rows[1][2];
@@ -501,7 +513,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
 test('an unavailable tracker fails the read-only health check and cannot claim a saved submission', () => {
   const { context, calls, sheets, files } = boot({ sheetUnavailable: true });
   assert.deepEqual(reply(context.doGet()), {
-    ok: false, ready: false, version: '2026-11-16-calculated-hp', error: 'The submission sheet is unavailable.',
+    ok: false, ready: false, version: '2026-11-16-notify-hp-boost', error: 'The submission sheet is unavailable.',
   });
   assert.equal(reply(context.doPost(event(entry()))).ok, false);
   assert.equal(sheets.size, 0);
@@ -527,4 +539,39 @@ test('saved HP is the three-stat total, including zero, regardless of supplied H
     assert.equal(reply(context.doPost(event(entry({move1:"Pasta",move2:"",move3:""})))).ok,true);
     assert.deepEqual(Array.from(sheets.get("Friend Submissions").rows[1].slice(14)),["Pasta","",""]);
   } finally { Date.now = realNow; }
+});
+
+test('saved boosts change HP only; invalid boost counts cannot save', () => {
+  const realNow=Date.now;Date.now=()=>now;
+  try {
+    for (const hpBoosts of [1,2,3]) {
+      const {context,sheets}=boot();
+      assert.equal(reply(context.doPost(event(entry({hp:999,hpBoosts,food:80,drink:70,scene:90})))).ok,true);
+      const row=sheets.get('Friend Submissions').rows[1];
+      assert.equal(row[3],240+hpBoosts*20);
+      assert.deepEqual(Array.from(row.slice(9,12)),[80,70,90]);
+    }
+    const capped=boot();
+    assert.equal(reply(capped.context.doPost(event(entry({hpBoosts:3,food:100,drink:100,scene:100})))).ok,true);
+    assert.equal(capped.sheets.get('Friend Submissions').rows[1][3],300);
+    for(const hpBoosts of [-1,4,1.5]) {
+      const {context,sheets}=boot();
+      assert.equal(reply(context.doPost(event(entry({hpBoosts})))).ok,false);
+      assert.equal(sheets.size,0);
+    }
+  } finally {Date.now=realNow;}
+});
+
+test('boosted cards retain the deployed submission deduplication and disabled outbox behavior',()=>{
+ const realNow=Date.now;Date.now=()=>now;
+ try {
+  const {context,sheets,files}=boot();
+  const body=entry({hpBoosts:3,submissionId:'11111111-2222-4333-8444-555555555555'});
+  assert.equal(reply(context.doPost(event(body))).ok,true);
+  assert.equal(reply(context.doPost(event(body))).ok,true);
+  assert.equal(sheets.get('Friend Submissions').rows.length,2);
+  assert.equal(sheets.get('Friend Submissions').rows[1][3],250);
+  assert.equal(files.length,1);
+  assert.equal(sheets.get('Notification Outbox').rows[1][1],'disabled');
+ } finally {Date.now=realNow;}
 });

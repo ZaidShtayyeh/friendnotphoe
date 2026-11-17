@@ -23,6 +23,8 @@ var NoBallValidate = (function () {
     move: 24,
     scoreMin: 0,
     scoreMax: 300,
+    hpBoostPoints: 20,
+    hpBoostMax: 3,
     rankMin: 0,
     rankMax: 100,
     minFillMs: 3000,
@@ -123,7 +125,9 @@ var NoBallValidate = (function () {
   }
 
   // Partial totals are useful while dragging; submission still requires all three stats.
-  function hpFromStats(input) {
+  function hpFromStats(input, boosts) {
+    var count = wholeNumber(boosts == null ? 0 : boosts, 0, LIMITS.hpBoostMax);
+    if (count === null) return null;
     var total = 0, rated = 0;
     for (var i = 0; i < RANK_FIELDS.length; i++) {
       var raw = trimmed(input, RANK_FIELDS[i][0]);
@@ -133,7 +137,7 @@ var NoBallValidate = (function () {
       total += value;
       rated += 1;
     }
-    return rated ? total : null;
+    return rated ? Math.min(LIMITS.scoreMax, total + count * LIMITS.hpBoostPoints) : null;
   }
 
   function validateSubmission(input) {
@@ -147,6 +151,8 @@ var NoBallValidate = (function () {
     var vibes = trimmed(input, 'vibes');
     var category = trimmed(input, 'category');
     var photo = readPhoto(input);
+    var hpBoosts = wholeNumber(input.hpBoosts == null ? 0 : input.hpBoosts, 0, LIMITS.hpBoostMax);
+    if (hpBoosts === null) errors.hp = 'Use up to three HP boosts.';
 
     if (!submittedBy) errors.submittedBy = 'Your name is required.';
     else if (submittedBy.length > LIMITS.friend) errors.submittedBy = 'Your name must be 60 characters or fewer.';
@@ -217,7 +223,8 @@ var NoBallValidate = (function () {
         maps: maps,
         city: city,
         area: area,
-        hp: hpFromStats(ranks),
+        hp: hpFromStats(ranks, hpBoosts),
+        hpBoosts: hpBoosts,
         category: category,
         color: CATEGORY_COLORS[category],
         vibes: vibes,
