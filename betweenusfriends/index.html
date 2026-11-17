@@ -2150,6 +2150,8 @@
     });
 
     function showSubmitted() {
+      // Confirmed saved: the next card gets a fresh id.
+      submissionId = newSubmissionId();
       closeReview(false);
       submissionComplete = true;
       clearStatus();
@@ -2186,8 +2188,22 @@
     $('make-another').addEventListener('click', startAnotherCard);
 
     // ==================== SEND ====================
+    // One id per card. Retries of the same card reuse it so the sheet can drop duplicates.
+    // A new id is made only after the sheet confirms the card was saved.
+    function newSubmissionId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+      var b = new Uint8Array(16);
+      window.crypto.getRandomValues(b);
+      b[6] = (b[6] & 0x0f) | 0x40;
+      b[8] = (b[8] & 0x3f) | 0x80;
+      var h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); }).join('');
+      return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+    }
+    var submissionId = newSubmissionId();
+
     function payload() {
       return {
+        submissionId: submissionId,
         submittedBy: $('friend').value,
         restaurant: place.value,
         photoData: photoState.data,
