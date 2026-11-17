@@ -1,6 +1,6 @@
 # Friend Not Phoe — connect live notifications
 
-Prepared November 15, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12/README.md`. The owner asked Codex to finish the website changes and hand notification setup to Grok bot. Do not redo the website or reopen the old submission bug.
+Updated November 16, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12/README.md`. The owner asked Codex to finish the website changes and hand notification setup to Grok bot. Do not redo the website or reopen the old submission bug.
 
 ## Paste this with the file
 
@@ -11,7 +11,7 @@ Prepared November 15, 2026. This supersedes `output/ops/grokbot-setup-2026-11-12
 | Component | Status at this handoff |
 | --- | --- |
 | Website and card creator | Live on GitHub Pages; root `main` branch. The creator has mandatory review, one required special move, HEIC preview/cropping, and hold-to-submit with the spinning logo. The final visual pass adds the forest-green invitation, pale-blue “infinity,” editorial labels, a three-option Scenes selector, unnumbered move fields, and initially blank stats. |
-| Google Sheet submission saving | Working backend, deployment version **5**, health version **`2026-11-15-one-move`**. Read-only health returned `ok:true, ready:true`. |
+| Google Sheet submission saving | Working backend, deployment version **6**, health version **`2026-11-16-calculated-hp`**. Read-only health returned `ok:true, ready:true`. HP is calculated from Food + Drink + Scene in both the form and backend, from 0 to 300. |
 | Cloudflare analytics | Existing Web Analytics beacon remains in root HTML. This is traffic analytics, not a Grok bot alert integration. No claim is made here about dashboard traffic counts. |
 | Visit Worker | **Confirmed in the authenticated Cloudflare dashboard**, not merely found in a branch. Name `friendnotphoe-visit-alerts`, production version prefix **`46ee1783`**, deployed 9 days before this audit. |
 | Worker forwarding | **OFF**: `FORWARDING_ENABLED=false`, `FORWARD_TEST_EVENTS=false`. |
@@ -141,7 +141,7 @@ Before uploading code, fetch current Apps Script content. It contains two pre-ex
 
 **Deployment/access detail:** `gws script projects getContent` worked on this machine. `updateContent` returned 403 because the user's Apps Script API write access is not enabled. Codex successfully saved and deployed through the existing personal Chrome editor instead. Do not enable new account permissions merely to avoid using that working UI path. Update the existing deployment with a new version, not a new URL. New outbound `UrlFetchApp` use/time-driven triggers may require owner authorization; handle that explicitly if Google prompts.
 
-Current backend validation must remain: name/place/city/neighborhood/photo/category/vibes/HP/all three numeric stats required; at least **one** move, maximum three, each up to 24 characters; Maps link optional. Preserve formula escaping, private Drive photos, explicit spreadsheet access, locks, and the `ok:true` success contract.
+Current backend validation must remain: name/place/city/neighborhood/photo/category/vibes/all three numeric stats required; at least **one** move, maximum three, each up to 24 characters; Maps link optional. HP is not a separate input: calculate it server-side as Food + Drink + Scene (each a whole number from 0 to 100), ignoring any caller-supplied HP. Preserve formula escaping, private Drive photos, explicit spreadsheet access, locks, and the `ok:true` success contract.
 
 ## Verification and completion receipt
 

@@ -541,8 +541,8 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261115-scenes1">
-  <link rel="stylesheet" href="forest-proposal.css?v=20261115-forest1">
+  <link rel="stylesheet" href="refinement.css?v=20261116-hp1">
+  <link rel="stylesheet" href="forest-proposal.css?v=20261116-hp1">
   <script>
     if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
       document.documentElement.dataset.surface = 'forest';
@@ -565,6 +565,7 @@
       <div class="creator-invitation">
         <span class="page-kicker">MAKE A CARD</span>
         <h1>From a friend<br><em>to <span>infinity.</span></em></h1>
+        <p class="invitation-note">Turn a favorite spot into a card.</p>
       </div>
           <div class="field creator-identity">
             <label for="friend">Made by</label>
@@ -621,7 +622,7 @@
         </section>
 
         <section class="block" id="the-card">
-          <h2 class="card-section-heading"><span class="section-heading"><span class="section-number">02</span>The card</span><span class="picture-note" id="picture-note">Use your own photo of the place or food.</span></h2>
+          <h2 class="card-section-heading"><span class="section-heading"><span class="section-number">02</span>The card</span><span class="picture-note" id="picture-note">Use your own photo of the place or food, porfa.</span></h2>
 
           <div class="field" id="shot-field">
             <label for="photo">Picture</label>
@@ -651,12 +652,6 @@
             <p class="error" id="err-photo"></p>
           </div>
 
-          <div class="field">
-            <label class="inline-hint" for="score">HP <span class="hint">300 max</span></label>
-            <div><span class="hp-box"><span>HP</span><input id="score" name="hp" inputmode="numeric" maxlength="3" required autocomplete="off" enterkeyhint="next" placeholder="280"></span></div>
-            <p class="error" id="err-hp"></p>
-          </div>
-
           <fieldset class="field">
             <legend>Scenes</legend>
             <!-- Keep existing submission values compatible with the tracker. -->
@@ -677,22 +672,21 @@
         </section>
 
         <section class="block" id="the-moves">
-          <h2><span class="section-heading"><span class="section-number">03</span>The moves</span></h2>
-          <p class="moves-hint" id="moves-hint">At least one special move. Add up to three.</p>
+          <h2 class="card-section-heading"><span class="section-heading"><span class="section-number">03</span>The moves</span><span class="section-note" id="moves-hint">Name your favorite things at the spot.</span></h2>
           <div class="moves">
             <div class="field">
               <label class="sr-only" for="move1">Move 1</label>
-              <div class="move-box"><input id="move1" name="move1" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Bread &amp; Olive Oil"><span class="move-left" id="left-move1"></span></div>
+              <div class="move-box"><input id="move1" name="move1" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Bread and olive oil"><span class="move-left" id="left-move1"></span></div>
               <p class="error" id="err-move1"></p>
             </div>
             <div class="field">
               <label class="sr-only" for="move2">Move 2 (optional)</label>
-              <div class="move-box"><input id="move2" name="move2" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Dirty Martini"><span class="move-optional">optional</span><span class="move-left" id="left-move2"></span></div>
+              <div class="move-box"><input id="move2" name="move2" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Wara Anab"><span class="move-optional">optional</span><span class="move-left" id="left-move2"></span></div>
               <p class="error" id="err-move2"></p>
             </div>
             <div class="field">
               <label class="sr-only" for="move3">Move 3 (optional)</label>
-              <div class="move-box"><input id="move3" name="move3" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Orange Wine"><span class="move-optional">optional</span><span class="move-left" id="left-move3"></span></div>
+              <div class="move-box"><input id="move3" name="move3" maxlength="24" aria-describedby="moves-hint" autocomplete="off" enterkeyhint="next" placeholder="Vinooo"><span class="move-optional">optional</span><span class="move-left" id="left-move3"></span></div>
               <p class="error" id="err-move3"></p>
             </div>
           </div>
@@ -700,6 +694,16 @@
 
         <section class="block" id="the-stats">
           <h2><span class="section-heading"><span class="section-number">04</span>The stats</span></h2>
+
+          <div class="field power-ranking">
+            <div class="power-total">
+              <label for="score" id="hp-label">HP</label>
+              <output id="score" name="hp" for="food drinks scene" aria-labelledby="hp-label" aria-describedby="hp-max hp-note" aria-live="off"></output>
+              <span class="hint" id="hp-max">300 max</span>
+            </div>
+            <p class="section-note" id="hp-note">This is the power ranking.<span class="sr-only"> Food plus Drink plus Scene.</span></p>
+          </div>
+          <p class="error" id="err-hp"></p>
 
           <div class="stat unset" data-stat="food">
             <label for="food">Food</label>
@@ -823,7 +827,7 @@
 
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
-  <script src="validate.js?v=20261115-one-move"></script>
+  <script src="validate.js?v=20261116-hp1"></script>
   <script src="places.js"></script>
   <script src="hold-submit.js?v=20261115-hold1"></script>
   <script>
@@ -864,7 +868,7 @@
         case 'maps': return "That's not a Google Maps link. Paste one or leave it blank.";
         case 'city': return long ? 'Keep it under 80 characters.' : 'Which city?';
         case 'area': return long ? 'Keep it under 80 characters.' : 'Which part of town?';
-        case 'hp': return 'HP is a whole number, 1 to 300.';
+        case 'hp': return 'Rate Food, Drink and Scene to calculate HP.';
         case 'category': return "Pick one. Can't be everything.";
         case 'vibes':
           if (fit) return "That runs past four lines on the card. Trim it.";
@@ -923,7 +927,7 @@
     var svg = $('card');
     var limits = NoBallValidate.LIMITS;
     var fields = ['submittedBy', 'restaurant', 'photo', 'maps', 'city', 'area', 'hp', 'category', 'vibes', 'move1', 'move2', 'move3', 'food', 'drink', 'scene'];
-    var FOCUS = { submittedBy: 'friend', restaurant: 'place', hp: 'score', drink: 'drinks' };
+    var FOCUS = { submittedBy: 'friend', restaurant: 'place', hp: 'food', drink: 'drinks' };
     var statInputs = { food: 'food', drink: 'drinks', scene: 'scene' };
     var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var mobileQuery = window.matchMedia('(max-width: 959px)');
@@ -1068,6 +1072,8 @@
 
     var currentColor = 'neutral';
     function renderCard() {
+      var totalHp = NoBallValidate.hpFromStats({ food: $('food').value, drink: $('drinks').value, scene: $('scene').value });
+      $('score').value = totalHp === null ? '' : String(totalHp);
       var category = selectedCategory();
       var color = CATEGORY_CHASSIS[category] || 'neutral';
       var palette = COLORS[color];
@@ -2078,7 +2084,7 @@
       }
       var sections = {
         'the-spot': ['restaurant', 'maps', 'city', 'area'],
-        'the-card': ['photo', 'hp', 'category', 'vibes'],
+        'the-card': ['photo', 'category', 'vibes'],
         'the-moves': ['move1', 'move2', 'move3'],
         'the-stats': ['food', 'drink', 'scene']
       };
@@ -2152,7 +2158,7 @@
         maps: $('maps').value,
         city: $('city').value,
         area: $('area').value,
-        hp: $('score').value,
+        hp: NoBallValidate.hpFromStats({ food: $('food').value, drink: $('drinks').value, scene: $('scene').value }),
         category: selectedCategory(),
         vibes: vibes.value,
         move1: $('move1').value,

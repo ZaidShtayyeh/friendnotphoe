@@ -17,7 +17,7 @@ test('first submit reviews a complete one-move card; only explicit confirmation 
  await c.confirmReview();assert.equal(c.posts,1);assert.equal(c.sent.move2,'');assert.equal(c.sent.move3,'');
 });
 test('every required field must be complete before review or any upload',async()=>{
- for(const key of ['submittedBy','restaurant','city','area','hp','category','vibes','move1','food','drink','scene']){
+ for(const key of ['submittedBy','restaurant','city','area','category','vibes','move1','food','drink','scene']){
   const c=setup();c.body[key]='';await c.requestReview();assert.equal(c.reviewDialog.open,false,key);assert.ok(c.errors[key],key);assert.equal(c.exports,0);assert.equal(c.posts,0);
  }
  const c=setup();c.photo=null;await c.requestReview();assert.ok(c.errors.photo);assert.equal(c.exports,0);

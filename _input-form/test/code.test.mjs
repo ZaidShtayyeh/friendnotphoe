@@ -262,7 +262,7 @@ test("a valid post creates Friend Submissions with headers and one row", () => {
       "Vibes", "Food", "Drink", "Scene", "Google Maps link", "Photo", "Move 1", "Move 2", "Move 3",
     ]));
     assert.equal(JSON.stringify(rows[1]), JSON.stringify([
-      "2026-11-10 09:15:00", "Sam", "C + B", 270, "Food first", "Green", "NYC", "East Village",
+      "2026-11-10 09:15:00", "Sam", "C + B", 190, "Food first", "Green", "NYC", "East Village",
       "A short line about the sandwich.", 80, 50, 60,
       "https://www.google.com/maps/search/?api=1&query=C+%2B+B",
       "https://drive.google.com/file/d/file-1/view",
@@ -413,8 +413,8 @@ test("invalid fields, honeypot, and too-fast posts write nothing", () => {
   Date.now = () => now;
   try {
     const cases = [
-      entry({ hp: "301" }),
-      entry({ hp: "310" }),
+      entry({ drink: "" }),
+      entry({ scene: "1.5" }),
       entry({ vibes: Array.from({ length: 51 }, () => "word").join(" ") }),
       entry({ maps: "http://maps.google.com/?q=x" }),
       entry({ food: "101" }),
@@ -488,7 +488,7 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
   Date.now = () => now;
   try {
     const { context, sheets } = boot();
-    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-15-one-move' });
+    assert.deepEqual(reply(context.doGet()), { ok: true, ready: true, version: '2026-11-16-calculated-hp' });
     assert.equal(sheets.size, 0);
     assert.equal(reply(context.doPost(event(entry({ restaurant: "=HYPERLINK(\"https://evil.test\")" })))).ok, true);
     const restaurant = sheets.get("Friend Submissions").rows[1][2];
@@ -501,12 +501,23 @@ test("text that looks like a formula is neutralized, and doGet writes nothing", 
 test('an unavailable tracker fails the read-only health check and cannot claim a saved submission', () => {
   const { context, calls, sheets, files } = boot({ sheetUnavailable: true });
   assert.deepEqual(reply(context.doGet()), {
-    ok: false, ready: false, version: '2026-11-15-one-move', error: 'The submission sheet is unavailable.',
+    ok: false, ready: false, version: '2026-11-16-calculated-hp', error: 'The submission sheet is unavailable.',
   });
   assert.equal(reply(context.doPost(event(entry()))).ok, false);
   assert.equal(sheets.size, 0);
   assert.equal(files.length, 0);
   assert.equal(calls.openedIds.length, 2);
+});
+
+test('saved HP is the three-stat total, including zero, regardless of supplied HP', () => {
+  const realNow=Date.now;Date.now=()=>now;
+  try {
+    for (const score of [0,100]) {
+      const {context,sheets}=boot();
+      assert.equal(reply(context.doPost(event(entry({hp:'999',food:score,drink:score,scene:score})))).ok,true);
+      assert.equal(sheets.get('Friend Submissions').rows[1][3],score*3);
+    }
+  } finally { Date.now=realNow; }
 });
 
  test("one move is saved with blank optional move cells", () => {

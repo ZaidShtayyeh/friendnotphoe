@@ -107,7 +107,7 @@ form{padding-top:44px}
 @media(max-width:420px){.card-review{padding:18px 14px}.card-review h2{font-size:26px}.review-actions .send{padding:0 16px}.move-optional{font-size:9px;padding-right:8px}}
 .block h2.card-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:22px}
 .card-section-heading .section-heading{flex-shrink:0}
-.picture-note{max-width:290px;font:italic 400 15px/1.45 'General Sans',sans-serif;letter-spacing:0;color:var(--muted);text-align:right}
+.picture-note,.section-note{max-width:290px;font:italic 400 15px/1.45 'General Sans',sans-serif;letter-spacing:0;color:var(--muted);text-align:right}
 .review-actions .hold-submit{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;min-height:62px;padding:0 16px;transform:none;flex:1.4}
 .submit-idle{display:flex;align-items:center;justify-content:center;gap:9px;position:relative}
 .submit-idle img{object-fit:contain;flex-shrink:0}
@@ -119,7 +119,7 @@ form{padding-top:44px}
 .hold-submit.is-sending{opacity:1;cursor:progress}
 .hold-submit.is-sending .submit-idle{visibility:hidden}
 .hold-submit.is-sending .submit-loading{display:flex}
-@media(max-width:600px){.picture-note{font-size:14px;max-width:210px}.block h2.card-section-heading{gap:16px}.review-actions .hold-submit{padding:0 10px}.submit-idle{gap:6px}.submit-idle img{width:42px;height:32px}.submit-idle span{font-size:12px}}
+@media(max-width:600px){.picture-note,.section-note{font-size:14px;max-width:210px}.block h2.card-section-heading{gap:16px}.review-actions .hold-submit{padding:0 10px}.submit-idle{gap:6px}.submit-idle img{width:42px;height:32px}.submit-idle span{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.submit-loading .animated-logo{display:none}.submit-loading .still-logo{display:block}}
 
 /* The invitation uses the homepage palette; the working surface stays warm and quiet. */
@@ -127,6 +127,15 @@ form{padding-top:44px}
 .creator-invitation .page-kicker{color:#c6dce8;opacity:.8;margin-bottom:24px}
 .creator-invitation h1{color:var(--cream);font-size:clamp(44px,4.8vw,64px)}
 .creator-invitation h1 em span{color:#c6dce8}
+.invitation-note{margin-top:20px;font:italic 400 14px/1.4 Georgia,serif;letter-spacing:0;color:#c6dce8;white-space:nowrap}
+#vibes::placeholder{font-style:italic}
+.power-ranking{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:21px;margin-bottom:26px;border-bottom:1px solid var(--line)}
+.power-total{display:flex;align-items:baseline;gap:8px;flex-shrink:0}
+.power-total label{font:400 20px/1 Georgia,serif}
+.power-total #score{display:block;width:3ch;min-width:0;padding:0;border:0;background:none;box-shadow:none;font:400 40px/1 Georgia,serif;letter-spacing:-.04em;text-align:right;font-variant-numeric:tabular-nums}
+.power-total #score:empty:before{content:'—';color:var(--muted)}
+.power-total .hint{font-size:11px;white-space:nowrap}
+.power-ranking .section-note{max-width:210px}
 .field>label:not(.drop):not(.sr-only),.field>legend,.stat>label{font:400 19px/1.25 Georgia,serif;letter-spacing:-.025em;color:var(--ink);margin-bottom:10px}
 .field>label .hint{font:400 11px/1.4 'General Sans',sans-serif;letter-spacing:0}
 .creator-identity{max-width:none;margin-top:30px}

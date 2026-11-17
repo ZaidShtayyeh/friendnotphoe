@@ -56,16 +56,24 @@ test("word count splits on whitespace and ignores extra spaces", () => {
   assert.equal(v.wordCount(words(51)), 51);
 });
 
-test("score accepts 1 and 300 and rejects 0, 301, 310, and decimals", () => {
-  for (const hp of ["1", "300", 300, "270"]) {
-    assert.equal(v.validateSubmission(valid({ hp })).ok, true, String(hp));
-    assert.equal(v.validateSubmission(valid({ hp })).value.hp, Number(hp));
+test("HP is calculated from stats, ignoring any supplied HP", () => {
+  for (const hp of [undefined, '', '270', '999', 'not a number']) {
+    const result = v.validateSubmission(valid({hp,food:'80',drink:'50',scene:'60'}));
+    assert.equal(result.ok,true);assert.equal(result.value.hp,190);
   }
-  for (const hp of ["0", "301", "310", "1.5", "01", "", "  ", "+5", "1e2", "-1"]) {
-    const result = v.validateSubmission(valid({ hp }));
-    assert.equal(result.ok, false, String(hp));
-    assert.match(result.errors.hp, /1 to 300/);
+  for (const value of [0,100]) {
+    const result=v.validateSubmission(valid({food:value,drink:value,scene:value}));
+    assert.equal(result.ok,true);assert.equal(result.value.hp,value*3);
   }
+});
+
+test("live HP distinguishes unrated, zero, partial and invalid stats", () => {
+  assert.equal(v.hpFromStats({food:'',drink:'',scene:''}),null);
+  assert.equal(v.hpFromStats({food:'0',drink:'',scene:''}),0);
+  assert.equal(v.hpFromStats({food:'80',drink:'',scene:'50'}),130);
+  assert.equal(v.hpFromStats({food:'100',drink:'100',scene:'100'}),300);
+  for (const food of ['101','-1','1.5','abc']) assert.equal(v.hpFromStats({food,drink:'50',scene:'60'}),null);
+  assert.equal(v.validateSubmission(valid({food:'80',drink:'',scene:'50'})).ok,false);
 });
 
 test("vibes allow 50 words and 250 characters, and reject either overflow", () => {

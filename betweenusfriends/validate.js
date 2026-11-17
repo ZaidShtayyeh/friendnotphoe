@@ -21,7 +21,7 @@ var NoBallValidate = (function () {
     vibesWords: 50,
     vibesChars: 250,
     move: 24,
-    scoreMin: 1,
+    scoreMin: 0,
     scoreMax: 300,
     rankMin: 0,
     rankMax: 100,
@@ -122,6 +122,20 @@ var NoBallValidate = (function () {
     return number;
   }
 
+  // Partial totals are useful while dragging; submission still requires all three stats.
+  function hpFromStats(input) {
+    var total = 0, rated = 0;
+    for (var i = 0; i < RANK_FIELDS.length; i++) {
+      var raw = trimmed(input, RANK_FIELDS[i][0]);
+      if (raw === '') continue;
+      var value = wholeNumber(raw, LIMITS.rankMin, LIMITS.rankMax);
+      if (value === null) return null;
+      total += value;
+      rated += 1;
+    }
+    return rated ? total : null;
+  }
+
   function validateSubmission(input) {
     input = input || {};
     var errors = {};
@@ -151,9 +165,6 @@ var NoBallValidate = (function () {
 
     if (!area) errors.area = 'Area is required.';
     else if (area.length > LIMITS.area) errors.area = 'Area must be 80 characters or fewer.';
-
-    var hp = wholeNumber(input.hp, LIMITS.scoreMin, LIMITS.scoreMax);
-    if (hp === null) errors.hp = 'Score must be a whole number from 1 to 300.';
 
     if (CATEGORIES.indexOf(category) === -1) errors.category = 'Pick a category.';
 
@@ -206,7 +217,7 @@ var NoBallValidate = (function () {
         maps: maps,
         city: city,
         area: area,
-        hp: hp,
+        hp: hpFromStats(ranks),
         category: category,
         color: CATEGORY_COLORS[category],
         vibes: vibes,
@@ -260,6 +271,7 @@ var NoBallValidate = (function () {
     LIMITS: LIMITS,
     wordCount: wordCount,
     isMapsUrl: isMapsUrl,
+    hpFromStats: hpFromStats,
     validateSubmission: validateSubmission,
     checkSpam: checkSpam,
     interpretReply: interpretReply

@@ -127,13 +127,12 @@ async function crop(page) {
   return (await page.locator("#card").getAttribute("data-crop")).split(",").map(Number);
 }
 
-async function fill(page, { name = "Sam", score = "270", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
+async function fill(page, { name = "Sam", vibes = VIBES, moves = MOVES, shot = SHOT } = {}) {
   await page.fill("#friend", name);
   await page.fill("#place", "C + B");
   await page.fill("#maps", "https://maps.google.com/?q=C+%2B+B");
   await page.fill("#city", "NYC");
   await page.fill("#area", "East Village");
-  await page.fill("#score", score);
   await page.locator('input[value="Food first"]').check();
   await page.fill("#vibes", vibes);
   for (let i = 0; i < 3; i += 1) await page.fill(`#move${i + 1}`, moves[i]);
@@ -234,10 +233,9 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("text=it's half the card").count(), 0, `${label} no shot hint`);
   assert.equal(await page.locator("text=1 to 300, save the big ones").count(), 0, `${label} no HP hint on the right`);
   assert.equal(await page.locator("text=pick one, it sets the color").count(), 0, `${label} no category hint`);
-  assert.equal(await page.locator('label[for="score"] .hint').textContent(), "300 max");
-  const hpLabel = await page.locator('label[for="score"]').boundingBox();
-  const hpHint = await page.locator('label[for="score"] .hint').boundingBox();
-  assert.ok(hpHint.x - hpLabel.x < 50, `${label} 300 max sits next to HP (${Math.round(hpHint.x - hpLabel.x)}px in)`);
+  assert.equal(await page.locator('#hp-max').textContent(), "300 max");
+  assert.equal(await page.locator('#the-stats output#score').count(), 1);
+  assert.equal(await page.locator('input#score').count(), 0);
   await page.waitForFunction(() => document.getElementById("place").getAttribute("data-places") === "failed");
   assert.equal(await page.locator("#place-list").isHidden(), true);
   const coin = await page.locator(".corner-coin").boundingBox();
@@ -289,7 +287,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#counter").textContent(), "102/250");
   assert.equal(await page.locator("#card-name").textContent(), "C + B");
   assert.equal(await page.locator("#card-name").evaluate((el) => el.classList.contains("ghost")), false);
-  assert.equal(await page.locator("#card-hp").textContent(), "270");
+  assert.equal(await page.locator("#card-hp").textContent(), "190");
   assert.equal(await page.locator("#card-city").textContent(), "NYC");
   assert.equal(await page.locator("#card-area").textContent(), "East Village, New York");
   assert.equal((await cardText(page, "card-vibes")).join(" "), VIBES.replace("'", "\u2019"));
@@ -460,12 +458,12 @@ async function exercise(page, label, base) {
   assert.equal(await page.locator("#send").isEnabled(), true);
   assert.deepEqual(await crop(page), framed, `${label} sending doesn't touch the framing`);
 
-  await page.fill("#score", "301");
+  await page.fill("#food", "101");
   await page.click("#send");
-  await page.waitForFunction(() => document.getElementById("err-hp").textContent.includes("1 to 300"));
+  await page.waitForFunction(() => document.getElementById("err-food").textContent.includes("0 to 100"));
   assert.equal(calls.length, 0);
-  assert.equal(await page.inputValue("#score"), "301");
-  await page.fill("#score", "270");
+  assert.equal(await page.locator("#score").textContent(), "");
+  await page.fill("#food", "80");
 
   await page.fill("#friend", "");
   await page.click("#send");
@@ -550,7 +548,7 @@ async function exercise(page, label, base) {
   assert.equal(sent.maps, "https://maps.google.com/?q=C+%2B+B");
   assert.equal(sent.city, "NYC");
   assert.equal(sent.area, "East Village");
-  assert.equal(sent.hp, "270");
+  assert.equal(sent.hp, 190);
   assert.equal(sent.category, "Food first");
   assert.equal(sent.vibes, VIBES);
   assert.equal(sent.move1, MOVES[0]);
@@ -573,7 +571,7 @@ async function exercise(page, label, base) {
   assert.equal(await page.inputValue("#friend"), "Sam");
   assert.equal(await page.inputValue("#place"), "");
   assert.equal(await page.inputValue("#city"), "");
-  assert.equal(await page.inputValue("#score"), "");
+  assert.equal(await page.locator("#score").textContent(), "");
   assert.equal(await page.inputValue("#vibes"), "");
   assert.equal(await page.inputValue("#move1"), "");
   assert.equal(await page.locator('input[name="category"]:checked').count(), 0);
@@ -637,7 +635,6 @@ async function fidelity(browser, base) {
   await page.fill("#place", TIME_AGAIN.name);
   await page.fill("#city", TIME_AGAIN.city);
   await page.fill("#area", TIME_AGAIN.area);
-  await page.fill("#score", TIME_AGAIN.hp);
   await page.locator('input[value="Legendary"]').check();
   await page.fill("#vibes", TIME_AGAIN.vibes);
   for (let i = 0; i < 3; i += 1) await page.fill(`#move${i + 1}`, TIME_AGAIN.moves[i]);
@@ -711,7 +708,7 @@ async function fidelity(browser, base) {
       return sum / ((x1 - x0) * (y1 - y0) * 3);
     };
     const scores = {
-      header: region(140, 120, 1360, 222),
+      header: region(140, 120, 1050, 222), // Old artwork has a manually assigned HP; compare the unchanged name area.
       area: region(500, 1050, 1000, 1125),
       vibes: region(140, 1205, 1365, 1400),
       moves: region(140, 1530, 1365, 1630),
