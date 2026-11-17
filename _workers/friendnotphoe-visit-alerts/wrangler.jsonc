@@ -10,9 +10,9 @@
   "workers_dev": true,
   "preview_urls": false,
 
-  // Forwarding stays off until secrets are set and an operator flips FORWARDING_ENABLED.
+  // Production forwards real visits. Test events stay off. Secrets stay out of this file.
   "vars": {
-    "FORWARDING_ENABLED": "false",
+    "FORWARDING_ENABLED": "true",
     "FORWARD_TEST_EVENTS": "false",
     "ALLOWED_ORIGINS": "https://friendnotphoe.com,https://www.friendnotphoe.com",
     "SITE": "friendnotphoe.com",

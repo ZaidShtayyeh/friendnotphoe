@@ -8,7 +8,7 @@ A small Cloudflare Worker. It receives at most one anonymous "visit" attempt per
 
 **Owner-reported, not re-checked here.** Friend says an inactive Worker is deployed at `https://friendnotphoe-visit-alerts.friendnotphoe.workers.dev/v1/visit`. Secret setup is not finished. Nothing in this repository deployed that Worker, called that URL, or sent a routine webhook. Do not treat the code tests below as proof the deployment exists.
 
-**Still true in this code.** `FORWARDING_ENABLED` and `FORWARD_TEST_EVENTS` are both `"false"`. Until the owner sets both secrets and turns forwarding on, the Worker returns 503 and does not call upstream. No step changes DNS, the zone, or GitHub Pages hosting. friendnotphoe.com stays where it is; the Worker is only a `workers.dev` hostname.
+**Still true in this code.** `FORWARDING_ENABLED` is `"true"` and `FORWARD_TEST_EVENTS` is `"false"`. A missing or invalid secret still returns 503 and does not call upstream. No step changes DNS, the zone, or GitHub Pages hosting. friendnotphoe.com stays where it is; the Worker is only a `workers.dev` hostname.
 
 **This PR does not publish the site.** `index.html` includes the visit-note script pointed at that owner-reported URL, but the live site loads it only after the owner merges this PR and Pages publishes. A 503 from the inactive Worker is not a delivery: the client records `not-delivered`, shows nothing, and still makes at most one attempt per tab session.
 
@@ -20,12 +20,19 @@ The `_workers/` folder starts with `_`, so the Jekyll build does not publish the
 browser (assets/visit-note.js)  --POST /v1/visit-->  Worker  --POST + Bearer-->  routine webhook
 ```
 
-The browser sends exactly this JSON, and the Worker forwards it unchanged:
+The browser sends exactly this JSON. Any other client key, including a client-sent `location`, is rejected with 400:
 
 ```json
 {"type":"visit","site":"friendnotphoe.com","event_id":"<uuid v4>","occurred_at":"<ISO-8601 UTC>","path":"/","test":false}
 ```
 
+When the Worker forwards, it may add one optional `location` object. That object is built server-side from Cloudflare's `request.cf` and is never logged:
+
+```json
+{"type":"visit","site":"friendnotphoe.com","event_id":"<uuid v4>","occurred_at":"<ISO-8601 UTC>","path":"/","test":false,"location":{"city":"Brooklyn","region":"New York","country":"US"}}
+```
+
+- **`location`** is coarse place only: `city`, `region`, and `country`. Each value is cleaned to letters, marks, numbers, spaces, periods, apostrophes, and hyphens, then capped at 60 characters. Fields that are missing or empty after cleaning are left out. The whole object is left out when nothing usable remains. IP, coordinates, postal code, ASN, timezone, colo, metro, and every other `request.cf` field are not copied.
 - **`path`** is `location.pathname` only, and must match `^/[A-Za-z0-9._~\-/]{0,63}$` with no `//` or `..`. Query, hash, and percent-escapes cannot pass. The site uses hash routing, so this is effectively always `/`; card and page hashes are never sent.
 - **What is not collected or forwarded:**
   - No cookies, IP, user agent, referrer, full URL, screen or device data, or fingerprinting.
