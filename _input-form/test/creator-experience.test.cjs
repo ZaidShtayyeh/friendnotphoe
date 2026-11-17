@@ -37,3 +37,14 @@ for(const [name,response,expected] of [
  ['network failure',new Error('offline'),'offline']
 ])test(name+' never shows success or clears the card',async()=>{const s=setup(response);await s.run(valid);assert.equal(s.confirmed(),0);assert.equal(s.messages[0].message,expected);});
 test('invalid cards are not sent',async()=>{const s=setup({});await s.run({...valid,restaurant:''});assert.equal(s.requests(),0);assert.equal(s.confirmed(),0);});
+
+test('a valid slider score clears its old warning, while invalid and unrated values remain flagged',()=>{
+ const source=html.slice(html.indexOf('    function syncBar(row)'),html.indexOf('    function updateCounter()'));
+ for(const stat of ['food','drink','scene'])for(const value of ['0','73','100','','101','1.5']){
+  const error={textContent:'Old score warning'},classes=new Set(['invalid']);
+  const row={getAttribute:()=>stat,classList:{toggle(){},remove:k=>classes.delete(k)},querySelector:selector=>selector==='.num'?{value}:{style:{setProperty(){}},setAttribute(){}}};
+  const c={NoBallValidate:validate,$:()=>error,rank:()=>50};vm.runInNewContext(source,c);c.syncBar(row);
+  const validValue=['0','73','100'].includes(value);
+  assert.equal(error.textContent==='',validValue,stat+':'+value);assert.equal(classes.has('invalid'),!validValue);
+ }
+});

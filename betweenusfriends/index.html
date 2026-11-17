@@ -885,9 +885,9 @@
         case 'move3':
           if (fit) return "Won't fit the card. Shorter.";
           return long ? '24 max, it has to fit the card.' : 'Add at least one special move. What do you order?';
-        case 'food': return 'Food is 0 to 100, whole numbers.';
-        case 'drink': return 'Drink is 0 to 100, whole numbers.';
-        case 'scene': return 'Scene is 0 to 100, whole numbers.';
+        case 'food':
+        case 'drink':
+        case 'scene': return 'Pick a score with the slider.';
         case 'photo':
           if (/5 MB/.test(message)) return "That shot's too heavy. 5 MB max.";
           if (/could not be read/.test(message)) return "Couldn't read that shot.";
@@ -1651,6 +1651,13 @@
       bar.value = v === null ? 0 : v;
       bar.style.setProperty('--v', (v === null ? 0 : v) + '%');
       bar.setAttribute('aria-valuetext', v === null ? 'Not rated' : v + ' out of 100');
+      var statKey = row.getAttribute('data-stat');
+      var rating = {};
+      rating[statKey] = num.value;
+      if (NoBallValidate.hpFromStats(rating) !== null) {
+        $('err-' + statKey).textContent = '';
+        row.classList.remove('invalid');
+      }
     }
 
     function updateCounter() {
