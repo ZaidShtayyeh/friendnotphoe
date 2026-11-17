@@ -1,0 +1,10 @@
+/* Approved front: paper texture only. Original image, frame and tatreez stay intact.
+   One shared decoded surface; no new per-card animated filters or glints. */
+.front-print{display:block;position:relative;isolation:isolate;width:100%;aspect-ratio:5/7;line-height:0}
+.front-print>img{display:block;width:100%;height:100%;object-fit:contain}
+.front-surface-host{isolation:isolate}
+.front-print::after,.front-surface-host::after{content:"";position:absolute;inset:0;background:url("front-surface.svg") center/100% 100% no-repeat;mix-blend-mode:multiply;pointer-events:none}
+#card-dialog .inspect-art>.front-print{height:100%}
+.map-popup .front-print{width:92px;margin:0 auto 8px}
+.map-popup .front-print>img{width:100%;height:100%;margin:0}
+.card-svg .approved-front-surface{mix-blend-mode:multiply;pointer-events:none}

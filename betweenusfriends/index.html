@@ -549,6 +549,7 @@
       document.querySelector('meta[name="theme-color"]').content = '#20291e';
     }
   </script>
+  <link rel="stylesheet" href="../assets/card-finish-v1/finish.css">
 </head>
 <body>
   <header>
@@ -794,6 +795,7 @@
             <rect id="card-bar-food" class="bar-fill" x="293" y="1713.6" width="0" height="31.6" rx="15.8"/>
             <rect id="card-bar-drink" class="bar-fill" x="293" y="1814.6" width="0" height="31.6" rx="15.8"/>
             <rect id="card-bar-scene" class="bar-fill" x="293" y="1915.6" width="0" height="31.6" rx="15.8"/>
+            <image class="approved-front-surface" href="../assets/card-finish-v1/front-surface.svg" width="1500" height="2100" aria-hidden="true"/>
           </svg>
           <div class="photo-hit" id="cardHit" role="group" aria-label="Your picture. Drop a photo here, or once it's in, drag it or use the arrow keys to frame it. Plus and minus zoom."><span class="hit-hud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span class="mouse-hud">Drag to frame · scroll to zoom</span></span></div>
         </div>
@@ -825,7 +827,7 @@
 
   <dialog class="inspo" id="inspo" aria-label="A real card for inspo: Time Again">
     <button type="button" class="inspo-close" id="inspoClose" aria-label="Close">✕</button>
-    <div class="inspo-card" id="inspoCard"><img src="../assets/cards-finish-v12/timeagain.webp" alt="The Time Again card: Lower East Side, HP 280, with its vibes and three special moves" width="1500" height="2100" decoding="async"></div>
+    <div class="inspo-card front-surface-host" id="inspoCard"><img src="../assets/cards-finish-v12/timeagain.webp" alt="The Time Again card: Lower East Side, HP 280, with its vibes and three special moves" width="1500" height="2100" decoding="async"></div>
     <p class="inspo-note">Say what it is, who it's for, what to get. Time Again nails it.</p>
   </dialog>
 

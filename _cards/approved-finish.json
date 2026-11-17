@@ -1,0 +1,21 @@
+{
+  "version": "card-finish-v1",
+  "approved": "2026-11-17",
+  "front": {
+    "surface": "fine paper grain, seed 18, opacity 0.115, multiply",
+    "frame": "original; no added etched frame",
+    "separators": "original stitching",
+    "tatreez": "original",
+    "corners": "original flowers",
+    "protect": ["photo", "HP type icon", "all card data", "photo crops", "existing glints and motion"]
+  },
+  "back": {
+    "frame": "decorated etched",
+    "pattern": "woven hidden hearts",
+    "centerpiece": "framed original heart logo",
+    "tatreez": "original",
+    "corners": "original flowers"
+  },
+  "families": {"drink":"blue","food":"green","special":"gold"},
+  "box": "cream concept, top and bottom stitch strips removed; still a design study"
+}

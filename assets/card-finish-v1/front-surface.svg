@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="2100" viewBox="0 0 1500 2100">
+  <defs>
+    <mask id="paper" maskUnits="userSpaceOnUse" x="0" y="0" width="1500" height="2100">
+      <rect x="98" y="98" width="1304" height="1898" fill="white"/>
+      <rect x="142" y="222" width="1218" height="818" rx="25" fill="black"/>
+      <rect x="1245" y="120" width="115" height="115" rx="58" fill="black"/>
+    </mask>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".52" numOctaves="3" stitchTiles="stitch" seed="18"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+  <g mask="url(#paper)" opacity=".115">
+    <rect width="1500" height="2100" filter="url(#grain)"/>
+  </g>
+</svg>
