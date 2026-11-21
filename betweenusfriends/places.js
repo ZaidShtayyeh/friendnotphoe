@@ -50,10 +50,23 @@ var NoBallPlaces = (function () {
     var components = (place && (place.addressComponents || place.address_components)) || [];
     var city = cityName(
       component(components, 'locality') ||
-      component(components, 'postal_town') ||
-      component(components, 'administrative_area_level_1')
+      component(components, 'postal_town')
     );
-    var area = component(components, 'neighborhood') || component(components, 'sublocality_level_1');
+    // Prefer the smallest named district Google supplies, not a state,
+    // postcode or NYC borough presented as a neighborhood. Missing data
+    // stays blank so the friend can supply the locally used name.
+    var borough = component(components, 'sublocality_level_1');
+    if (!city && NYC[borough.toLowerCase()]) city = 'NYC';
+    var area = '';
+    var areaTypes = ['neighborhood', 'sublocality_level_5', 'sublocality_level_4',
+      'sublocality_level_3', 'sublocality_level_2', 'sublocality_level_1', 'sublocality'];
+    for (var i = 0; i < areaTypes.length; i++) {
+      var candidate = component(components, areaTypes[i]).trim();
+      if (!candidate || cityName(candidate).toLowerCase() === city.toLowerCase()) continue;
+      if (city === 'NYC' && NYC[candidate.toLowerCase()]) continue;
+      area = candidate;
+      break;
+    }
     return {
       name: asText(place && place.displayName).replace(/^\s+|\s+$/g, ''),
       maps: (place && (place.googleMapsURI || place.googleMapsUri)) || '',

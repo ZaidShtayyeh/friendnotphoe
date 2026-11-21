@@ -541,7 +541,7 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261116-boost1">
+  <link rel="stylesheet" href="refinement.css?v=20261121-location1">
   <link rel="stylesheet" href="forest-proposal.css?v=20261116-boost1">
   <script>
     if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
@@ -611,12 +611,14 @@
           <div class="pair">
             <div class="field">
               <label for="city">City</label>
-              <input class="text" id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="NYC">
+              <input class="text" id="city" name="city" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Enter the city" aria-describedby="city-suggestion err-city">
+              <p class="location-note" id="city-suggestion" hidden></p>
               <p class="error" id="err-city"></p>
             </div>
             <div class="field">
               <label for="area">Neighborhood</label>
-              <input class="text" id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Lower East Side">
+              <input class="text" id="area" name="area" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Enter the neighborhood" aria-describedby="area-suggestion err-area">
+              <p class="location-note" id="area-suggestion" hidden></p>
               <p class="error" id="err-area"></p>
             </div>
           </div>
@@ -834,7 +836,7 @@
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
   <script src="validate.js?v=20261116-boost1"></script>
-  <script src="places.js"></script>
+  <script src="places.js?v=20261121-location1"></script>
   <script src="hold-submit.js?v=20261115-hold1"></script>
   <script>
     // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
@@ -1926,6 +1928,15 @@
       var mapsInput = $('maps');
       var connection = $('place-connection');
 
+      function locationNote(id, message) {
+        var note = $(id + '-suggestion');
+        note.textContent = message;
+        note.hidden = !message;
+      }
+      ['city', 'area'].forEach(function (id) {
+        $(id).addEventListener('input', function () { locationNote(id, ''); });
+      });
+
       function releasePlace(clearFields) {
         if (selectedPlace && clearFields) {
           mapsInput.value = '';
@@ -1933,6 +1944,8 @@
           if ($('area').value === selectedPlace.area) $('area').value = '';
         }
         selectedPlace = null;
+        locationNote('city', '');
+        locationNote('area', '');
         mapsInput.readOnly = false;
         $('maps-field').hidden = false;
         connection.hidden = true;
@@ -1985,8 +1998,10 @@
       function applyFields(fields) {
         if (fields.name) place.value = fields.name;
         mapsInput.value = fields.maps;
-        $('city').value = fields.city;
-        $('area').value = fields.area;
+        $('city').value = fields.city || '';
+        $('area').value = fields.area || '';
+        locationNote('city', fields.city ? 'Suggested from the place. Edit if needed.' : 'City not found. Add it here, porfa.');
+        locationNote('area', fields.area ? 'Suggested from the place. Use the name you know.' : 'Neighborhood not found. Add it here, porfa.');
         // A selected place owns its Maps URL; changing the place releases it.
         selectedPlace = { name: place.value, maps: fields.maps, city: fields.city, area: fields.area };
         mapsInput.readOnly = !!fields.maps;

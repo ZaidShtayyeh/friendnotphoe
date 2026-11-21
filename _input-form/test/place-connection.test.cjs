@@ -18,7 +18,7 @@ class Element {
 }
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 function setup(){
-  const fields=Object.fromEntries(['place','maps','city','area','place-list','place-status','place-connection','maps-field','selected-maps','change-place','form'].map(id=>[id,new Element()]));
+  const fields=Object.fromEntries(['place','maps','city','area','city-suggestion','area-suggestion','place-list','place-status','place-connection','maps-field','selected-maps','change-place','form'].map(id=>[id,new Element()]));
   const timers=new Map();let next=0,queries=0,detailResolve;
   const context={
     $:id=>fields[id],place:fields.place,form:fields.form,Event,console,
@@ -70,4 +70,15 @@ test('stale search suggestions do not reopen after the input changes',async()=>{
   const s=setup();let finishSearch;s.context.NoBallPlaces.search=()=>new Promise(resolve=>{finishSearch=resolve;});
   s.type('Old query');await s.tick();s.type('New query');finishSearch([{placePrediction:{}}]);await settle();
   assert.equal(s.fields['place-list'].hidden,true);assert.equal(s.fields['place-list'].children.length,0);
+});
+test('suggestions are editable and missing location replaces old values with blanks',async()=>{
+  const s=setup();await s.choose();s.resolve(selection);await settle();
+  assert.equal(s.fields.city.readOnly,false);assert.equal(s.fields.area.readOnly,false);
+  assert.match(s.fields['area-suggestion'].textContent,/Suggested/);
+  s.fields.area.value='Chinatown';s.fire(s.fields.area,'input');
+  assert.equal(s.fields['area-suggestion'].hidden,true);
+  await s.choose();s.resolve({name:'New spot',maps:'https://maps.google.com/?cid=456',city:'',area:''});await settle();
+  assert.equal(s.fields.city.value,'');assert.equal(s.fields.area.value,'');
+  assert.match(s.fields['city-suggestion'].textContent,/City not found/);
+  assert.match(s.fields['area-suggestion'].textContent,/Neighborhood not found/);
 });

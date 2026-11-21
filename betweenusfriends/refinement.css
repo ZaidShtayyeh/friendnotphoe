@@ -30,6 +30,7 @@ footer{max-width:1142px;width:calc(100% - 88px);margin:55px auto 0;padding:24px 
 @media(max-width:959px){.stage-tab{max-width:calc(100vw - 40px)}.stage-tab.preview-nudge{animation:preview-nudge 700ms cubic-bezier(.2,.7,.25,1) 1}.stage-tab .peek-label{white-space:nowrap}}
 @media(prefers-reduced-motion:reduce){.stage-tab.preview-nudge{animation:none}}
 .place-status{font-size:11px;line-height:1.5;color:var(--muted);margin:8px 0 0}
+.location-note{font:italic 12px/1.45 'General Sans',sans-serif;color:var(--muted);margin:8px 0 0}
 .place-connection{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;font-size:11px}.place-connection[hidden],#maps-field[hidden]{display:none}.place-connection a{color:var(--sage);text-underline-offset:4px}.place-connection button{border:0;padding:8px 0;background:none;font:inherit;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
 /* Keep framing beside the upload on every screen, as well as on the live card. */
 .frame-inline{display:block}.frame-inline .hit-hud{opacity:1;transform:translate(-50%,0)}

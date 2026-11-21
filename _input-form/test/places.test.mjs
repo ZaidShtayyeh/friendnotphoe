@@ -39,7 +39,7 @@ test("boroughs and New York City all become NYC", () => {
   })).city, "London");
 });
 
-test("city falls back to postal town, then the admin area", () => {
+test("city falls back to postal town, but never to a state", () => {
   assert.equal(places.fromPlace(place({
     addressComponents: [
       { longText: "Brooklyn", types: ["postal_town"] },
@@ -48,17 +48,40 @@ test("city falls back to postal town, then the admin area", () => {
   })).city, "NYC");
   assert.equal(places.fromPlace(place({
     addressComponents: [{ longText: "California", types: ["administrative_area_level_1", "political"] }],
-  })).city, "California");
+  })).city, "");
 });
 
-test("neighborhood wins, otherwise the first sublocality", () => {
+test("neighborhood wins, but an NYC borough is not a neighborhood", () => {
   assert.equal(places.fromPlace(place()).area, "East Village");
   assert.equal(places.fromPlace(place({
     addressComponents: [
       { longText: "Brooklyn", types: ["sublocality_level_1", "sublocality", "political"] },
       { longText: "New York", types: ["locality", "political"] },
     ],
-  })).area, "Brooklyn");
+  })).area, "");
+});
+
+test("the most specific district wins regardless of component order", () => {
+  const got = places.fromPlace(place({addressComponents:[
+    {longText:'Manhattan',types:['sublocality_level_1','sublocality']},
+    {longText:'Lower East Side',types:['sublocality_level_2']},
+    {longText:'New York',types:['locality']}
+  ]}));
+  assert.equal(got.city,'NYC');
+  assert.equal(got.area,'Lower East Side');
+});
+
+test("international districts remain editable suggestions without guessing a city", () => {
+  assert.equal(places.fromPlace(place({addressComponents:[
+    {longText:'10th arrondissement',types:['sublocality_level_2']},
+    {longText:'Paris',types:['locality']}
+  ]})).area,'10th arrondissement');
+  const got=places.fromPlace(place({addressComponents:[
+    {longText:'Mallorca',types:['administrative_area_level_3']},
+    {longText:'Balearic Islands',types:['administrative_area_level_1']}
+  ]}));
+  assert.equal(got.city,'');assert.equal(got.area,'');
+  assert.equal(places.fromPlace(place({addressComponents:[]})).area,'');
 });
 
 test("displayName objects and legacy component names still read", () => {
