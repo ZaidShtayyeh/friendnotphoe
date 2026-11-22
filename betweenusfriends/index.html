@@ -541,7 +541,7 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261121-colors1">
+  <link rel="stylesheet" href="refinement.css?v=20261122-duplicate1">
   <link rel="stylesheet" href="forest-proposal.css?v=20261116-boost1">
   <script>
     if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
@@ -593,6 +593,11 @@
             <div class="place-combo">
               <input class="text" id="place" name="restaurant" maxlength="80" required autocomplete="off" enterkeyhint="next" placeholder="Search for a place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list">
               <ul id="place-list" class="place-list" role="listbox" hidden></ul>
+            </div>
+            <div id="existing-card" class="existing-card" role="status" aria-live="polite" hidden>
+              <p>Oops, someone beat you to this one.</p>
+              <span id="existing-card-name"></span>
+              <div class="existing-card-actions"><a id="existing-card-link" target="_blank" rel="noopener">See the card ↗</a><button type="button" id="existing-card-change">Choose another spot</button></div>
             </div>
             <p id="place-status" class="place-status" role="status" hidden></p>
             <div class="place-connection" id="place-connection" hidden>
@@ -836,7 +841,9 @@
   <footer><a href="https://instagram.com/friend_not_phoe" target="_blank" rel="noopener">@friend_not_phoe</a></footer>
 
   <script src="validate.js?v=20261116-boost1"></script>
-  <script src="places.js?v=20261121-location1"></script>
+  <script src="places.js?v=20261122-duplicate1"></script>
+  <script src="../assets/site-v3/data.js?v=20261122-duplicate1"></script>
+  <script src="existing-card.js?v=20261122-duplicate1"></script>
   <script src="hold-submit.js?v=20261115-hold1"></script>
   <script>
     // PASTE THE WEB APP URL HERE after deploying Apps Script. Leave it empty until then.
@@ -2011,6 +2018,7 @@
         applyingPlace = true;
         place.dispatchEvent(new Event('input', { bubbles: true }));
         applyingPlace = false;
+        place.dispatchEvent(new CustomEvent('fnp:place-selected', { detail: fields }));
       }
 
       function choose(index) {

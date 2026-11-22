@@ -21,7 +21,7 @@ function setup(){
   const fields=Object.fromEntries(['place','maps','city','area','city-suggestion','area-suggestion','place-list','place-status','place-connection','maps-field','selected-maps','change-place','form'].map(id=>[id,new Element()]));
   const timers=new Map();let next=0,queries=0,detailResolve;
   const context={
-    $:id=>fields[id],place:fields.place,form:fields.form,Event,console,
+    $:id=>fields[id],place:fields.place,form:fields.form,Event,console,CustomEvent:class extends Event{constructor(type,options){super(type);this.detail=options.detail;}},
     document:{createElement:()=>new Element(),addEventListener(){}},
     window:{setTimeout(fn){timers.set(++next,fn);return next;},clearTimeout(id){timers.delete(id);}},
     NoBallPlaces:{search:async()=>{queries++;return [{placePrediction:{}}];},suggestionLabel:()=>({main:'Selected place',secondary:'New York'}),readPlace:()=>new Promise(resolve=>{detailResolve=resolve;})},

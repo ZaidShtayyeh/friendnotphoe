@@ -4,8 +4,7 @@
 var NoBallPlaces = (function () {
   // Establishments only. Up to five primary types are allowed.
   var TYPES = ['restaurant', 'bar', 'cafe', 'food'];
-  // location is available and intentionally not requested.
-  var FIELDS = ['displayName', 'googleMapsURI', 'addressComponents'];
+  var FIELDS = ['displayName', 'googleMapsURI', 'addressComponents', 'id', 'location', 'formattedAddress'];
   var NYC = {
     'new york': true,
     'new york city': true,
@@ -67,12 +66,20 @@ var NoBallPlaces = (function () {
       area = candidate;
       break;
     }
-    return {
+    var fields = {
       name: asText(place && place.displayName).replace(/^\s+|\s+$/g, ''),
       maps: (place && (place.googleMapsURI || place.googleMapsUri)) || '',
       city: city,
       area: area
     };
+    // Location is used only to distinguish an existing card from another branch.
+    if (place && place.id) fields.placeId = place.id;
+    if (place && place.formattedAddress) fields.address = place.formattedAddress;
+    if (place && place.location) {
+      fields.lat = typeof place.location.lat === 'function' ? place.location.lat() : place.location.lat;
+      fields.lng = typeof place.location.lng === 'function' ? place.location.lng() : place.location.lng;
+    }
+    return fields;
   }
 
   function suggestionLabel(prediction) {

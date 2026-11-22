@@ -134,7 +134,7 @@ test("reading a prediction requests only the fields we store", async () => {
     },
   };
   const got = await places.readPlace(prediction);
-  assert.deepEqual(asked, ["displayName", "googleMapsURI", "addressComponents"]);
+  assert.deepEqual(asked, ["displayName", "googleMapsURI", "addressComponents", "id", "location", "formattedAddress"]);
   assert.equal(got.city, "NYC");
   assert.equal(got.name, "Smor");
 });
