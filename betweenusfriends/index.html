@@ -541,7 +541,7 @@
       .card-wrap::after { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="refinement.css?v=20261121-location1">
+  <link rel="stylesheet" href="refinement.css?v=20261121-colors1">
   <link rel="stylesheet" href="forest-proposal.css?v=20261116-boost1">
   <script>
     if (new URLSearchParams(window.location.search).get('surface') === 'forest') {
@@ -656,12 +656,12 @@
           </div>
 
           <fieldset class="field">
-            <legend>Scenes</legend>
+            <legend>Card color</legend>
             <!-- Keep existing submission values compatible with the tracker. -->
             <div class="scenes">
-              <label class="scene-choice scene-food"><input type="radio" name="category" value="Food first"><span>Food forward</span></label>
-              <label class="scene-choice scene-drink"><input type="radio" name="category" value="Drinks first"><span>Drinks</span></label>
-              <label class="scene-choice scene-gold"><input type="radio" name="category" value="Legendary"><span>Legendary</span></label>
+              <label class="scene-choice scene-food"><input type="radio" name="category" value="Food first"><span><span class="scene-name">Food / café</span><small class="scene-color">Green</small></span></label>
+              <label class="scene-choice scene-drink"><input type="radio" name="category" value="Vibes first"><span><span class="scene-name">Scene</span><small class="scene-color">Blue</small></span></label>
+              <label class="scene-choice scene-gold"><input type="radio" name="category" value="Legendary"><span><span class="scene-name">Legendary</span><small class="scene-color">Gold</small></span></label>
             </div>
             <p class="error" id="err-category"></p>
           </fieldset>

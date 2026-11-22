@@ -309,9 +309,10 @@ async function exercise(page, label, base) {
   await page.fill("#drinks", "20");
   assert.equal(await page.locator("#card").getAttribute("data-icon"), "food");
   await page.fill("#drinks", "50");
-  await page.locator('input[value="Drinks first"]').check();
+  await page.locator('input[value="Vibes first"]').check();
   assert.equal(await page.locator("#card").getAttribute("data-color"), "blue");
-  assert.deepEqual(await page.locator('.scene-choice > span').allTextContents(), ['Food forward', 'Drinks', 'Legendary']);
+  assert.deepEqual(await page.locator('.scene-name').allTextContents(), ['Food / café', 'Scene', 'Legendary']);
+  assert.deepEqual(await page.locator('.scene-color').allTextContents(), ['Green', 'Blue', 'Gold']);
   await page.locator('input[value="Legendary"]').check();
   assert.equal(await page.locator("#card").getAttribute("data-color"), "gold");
   await page.locator('input[value="Food first"]').check();
