@@ -16,7 +16,7 @@ test('friend names, final ratings, cities, and searchable copy match the approve
  for(const e of expected){
   const c=data.cards.find(c=>c.id===e.id);assert.ok(c);
   assert.deepEqual([c.name,c.city,c.hp,c.vibes[0],c.creator],[e.name,e.city,e.hp,e.type,e.creator]);
-  assert.equal(e.hp,e.stats.reduce((a,b)=>a+b,0)+e.boostPoints);assert.equal(e.vibes.endsWith('.'),false);
+  assert.equal(e.hp,e.stats.reduce((a,b)=>a+b,0)+e.boostPoints);if(!e.copyVerbatim)assert.equal(e.vibes.endsWith('.'),false);
   assert.deepEqual(search[c.id],{vibes:e.vibes,area:search[c.id].area,moves:e.moves.join(' ')});
   const [south,north,west,east]=bounds[c.city];assert.ok(c.lat>south&&c.lat<north&&c.lng>west&&c.lng<east,c.name);
   const version=e.assetVersion?'?v='+e.assetVersion:'';

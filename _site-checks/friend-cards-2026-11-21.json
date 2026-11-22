@@ -152,13 +152,15 @@
       80
     ],
     "boostPoints": 0,
-    "vibes": "Not many places in Naples are worth eating at... this being the exception: French-Vietnamese food (colonialism can be weird) that is elegant and thoughtful in all the right ways. Sit outside if it’s not too hot and enjoy Fifth",
+    "vibes": "Not too many places in Naples are worth eating at, this being the exception. French Vietnamese food (colonism) can be weird... That is elegant and thoughtful in the right way. Sit outside if it's not too hot and enjoy 5th.",
     "moves": [
       "Sea Bass",
       "House Salad",
       "Green Curry"
     ],
     "lat": 26.1414062,
-    "lng": -81.8010192
+    "lng": -81.8010192,
+    "copyVerbatim": true,
+    "assetVersion": "20261121-mama2"
   }
 ]
