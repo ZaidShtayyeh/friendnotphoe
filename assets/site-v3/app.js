@@ -9,23 +9,26 @@ const asset=p=>/^(data:|https?:)/.test(p)?p:root+p;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const types={food:'Food',drink:'Vibes',special:'Legendary'},cityNames={NYC:'New York'};
 const query=new URLSearchParams(location.search),motion=matchMedia('(prefers-reduced-motion: reduce)');
-const state={page:'home',palette:query.get('palette')==='original'?'original':'forest',city:query.get('city')||'all',category:query.get('category')||'all',search:query.get('q')||'',sort:query.get('sort')||'recent',creator:query.get('from')||'all',groupByCity:query.get('group')!=='none',view:['map','globe'].includes(query.get('view'))?query.get('view'):'cards',motionOff:motion.matches};
+const state={page:'home',palette:query.get('palette')==='original'?'original':'forest',city:query.get('city')||'all',category:query.get('category')||'all',search:query.get('q')||'',sort:query.get('sort')||'random',creator:query.get('from')||'all',groupByCity:query.get('group')!=='none',view:['map','globe'].includes(query.get('view'))?query.get('view'):'cards',motionOff:motion.matches};
 if(state.city!=='all'&&!cards.some(c=>c.city===state.city))state.city='all';
 if(!['all','food','drink','special'].includes(state.category))state.category='all';
-if(!['recent','hp','name'].includes(state.sort))state.sort='recent';
+if(!['random','hp','name'].includes(state.sort))state.sort='random';
 if(!['all','zaid','friends'].includes(state.creator))state.creator='all';
 let filtered=[],inView=[],map=null,markers=[],selectedId=null,detailDeck=[],detailId=null,detailToken=0,returnFocus=null,frame=0,lastTime=0,phase=0,mapReady=false,journeyDistance=0,journeyFinishStarted=0,journeyFinishFrom=0;
 let journeyGeometry=null,journeyProgress=0,mapCity=null,mapMarkerIds='';
-const newest=[...cards].reverse(),addedOrder=new Map(cards.map((c,i)=>[c.id,i]));
+// Shuffle once per page load so filters, map movement and card details keep
+// the same relative order instead of jumping around while someone browses.
+function shuffleCards(list){const shuffled=[...list];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}return shuffled;}
+const shuffledCards=shuffleCards(cards);
 // Entrance cards match the first four grid positions in either layout.
 let featured=[],flightNodes=[];
-function getFeaturedCards(){return (state.groupByCity?newest.filter(c=>c.city===cards[0]?.city):newest).slice(0,4);}
+function getFeaturedCards(){return (state.groupByCity?shuffledCards.filter(c=>c.city===cards[0]?.city):shuffledCards).slice(0,4);}
 const picture=(c,loading='lazy')=>`<span class="front-print"><img src="${esc(asset(c.thumb))}" alt="${esc(c.name)} collectible card, ${c.hp} HP" loading="${loading}" decoding="async" width="1500" height="2100"></span>`;
-function syncURL(){const q=new URLSearchParams();q.set('palette',state.palette);if(query.get('lettering'))q.set('lettering',query.get('lettering'));if(query.get('focus')==='heart')q.set('focus','heart');if(state.city!=='all')q.set('city',state.city);if(state.category!=='all')q.set('category',state.category);if(state.search)q.set('q',state.search);if(state.sort!=='recent')q.set('sort',state.sort);if(state.creator!=='all')q.set('from',state.creator);if(state.view!=='cards')q.set('view',state.view);if(!state.groupByCity)q.set('group','none');history.replaceState(history.state,'',location.pathname+(q.size?'?'+q:'')+location.hash);}
+function syncURL(){const q=new URLSearchParams();q.set('palette',state.palette);if(query.get('lettering'))q.set('lettering',query.get('lettering'));if(query.get('focus')==='heart')q.set('focus','heart');if(state.city!=='all')q.set('city',state.city);if(state.category!=='all')q.set('category',state.category);if(state.search)q.set('q',state.search);if(state.sort!=='random')q.set('sort',state.sort);if(state.creator!=='all')q.set('from',state.creator);if(state.view!=='cards')q.set('view',state.view);if(!state.groupByCity)q.set('group','none');history.replaceState(history.state,'',location.pathname+(q.size?'?'+q:'')+location.hash);}
 function navigate(page,{push=true,y=0}={}){
  if(!['home','explore','adventures','article'].includes(page))page='home';
  if(push){history.replaceState({page:state.page,y:scrollY},'');history.pushState({page,y:0},'',location.pathname+location.search+'#'+page);}
- state.page=page;if(page==='home'){journeyDistance=0;journeyGeometry=null;journeyProgress=0;journeyFinishStarted=0;state.city='all';state.category='all';state.search='';state.sort='recent';state.creator='all';$('#creator-filter').value='all';state.view='cards';$('#search').value='';$('#sort').value='recent';resetJourneyCards();}if(!['home','explore'].includes(page))window.FnpGlobe?.hide();document.body.dataset.page=page;$('#explore-page').classList.toggle('from-home',page==='home');$('#journey-cards').hidden=page!=='home';
+ state.page=page;if(page==='home'){journeyDistance=0;journeyGeometry=null;journeyProgress=0;journeyFinishStarted=0;state.city='all';state.category='all';state.search='';state.sort='random';state.creator='all';$('#creator-filter').value='all';state.view='cards';$('#search').value='';$('#sort').value='random';resetJourneyCards();}if(!['home','explore'].includes(page))window.FnpGlobe?.hide();document.body.dataset.page=page;$('#explore-page').classList.toggle('from-home',page==='home');$('#journey-cards').hidden=page!=='home';
  for(const el of $$('.page'))el.hidden=el.id!==page+'-page'&&!(page==='home'&&el.id==='explore-page');
  $('.page-dock').hidden=page==='home';
  for(const a of $$('.page-dock a'))a.setAttribute('aria-current',a.hash==='#'+page?'page':'false');
@@ -91,7 +94,7 @@ $('#creator-filter').addEventListener('change',e=>{state.creator=e.target.value;
 $('#sort').addEventListener('change',e=>{state.sort=e.target.value;renderCollection(false);});
 $('#group-by-city').addEventListener('change',e=>{state.groupByCity=e.target.checked;if(state.page==='home')resetJourneyCards();renderCollection(false);});
 for(const b of $$('[data-view]'))b.addEventListener('click',()=>{state.view=b.dataset.view;renderCollection(false);});
-function resetFilters(){state.category='all';state.search='';state.sort='recent';state.creator='all';$('#creator-filter').value='all';$('#search').value='';$('#sort').value='recent';renderCollection(true);}
+function resetFilters(){state.category='all';state.search='';state.sort='random';state.creator='all';$('#creator-filter').value='all';$('#search').value='';$('#sort').value='random';renderCollection(true);}
 $('#reset-filters').addEventListener('click',resetFilters);
 $('#empty-reset').addEventListener('click',()=>{if(!filtered.length)resetFilters();if(state.view==='map')fitAll();else resetFilters();});
 $('#map-reset').addEventListener('click',fitAll);
@@ -100,7 +103,7 @@ const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
 const searchAliases={family:['family','fam','parents','mama','mum','mom'],solo:['solo','alone','your own','by yourself'],date:['date','romantic'],outdoor:['outside','outdoor'],tags:[]};
 function searchMatches(c,q){const data=window.FNP_SEARCH[c.id]||{};const hay=normalize([c.name,c.place,c.creator?.name,data.area,data.vibes,data.moves,...c.vibes.map(v=>types[v])].join(' '));return normalize(q).split(/\s+/).filter(w=>w&&!['a','the','for','good','spot','spots','place','places','with'].includes(w)).every(w=>searchAliases[w]?searchAliases[w].some(term=>new RegExp('\\b'+term+'\\b').test(hay)):hay.includes(w));}
 function creatorMatches(c){return state.creator==='all'||(state.creator==='friends'?c.creator?.kind==='friend':c.creator?.kind!=='friend');}
-function getFiltered(){const q=state.search.trim();let list=cards.filter(c=>creatorMatches(c)&&(state.city==='all'||c.city===state.city)&&(state.category==='all'||c.vibes.includes(state.category))&&(!q||searchMatches(c,q)));if(state.sort==='recent')list.sort((a,b)=>addedOrder.get(b.id)-addedOrder.get(a.id));if(state.sort==='hp')list.sort((a,b)=>b.hp-a.hp||a.name.localeCompare(b.name));if(state.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));return list;}
+function getFiltered(){const q=state.search.trim();let list=shuffledCards.filter(c=>creatorMatches(c)&&(state.city==='all'||c.city===state.city)&&(state.category==='all'||c.vibes.includes(state.category))&&(!q||searchMatches(c,q)));if(state.sort==='hp')list.sort((a,b)=>b.hp-a.hp||a.name.localeCompare(b.name));if(state.sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));return list;}
 function stars(seed,count=6){let html='',photos=0;let n=seed*9301+49297;const rand=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};for(let i=0;i<count;i++){let x=3+rand()*94,y=2+rand()*95;if(x>8&&x<92&&y>9&&y<49){if(photos>=2)y=52+rand()*38;else photos++;}html+=`<span class="twinkle" aria-hidden="true" style="left:${x}%;top:${y}%;font-size:${10+rand()*6}px;--tw-dur:${2.6+rand()*2.2}s;--tw-delay:${rand()*4}s">${rand()>.5?'✦':'✧'}</span>`;}return html;}
 const visibleCards=new Set(),effectObserver=new IntersectionObserver(entries=>{for(const entry of entries){entry.target.classList.toggle('effects-visible',entry.isIntersecting);if(entry.isIntersecting)visibleCards.add(entry.target);else visibleCards.delete(entry.target);}},{rootMargin:'50px'});
 function renderCollection(markersChanged){
@@ -112,7 +115,7 @@ function renderCollection(markersChanged){
  $('#map-reset').textContent='Show all places ↗';
  for(const b of $$('.category')){const active=b.dataset.category===state.category;b.classList.toggle('is-active',active);b.setAttribute('aria-pressed',active);}
  for(const b of $$('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
- $('#reset-filters').hidden=state.category==='all'&&!state.search&&state.sort==='recent'&&state.creator==='all';
+ $('#reset-filters').hidden=state.category==='all'&&!state.search&&state.sort==='random'&&state.creator==='all';
  $('.collection-content').classList.toggle('is-map',state.view!=='cards');$('.map-wrap').hidden=state.view!=='map';$('.globe-wrap').hidden=state.view!=='globe';if(state.view!=='globe')window.FnpGlobe?.hide();
  if(state.view==='map'){ensureMap();if(markersChanged||!markers.length||mapMarkerIds!==filtered.map(c=>c.id).join(','))rebuildMarkers();requestAnimationFrame(()=>{map?.invalidateSize();if(!mapReady||mapCity!==state.city)fitAll();else syncMapCards();});}else{renderList(filtered);if(state.view==='globe')window.FnpGlobe.show(filtered,c=>{state.city=c.city;state.view='map';renderCollection(true);requestAnimationFrame(()=>{map?.setView([c.lat,c.lng],13);syncMapCards();});},state.motionOff);}
  syncURL();

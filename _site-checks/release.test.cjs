@@ -35,12 +35,12 @@ test('the twenty new tracker cards have unique links, correct categories and val
 test('the homepage entrance lands in the first four positions in both layouts',()=>{
   const source=fs.readFileSync(path.join(root,'assets/site-v3/app.js'),'utf8');
   const declaration=source.match(/function getFeaturedCards\(\)\{([^}]+)\}/)[0];
-  const newest=[...data.cards].reverse();
+  const shuffledCards=[...data.cards.slice(23),...data.cards.slice(0,23)].reverse();
   for(const groupByCity of [true,false]){
-    const ctx={newest,cards:data.cards,state:{groupByCity}};
+    const ctx={shuffledCards,cards:data.cards,state:{groupByCity}};
     vm.runInNewContext(declaration+';this.featured=getFeaturedCards()',ctx);
-    const firstGroup=newest.filter(c=>c.city===data.cards[0].city);
-    assert.deepEqual(ctx.featured.map(c=>c.id),(groupByCity?firstGroup:newest).slice(0,4).map(c=>c.id));
+    const firstGroup=shuffledCards.filter(c=>c.city===data.cards[0].city);
+    assert.deepEqual(ctx.featured.map(c=>c.id),(groupByCity?firstGroup:shuffledCards).slice(0,4).map(c=>c.id));
   }
 });
 test('published stories survive exactly and drafts stay private',()=>{
