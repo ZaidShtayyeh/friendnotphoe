@@ -81,7 +81,9 @@ const backs={all:'gold',food:'green',drink:'blue',special:'gold'};
 for(const b of $$('.category')){const src=root+`assets/card-finish-v1/backs/${backs[b.dataset.category]}-180.webp`;b.querySelector('.mini-deck').innerHTML=`<img src="${src}" alt="" loading="lazy"><img src="${src}" alt="" loading="lazy">`;b.addEventListener('click',()=>{state.category=b.dataset.category;renderCollection(true);});}
 $('#all-count').textContent=cards.length+' places & counting';
 const cities=[...new Set(cards.map(c=>c.city))];
-$('#city-options').innerHTML=[{id:'all',name:'DUNYA',caption:'Everywhere'},...cities.map(c=>({id:c,name:cityNames[c]||c,caption:c}))].map(c=>`<button class="city-option" data-city="${c.id}"><span><strong>${c.name}</strong><small>${c.caption}</small></span><span>${cards.filter(card=>c.id==='all'||card.city===c.id).length} cards <b>↗</b></span></button>`).join('');
+const cityCounts=new Map(cities.map(city=>[city,cards.filter(c=>c.city===city).length]));
+const pickerCities=[...cities].sort((a,b)=>cityCounts.get(b)-cityCounts.get(a)||(cityNames[a]||a).localeCompare(cityNames[b]||b));
+$('#city-options').innerHTML=[{id:'all',name:'DUNYA',caption:'Everywhere'},...pickerCities.map(c=>({id:c,name:cityNames[c]||c,caption:c}))].map(c=>`<button class="city-option" data-city="${c.id}"><span><strong>${c.name}</strong><small>${c.caption}</small></span><span>${c.id==='all'?cards.length:cityCounts.get(c.id)} cards <b>↗</b></span></button>`).join('');
 $('#city-count').textContent=cards.length+' cards & counting.';
 $('#city-picker').addEventListener('click',()=>$('#city-dialog').showModal());
 $('.city-close').addEventListener('click',()=>$('#city-dialog').close());
