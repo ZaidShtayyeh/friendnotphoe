@@ -34,12 +34,14 @@ test('creator filtering keeps all legacy cards and separates the credited friend
  c.state.creator='friends';assert.equal(data.cards.filter(c.matches).length,expected.length);
  c.state.creator='zaid';assert.equal(data.cards.filter(c.matches).length,97);
 });
-test('adding Mama preserves all 102 previously published cards and their searchable copy',()=>{
- const previous=read(cp.execFileSync('git',['show','f8c1a4d:assets/site-v3/data.js'],{cwd:root,encoding:'utf8'})).FNP_DATA;
- const previousSearch=read(cp.execFileSync('git',['show','f8c1a4d:assets/site-v3/search-data.js'],{cwd:root,encoding:'utf8'})).FNP_SEARCH;
- assert.equal(previous.cards.length,102);
- assert.deepEqual(data.cards.slice(0,102),previous.cards);
- for(const card of previous.cards)assert.deepEqual(search[card.id],previousSearch[card.id]);
+test('editing Camino preserves all 102 other cards and their searchable copy',()=>{
+ const previous=read(cp.execFileSync('git',['show','453b075:assets/site-v3/data.js'],{cwd:root,encoding:'utf8'})).FNP_DATA;
+ const previousSearch=read(cp.execFileSync('git',['show','453b075:assets/site-v3/search-data.js'],{cwd:root,encoding:'utf8'})).FNP_SEARCH;
+ assert.equal(previous.cards.length,103);assert.equal(data.cards.length,103);
+ assert.deepEqual(data.cards.filter(c=>c.id!==101),previous.cards.filter(c=>c.id!==101));
+ for(const card of previous.cards)if(card.id!==101)assert.deepEqual(search[card.id],previousSearch[card.id]);
+ const withoutImageVersion=c=>({...c,image:c.image.split('?')[0],thumb:c.thumb.split('?')[0]});
+ assert.deepEqual(withoutImageVersion(data.cards.find(c=>c.id===101)),withoutImageVersion(previous.cards.find(c=>c.id===101)));
  const mama=data.cards.filter(c=>c.creator?.name==='Mama');
  assert.equal(mama.length,1);assert.equal(mama[0].hp,235);assert.equal(mama[0].city,'Naples');
 });
