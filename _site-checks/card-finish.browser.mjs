@@ -56,9 +56,9 @@ try{
     assert.deepEqual(dims,[1500,2100]);
   }
   await page.goto(origin+'/#explore');await page.waitForSelector('#cards .card-button');
-  await page.selectOption('#sort','hp');
+  await page.locator('#sort-picker').click();await page.locator('.choice-option[data-value="hp"]').click();
   assert.equal(await page.locator('#cards .card-button').first().getAttribute('data-card'),String([...source].sort((a,b)=>b.hp-a.hp||a.name.localeCompare(b.name))[0].id));
-  await page.locator('#group-by-city').uncheck();assert.equal(await page.locator('#cards .front-print').count(),expectedCount);
+  await page.locator('[data-arrange="all"]').click();assert.equal(await page.locator('#cards .front-print').count(),expectedCount);
   await page.locator('#cards .card-button').first().click();await page.waitForSelector('#card-dialog .front-print img');
   await page.keyboard.press('ArrowRight');await page.waitForSelector('#card-dialog[aria-label]:not([aria-busy="true"]) .front-print img');await page.keyboard.press('Escape');
   await page.evaluate(()=>{
