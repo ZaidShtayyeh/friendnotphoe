@@ -1,0 +1,527 @@
+{
+  "version": "20261122-tracker",
+  "previousCommit": "4de1b63",
+  "previousTotal": 103,
+  "newTotal": 120,
+  "added": [
+    {
+      "key": "bar-henrietta",
+      "name": "Bar Henrietta",
+      "city": "Montreal",
+      "hp": 260,
+      "color": "gold",
+      "badge": "MTL",
+      "area": "Mile End",
+      "stats": [
+        75,
+        75,
+        75
+      ],
+      "vibes": "Kind of the perfect bar (vino and non vino). It's not going to be like wow this was the best drink or best bite of food I have ever had but you will go and be like umm this is kind of perfect. No res but there are a lot of other spots you can wait at around the area",
+      "moves": [
+        "Steak Tartare",
+        "Piri Piri Chicken",
+        "Oysters"
+      ],
+      "id": 106,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "big-in-japan",
+      "name": "Big in Japan",
+      "city": "Montreal",
+      "hp": 255,
+      "color": "blue",
+      "badge": "MTL",
+      "area": "Plateau",
+      "stats": [
+        50,
+        75,
+        75
+      ],
+      "vibes": "Kind of a speakeasy but not really with almost this Tetris like bar seating. It's actually really nice in there. Drinks are v good and lighting is ideal",
+      "moves": [
+        "Negroni",
+        "Martini",
+        "Olives"
+      ],
+      "id": 107,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "larrys",
+      "name": "Larrys",
+      "city": "Montreal",
+      "hp": 275,
+      "color": "gold",
+      "badge": "MTL",
+      "area": "Mile End",
+      "stats": [
+        85,
+        75,
+        80
+      ],
+      "vibes": "Everything you want out of a restaurant (or in life tbh). Very neighborhood feel with a lunch scene that is just as good as the dinner scene. Very casual but they really don't play about anything. Man I love this place",
+      "moves": [
+        "Burger",
+        "Ceviche",
+        "Tartare de boeuf"
+      ],
+      "id": 108,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "stem-bar",
+      "name": "Stem Bar",
+      "city": "Montreal",
+      "hp": 275,
+      "color": "gold",
+      "badge": "MTL",
+      "area": "Little Burgundy",
+      "stats": [
+        85,
+        80,
+        80
+      ],
+      "vibes": "I get upset that I can't have this place as much as I want to (Montreal syndrome??). First come first served bar / resto that does not play. Their food is amazing, the scene is amazing (more of a date or buttoned up type) and the dessert is stupido",
+      "moves": [
+        "Steak Tartare",
+        "Cavatelli",
+        "Tarte Tatin"
+      ],
+      "id": 109,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "contramar",
+      "name": "Contramar",
+      "city": "Mexico City",
+      "hp": 275,
+      "color": "blue",
+      "badge": "CDMX",
+      "area": "Roma",
+      "stats": [
+        90,
+        70,
+        75
+      ],
+      "vibes": "Usually when a spot is soo hyped and popular it really isn't that good at all. Contramar does not fit that pattern - undeniable food, really nothing more to say... please go. Honorable mention to the desserts (fig ting is brazy)",
+      "moves": [
+        "Tostadas x infinity",
+        "Pescado a la talla",
+        "Ceviche"
+      ],
+      "id": 110,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "salle-climatisee",
+      "name": "Salle Climatisée",
+      "city": "Montreal",
+      "hp": 280,
+      "color": "gold",
+      "badge": "MTL",
+      "area": "Little Italy",
+      "stats": [
+        90,
+        80,
+        75
+      ],
+      "vibes": "Woah. Perfect scene, perfect menu, everything is on a million here (they also have a great website). Not super whitecloth but a biiiit on that side. Good celebration, date or treat yourself spot",
+      "moves": [
+        "Beef Tartare",
+        "It's seasonal just get everything"
+      ],
+      "id": 111,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "fleurs-et-cadeaux",
+      "name": "Fleurs et Cadeaux",
+      "city": "Montreal",
+      "hp": 270,
+      "color": "blue",
+      "badge": "MTL",
+      "area": "Downtown",
+      "stats": [
+        70,
+        70,
+        75
+      ],
+      "vibes": "A literal flower shop that also has one of the most banging Japanese restaurants I've had. My favorite plating of any spot I have ever been to... I wanted to steal their wine glasses... I did not (sadly). Staff is also really amazing. Weirdly they have a club downstairs (never been but interesting)",
+      "moves": [
+        "Just run it up brev - really good specials as well"
+      ],
+      "id": 112,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "fugaz",
+      "name": "Fugaz",
+      "city": "Mexico City",
+      "hp": 260,
+      "color": "blue",
+      "badge": "CDMX",
+      "area": "Roma",
+      "stats": [
+        70,
+        60,
+        75
+      ],
+      "vibes": "Kind of feels like a cool kid spot in CDMX. The staff is laid back and all wearing vintage clothes. Don't get it wrong though, they take the food seriously and it's great. Good date spot",
+      "moves": [
+        "Tostadas (all of them)"
+      ],
+      "id": 113,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "oropel",
+      "name": "Oropel",
+      "city": "Mexico City",
+      "hp": 270,
+      "color": "gold",
+      "badge": "CDMX",
+      "area": "Roma",
+      "stats": [
+        5,
+        70,
+        90
+      ],
+      "vibes": "The perfect bar. Extensive outdoor seating with a cozy inside. Lots of locals and regulars but will get the occasional tourists (but the cool ones). Kind of place that you stay at for a long sip and yap situ",
+      "moves": [
+        "Just raas it"
+      ],
+      "id": 114,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "taqueria-el-paraiso",
+      "name": "Los Parados",
+      "city": "Mexico City",
+      "hp": 260,
+      "color": "green",
+      "badge": "CDMX",
+      "area": "Roma",
+      "stats": [
+        70,
+        5,
+        5
+      ],
+      "vibes": "Yes yes yes (one for each taco). Quick ting, eat standing, very run up and gun up",
+      "moves": [
+        "Tacos your way"
+      ],
+      "id": 115,
+      "type": "food",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "pujol",
+      "name": "Pujol",
+      "city": "Mexico City",
+      "hp": 265,
+      "color": "blue",
+      "badge": "CDMX",
+      "area": "Polanco",
+      "stats": [
+        70,
+        70,
+        90
+      ],
+      "vibes": "In such a competitive city for food and decor, Pujol has managed to stand out in basically every aspect. I can't get over how beautiful the scene is there (food is also a banger). Pls go here maane",
+      "moves": [
+        "Tostadas (all of them)",
+        "Pescado Scenes",
+        "Tomato and burrata ting"
+      ],
+      "id": 116,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "rosetta",
+      "name": "Rosetta",
+      "city": "Mexico City",
+      "hp": 260,
+      "color": "green",
+      "badge": "CDMX",
+      "area": "Roma",
+      "stats": [
+        65,
+        60,
+        80
+      ],
+      "vibes": "I love a courtyard and this restaurant has one of the most beautiful ones. Everything is done in good taste here (their plates are really nice). Food is very good. More fancy but a really perfect lunch scene for sure",
+      "moves": [
+        "Short ribs",
+        "Jerusalem artichoke",
+        "Corn and ash bread"
+      ],
+      "id": 117,
+      "type": "food",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "xampanyeria",
+      "name": "El Xampanyet",
+      "city": "Barcelona",
+      "hp": 270,
+      "color": "gold",
+      "badge": "BCN",
+      "area": "El Born",
+      "stats": [
+        80,
+        80,
+        90
+      ],
+      "vibes": "Honestly, one of my favorite meal moments I have had in my life. I feel like this spot embodies the spirit of Barcelona. Tight, buzzing, loud (in all the right ways) and the food keeps on coming. I don't think they have a menu, p sure you just run it up. First come first served and you wait in line soooooo",
+      "moves": [
+        "Raas the whole ting"
+      ],
+      "id": 118,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "le-vin-papillon",
+      "name": "Le Vin Papillon",
+      "city": "Montreal",
+      "hp": 280,
+      "color": "gold",
+      "badge": "MTL",
+      "area": "Little Burgundy",
+      "stats": [
+        80,
+        70,
+        80
+      ],
+      "vibes": "I was working a lot (like a lot a lot) when I was in Montreal and this became my local dissociation by indulgence spot. Everything hits here. Perfect lighting, really good food and obvi the menu is on a big chalk board. I would fight one of you for the carrot cake right now",
+      "moves": [
+        "Steak Tartare",
+        "Carrot Cake",
+        "Everything else"
+      ],
+      "id": 119,
+      "type": "special",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "albi",
+      "name": "Albi",
+      "city": "Washington, DC",
+      "hp": 270,
+      "color": "blue",
+      "badge": "DC",
+      "area": "Navy Yard",
+      "stats": [
+        75,
+        75,
+        75
+      ],
+      "vibes": "Albi means heart in Arabic and this spot has my heart brev. It's refreshing to see Palestinian food taken a bit fancy. All the familiar flavours but ~elevated~. I bang with it",
+      "moves": [
+        "Sfeeha",
+        "Kibbeh Niya",
+        "Wara"
+      ],
+      "id": 120,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "maydan",
+      "name": "Maydan",
+      "city": "Washington, DC",
+      "hp": 270,
+      "color": "blue",
+      "badge": "DC",
+      "area": "U Street",
+      "stats": [
+        75,
+        75,
+        75
+      ],
+      "vibes": "Any restaurant that cooks on a live fire I immediately love and this spot has the fire pit right in the middle (kind of incredible). That sets the tone for the meal and nothing misses from there. Good food, buzzy and drinks are greeeat. Go to their bar Madina when you're done with dinner",
+      "moves": [
+        "Honestly run up the tawleh thing"
+      ],
+      "id": 121,
+      "type": "drink",
+      "creator": null,
+      "boostPoints": 0
+    },
+    {
+      "key": "la-panaderia-cali",
+      "name": "La Panadería Cali",
+      "city": "Cali",
+      "hp": 255,
+      "color": "green",
+      "badge": "Cali",
+      "area": "Miraflores",
+      "stats": [
+        80,
+        100,
+        75
+      ],
+      "vibes": "Best juice ever. A great invitation to Cali, Colombia; full of color and passion. This place is a piece of my heart. Everything here is made with/from/by/for love",
+      "moves": [
+        "Calentado",
+        "Maracuyá",
+        "Masa Madre"
+      ],
+      "id": 122,
+      "type": "food",
+      "creator": {
+        "kind": "friend",
+        "name": "Cindy :)"
+      },
+      "boostPoints": 0
+    }
+  ],
+  "updated": [
+    {
+      "id": 57,
+      "key": "soothr",
+      "name": "Soothr",
+      "hp": 250,
+      "color": "green"
+    },
+    {
+      "id": 37,
+      "key": "bridges",
+      "name": "Bridges",
+      "hp": 270,
+      "color": "gold"
+    },
+    {
+      "id": 44,
+      "key": "lucien",
+      "name": "Lucien",
+      "hp": 170,
+      "color": "blue"
+    },
+    {
+      "id": 42,
+      "key": "smithereens",
+      "name": "Smithereens",
+      "hp": 290,
+      "color": "gold"
+    },
+    {
+      "id": 36,
+      "key": "goldenswan",
+      "name": "The Golden Swan",
+      "hp": 255,
+      "color": "blue"
+    },
+    {
+      "id": 47,
+      "key": "banshee",
+      "name": "Banshee",
+      "hp": 250,
+      "color": "blue"
+    },
+    {
+      "id": 49,
+      "key": "omwok",
+      "name": "Om Wok",
+      "hp": 300,
+      "color": "gold"
+    },
+    {
+      "id": 93,
+      "key": "monsieur",
+      "name": "Monsieur",
+      "hp": 240,
+      "color": "blue"
+    },
+    {
+      "id": 9,
+      "key": "penny",
+      "name": "Penny",
+      "hp": 265,
+      "color": "blue"
+    },
+    {
+      "id": 61,
+      "key": "scarrs",
+      "name": "Scarrs Pizza",
+      "hp": 200,
+      "color": "blue"
+    },
+    {
+      "id": 64,
+      "key": "oxomoco",
+      "name": "Oxomoco",
+      "hp": 265,
+      "color": "blue"
+    },
+    {
+      "id": 68,
+      "key": "cellar36",
+      "name": "Cellar 36",
+      "hp": 270,
+      "color": "gold"
+    },
+    {
+      "id": 69,
+      "key": "baroliver",
+      "name": "Bar Oliver",
+      "hp": 260,
+      "color": "blue"
+    },
+    {
+      "id": 70,
+      "key": "theriver",
+      "name": "The River",
+      "hp": 260,
+      "color": "gold"
+    },
+    {
+      "id": 96,
+      "key": "swan-room",
+      "name": "Swan Room",
+      "hp": 265,
+      "color": "blue"
+    },
+    {
+      "id": 97,
+      "key": "smoking-goat",
+      "name": "Smoking Goat",
+      "hp": 255,
+      "color": "blue"
+    },
+    {
+      "id": 99,
+      "key": "gem-home",
+      "name": "GEM Home",
+      "hp": 255,
+      "color": "blue"
+    }
+  ]
+}

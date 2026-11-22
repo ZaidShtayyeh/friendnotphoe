@@ -2,19 +2,20 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),cp=require('node:child_process');
 const root=path.resolve(__dirname,'..');
+const {refresh,approvedExisting}=require('./approved-refresh.cjs');
 const before=cp.execFileSync('git',['show','2e2b3a0:index.html'],{cwd:root,encoding:'utf8'});
 const original=name=>JSON.parse(JSON.stringify(vm.runInNewContext(before.match(new RegExp('const '+name+' = (\\[[\\s\\S]*?\\n        \\]);'))[1])));
 const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/site-v3/data.js'),'utf8'),context);
 const data=JSON.parse(JSON.stringify(context.window.FNP_DATA));
 test('every existing live card and its metadata survive, with real HD files and thumbnails',()=>{
   const originals=original('restaurantCards').filter(c=>c.image),ids=new Set(originals.map(c=>c.id));
-  assert.deepEqual(data.cards.filter(c=>ids.has(c.id)).map(({thumb,...c})=>c),originals);
+  assert.deepEqual(data.cards.filter(c=>ids.has(c.id)).map(({thumb,...c})=>c),originals.map(approvedExisting));
   for(const c of data.cards){assert.ok(fs.existsSync(path.join(root,c.image.split('?')[0])));assert.ok(fs.existsSync(path.join(root,c.thumb.split('?')[0])));}
 });
 test('the twenty new tracker cards have unique links, correct categories and valid city locations',()=>{
   const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'new-cards-2026-11-15.json'),'utf8'));
   const friends=JSON.parse(fs.readFileSync(path.join(__dirname,'friend-cards-2026-11-21.json'),'utf8'));
-  assert.equal(data.cards.length,77+expected.length+friends.length);
+  assert.equal(data.cards.length,77+expected.length+friends.length+refresh.added.length);
   assert.equal(new Set(data.cards.map(c=>c.id)).size,data.cards.length);
   const slug=c=>c.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   assert.equal(new Set(data.cards.map(slug)).size,data.cards.length);
@@ -22,8 +23,10 @@ test('the twenty new tracker cards have unique links, correct categories and val
   const bounds={NYC:[40,41,-75,-73],Boston:[42,43,-72,-70],London:[51,52,-1,1]};
   for(const e of expected){
     const c=data.cards.find(c=>c.id===e.id);assert.ok(c,e.name);
-    assert.deepEqual([c.name,c.city,c.hp,c.vibes[0]],[e.name,e.city,e.hp,e.type]);
-    assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp');assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp');
+    const approved=approvedExisting({id:e.id,hp:e.hp,vibes:[e.type]});
+    assert.deepEqual([c.name,c.city,c.hp,c.vibes[0]],[e.name,e.city,approved.hp,approved.vibes[0]]);
+    const version=refresh.updated.some(x=>x.id===c.id)?'?v='+refresh.version:'';
+    assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp'+version);assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp'+version);
     const [south,north,west,east]=bounds[c.city];assert.ok(c.lat>south&&c.lat<north&&c.lng>west&&c.lng<east,e.name);
     for(const field of ['area','vibes','moves'])assert.ok(ctx.window.FNP_SEARCH[c.id][field],e.name+' '+field);
   }
