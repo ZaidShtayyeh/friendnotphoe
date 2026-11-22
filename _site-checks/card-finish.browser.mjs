@@ -8,7 +8,7 @@ const require=createRequire(import.meta.url);
 let chromium;try{({chromium}=require('playwright'));}catch{({chromium}=require('/Users/zaidshtayyeh/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));}
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const out=path.join(root,'output/qa/card-finish-v1');fs.mkdirSync(out,{recursive:true});
-const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.json':'application/json'};
 const server=http.createServer((req,res)=>{
   let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(name.endsWith('/'))name+='index.html';
   const file=path.join(root,name);if(!file.startsWith(root+path.sep)||!fs.existsSync(file)){res.writeHead(404);res.end();return;}
@@ -62,13 +62,11 @@ try{
   await page.locator('#cards .card-button').first().click();await page.waitForSelector('#card-dialog .front-print img');
   await page.keyboard.press('ArrowRight');await page.waitForSelector('#card-dialog[aria-label]:not([aria-busy="true"]) .front-print img');await page.keyboard.press('Escape');
   await page.evaluate(()=>{
-    const paint=window.FnpCardFinish.paint;window.__finishPaints=0;
-    window.FnpCardFinish.paint=async ctx=>{const result=await paint(ctx);window.__finishPaints++;return result;};
     Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});
     Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{if(data.files?.[0]){const f=data.files[0],im=await createImageBitmap(f);window.__sharedCard={name:f.name,width:im.width,height:im.height};im.close();}}});
   });
-  await page.locator('#cards .card-button').nth(2).click();await page.waitForFunction(()=>window.__finishPaints>0);
-  for(let i=0;i<10;i++){await page.locator('#share-card').click();if(await page.evaluate(()=>!!window.__sharedCard))break;await page.waitForTimeout(100);}
+  await page.locator('#cards .card-button').nth(2).click();await page.waitForSelector('#detail-image img');
+  for(let i=0;i<30;i++){await page.locator('#share-card').click();if(await page.evaluate(()=>!!window.__sharedCard))break;await page.waitForTimeout(100);}
   const shared=await page.evaluate(()=>window.__sharedCard);assert.equal(shared.width,1500);assert.equal(shared.height,2100);assert.ok(shared.name.endsWith('.jpg'));await page.keyboard.press('Escape');
   await page.locator('[data-view="map"]').click();await page.waitForSelector('.leaflet-marker-icon');
   await page.evaluate(()=>document.querySelector('.leaflet-marker-icon').click());await page.waitForSelector('.map-popup .front-print');

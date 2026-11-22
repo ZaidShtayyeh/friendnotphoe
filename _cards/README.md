@@ -13,3 +13,9 @@ Future front cards automatically receive the finish through the shared rendering
 Validation: run `node --test _site-checks/*.test.cjs` and `node _site-checks/card-finish.browser.mjs`. The browser check blocks notification and submission requests.
 
 Rollback: revert the release commit, then publish normally. No source photos or card records need restoration.
+
+## Card sharing
+
+After adding or editing a card, run `node _cards/build-shares.mjs` before publishing. It builds `/cards/<slug>/` pages with per-card Open Graph metadata, versioned preview images and opaque 1500 × 2100 JPEG attachments. The website shares these URLs; old `#card/` viewer links still work. Bots receive static metadata, while visitors open the existing card viewer. The builder reuses unchanged images and refreshes the manifest cache key automatically. Keep generated pages, JPEGs, the manifest and `index.html` in the same release.
+
+The shared paper surface is baked into these JPEGs exactly once. Do not add a second surface to them. The website continues to use its unchanged V12 WebP files plus the shared CSS surface.
