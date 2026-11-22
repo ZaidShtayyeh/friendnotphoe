@@ -9,7 +9,7 @@ const data=JSON.parse(JSON.stringify(context.window.FNP_DATA));
 test('every existing live card and its metadata survive, with real HD files and thumbnails',()=>{
   const originals=original('restaurantCards').filter(c=>c.image),ids=new Set(originals.map(c=>c.id));
   assert.deepEqual(data.cards.filter(c=>ids.has(c.id)).map(({thumb,...c})=>c),originals);
-  for(const c of data.cards){assert.ok(fs.existsSync(path.join(root,c.image)));assert.ok(fs.existsSync(path.join(root,c.thumb)));}
+  for(const c of data.cards){assert.ok(fs.existsSync(path.join(root,c.image.split('?')[0])));assert.ok(fs.existsSync(path.join(root,c.thumb.split('?')[0])));}
 });
 test('the twenty new tracker cards have unique links, correct categories and valid city locations',()=>{
   const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'new-cards-2026-11-15.json'),'utf8'));

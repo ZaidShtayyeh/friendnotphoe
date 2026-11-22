@@ -19,7 +19,8 @@ test('friend names, final ratings, cities, and searchable copy match the approve
   assert.equal(e.hp,e.stats.reduce((a,b)=>a+b,0)+e.boostPoints);assert.equal(e.vibes.endsWith('.'),false);
   assert.deepEqual(search[c.id],{vibes:e.vibes,area:search[c.id].area,moves:e.moves.join(' ')});
   const [south,north,west,east]=bounds[c.city];assert.ok(c.lat>south&&c.lat<north&&c.lng>west&&c.lng<east,c.name);
-  assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp');assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp');
+  const version=e.assetVersion?'?v='+e.assetVersion:'';
+  assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp'+version);assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp'+version);
  }
  assert.equal(expected.find(c=>c.key==='camino').badge,'PARII');
  assert.equal(expected.filter(c=>c.creator.name==='Cindy :)').length,3);

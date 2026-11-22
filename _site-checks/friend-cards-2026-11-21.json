@@ -44,14 +44,15 @@
       80
     ],
     "boostPoints": 0,
-    "vibes": "Small candlelit restaurant in Paris (I know…). No menu, just seasonal dishes. If they have the artichoke, get the artichoke",
+    "vibes": "Small candlelit Italian restaurant (I know). No menu, just seasonal dishes. If they have the artichoke, get the artichoke",
     "moves": [
       "Tiramisu",
       "Artichoke",
       "Fettuccine funghi"
     ],
     "lat": 48.8737615,
-    "lng": 2.3497524999999997
+    "lng": 2.3497524999999997,
+    "assetVersion": "20261121-italian1"
   },
   {
     "id": 102,
