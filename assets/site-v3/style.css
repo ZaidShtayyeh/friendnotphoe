@@ -154,3 +154,13 @@ body[data-focus=heart] .home-sticky{background:var(--home-bg)}
 .results-line .wasta-key{margin-left:12px}
 @media(max-width:700px){.group-toggle{font-size:11px;gap:7px}.results-line .wasta-key{margin-left:0}}
 @media(prefers-reduced-motion:reduce){.group-toggle input,.group-toggle input:before{transition:none}}
+
+/* Approved friend credits stay outside the original printed card. */
+.creator-label{flex-basis:138px}
+.card-byline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 3px 0;font-size:11px;line-height:1.4;color:#56624e}
+.friend-tag{font-size:9px;border:1px solid #a7b39b;border-radius:4px;padding:2px 6px;font-weight:400}
+#detail-credit:empty{display:none}
+#detail-credit .card-byline{padding:0;color:#f2f0e7;gap:14px}
+#detail-credit .friend-tag{border-color:#abb6a1}
+@media(max-width:1000px) and (min-width:701px){.browse-tools{flex-wrap:wrap}.browse-tools .search{flex-basis:100%}}
+@media(max-width:700px){.browse-tools{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.browse-tools .view-switch{grid-column:1/-1;justify-self:end}.creator-label{display:flex}.card-byline{font-size:10px;padding-top:10px}.friend-tag{font-size:8px}}

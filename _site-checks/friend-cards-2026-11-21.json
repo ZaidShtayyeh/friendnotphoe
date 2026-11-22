@@ -1,0 +1,136 @@
+[
+  {
+    "id": 100,
+    "key": "wolfmoon",
+    "name": "Wolfmoon",
+    "city": "Naples",
+    "badge": "Naples",
+    "hp": 257,
+    "type": "food",
+    "creator": {
+      "kind": "friend",
+      "name": "TT"
+    },
+    "stats": [
+      71,
+      86,
+      100
+    ],
+    "boostPoints": 0,
+    "vibes": "Perfect outdoor seating spot (weather’s usually nice in Naples). If you want a simple cup of coffee and a hefty cup of vibes, this is your spot. Also attached to a flower/craft shop, so lots of knickknacks. There is also a cat",
+    "moves": [
+      "Croissant",
+      "Coffee",
+      "Cat"
+    ],
+    "lat": 26.136731,
+    "lng": -81.77848560000001
+  },
+  {
+    "id": 101,
+    "key": "camino",
+    "name": "Camino",
+    "city": "Paris",
+    "badge": "PARII",
+    "hp": 242,
+    "type": "drink",
+    "creator": {
+      "kind": "friend",
+      "name": "Gigi"
+    },
+    "stats": [
+      87,
+      75,
+      80
+    ],
+    "boostPoints": 0,
+    "vibes": "Small candlelit restaurant in Paris (I know…). No menu, just seasonal dishes. If they have the artichoke, get the artichoke",
+    "moves": [
+      "Tiramisu",
+      "Artichoke",
+      "Fettuccine funghi"
+    ],
+    "lat": 48.8737615,
+    "lng": 2.3497524999999997
+  },
+  {
+    "id": 102,
+    "key": "balm",
+    "name": "Balm Restaurant",
+    "city": "Mallorca",
+    "badge": "Mallorca",
+    "hp": 280,
+    "type": "special",
+    "creator": {
+      "kind": "friend",
+      "name": "Cindy :)"
+    },
+    "stats": [
+      95,
+      85,
+      100
+    ],
+    "boostPoints": 0,
+    "vibes": "Good reminder that tranquility and class can coexist. Lots of creative combinations with fresh ingredients that make every bite feel familiarly surprising",
+    "moves": [
+      "Carrot soup",
+      "Baked eggplant",
+      "Orange duck"
+    ],
+    "lat": 39.7467208,
+    "lng": 2.6493064
+  },
+  {
+    "id": 103,
+    "key": "taverna-pietro-paolo",
+    "name": "Taverna Pietro Paolo",
+    "city": "Ischia",
+    "badge": "Ischia",
+    "hp": 275,
+    "type": "special",
+    "creator": {
+      "kind": "friend",
+      "name": "Cindy :)"
+    },
+    "stats": [
+      80,
+      75,
+      100
+    ],
+    "boostPoints": 20,
+    "vibes": "Family-owned restaurant on the western side of Maronti beach — a remote house decorated by olive trees, the sea, and a loud, welcoming Italian family",
+    "moves": [
+      "Grilled seafood",
+      "Spaghetti alle cozze",
+      "Pesche al vino"
+    ],
+    "lat": 40.7029055,
+    "lng": 13.9034926
+  },
+  {
+    "id": 104,
+    "key": "mestousiko",
+    "name": "Mestoúsiko Grill",
+    "city": "Chios",
+    "badge": "Chios",
+    "hp": 222,
+    "type": "food",
+    "creator": {
+      "kind": "friend",
+      "name": "Cindy :)"
+    },
+    "stats": [
+      100,
+      2,
+      100
+    ],
+    "boostPoints": 20,
+    "vibes": "Family-owned, everything handmade, from farm to table. Don’t think I need to say much more",
+    "moves": [
+      "Lamb skioufikta",
+      "Literally everything else"
+    ],
+    "lat": 38.2601784,
+    "lng": 25.922988600000004
+  }
+]

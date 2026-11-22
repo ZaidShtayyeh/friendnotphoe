@@ -13,7 +13,8 @@ test('every existing live card and its metadata survive, with real HD files and 
 });
 test('the twenty new tracker cards have unique links, correct categories and valid city locations',()=>{
   const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'new-cards-2026-11-15.json'),'utf8'));
-  assert.equal(data.cards.length,77+expected.length);
+  const friends=JSON.parse(fs.readFileSync(path.join(__dirname,'friend-cards-2026-11-21.json'),'utf8'));
+  assert.equal(data.cards.length,77+expected.length+friends.length);
   assert.equal(new Set(data.cards.map(c=>c.id)).size,data.cards.length);
   const slug=c=>c.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   assert.equal(new Set(data.cards.map(slug)).size,data.cards.length);
@@ -33,9 +34,9 @@ test('the homepage entrance lands in the first four positions in both layouts',(
   const declaration=source.match(/function getFeaturedCards\(\)\{([^}]+)\}/)[0];
   const newest=[...data.cards].reverse();
   for(const groupByCity of [true,false]){
-    const ctx={newest,state:{groupByCity}};
+    const ctx={newest,cards:data.cards,state:{groupByCity}};
     vm.runInNewContext(declaration+';this.featured=getFeaturedCards()',ctx);
-    const firstGroup=newest.filter(c=>c.city===newest[0].city);
+    const firstGroup=newest.filter(c=>c.city===data.cards[0].city);
     assert.deepEqual(ctx.featured.map(c=>c.id),(groupByCity?firstGroup:newest).slice(0,4).map(c=>c.id));
   }
 });

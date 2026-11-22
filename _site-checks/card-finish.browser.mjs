@@ -22,9 +22,10 @@ try{
   const page=await browser.newPage({viewport:{width:1440,height:1100},deviceScaleFactor:1,reducedMotion:'reduce'});
   const errors=[],missing=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().startsWith(origin)&&r.status()>=400)missing.push(r.url());});
   await page.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
-  await page.goto(origin+'/#explore');await page.waitForFunction(()=>document.querySelectorAll('#cards .card-item').length===97);
-  assert.equal(await page.locator('#cards .front-print').count(),97);
-  assert.equal(await page.locator('#cards .twinkle').count(),97*6);
+  await page.goto(origin+'/#explore');await page.waitForFunction(()=>document.querySelectorAll('#cards .card-item').length===window.FNP_DATA.cards.length);
+  const expectedCount=await page.evaluate(()=>window.FNP_DATA.cards.length);
+  assert.equal(await page.locator('#cards .front-print').count(),expectedCount);
+  assert.equal(await page.locator('#cards .twinkle').count(),expectedCount*6);
   assert.equal(await page.locator('.category .mini-deck img').count(),8);
   const source=await page.evaluate(()=>window.FNP_DATA.cards);
   const slug=c=>c.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -57,7 +58,7 @@ try{
   await page.goto(origin+'/#explore');await page.waitForSelector('#cards .card-button');
   await page.selectOption('#sort','hp');
   assert.equal(await page.locator('#cards .card-button').first().getAttribute('data-card'),String([...source].sort((a,b)=>b.hp-a.hp||a.name.localeCompare(b.name))[0].id));
-  await page.locator('#group-by-city').uncheck();assert.equal(await page.locator('#cards .front-print').count(),97);
+  await page.locator('#group-by-city').uncheck();assert.equal(await page.locator('#cards .front-print').count(),expectedCount);
   await page.locator('#cards .card-button').first().click();await page.waitForSelector('#card-dialog .front-print img');
   await page.keyboard.press('ArrowRight');await page.waitForSelector('#card-dialog[aria-label]:not([aria-busy="true"]) .front-print img');await page.keyboard.press('Escape');
   await page.evaluate(()=>{
@@ -90,6 +91,6 @@ try{
   await page.evaluate(()=>window.scrollTo(0,document.querySelector('.home-journey').offsetHeight));
   await page.waitForFunction(()=>document.body.dataset.page==='explore');assert.equal(await page.locator('.awaiting-landing').count(),0);
   assert.deepEqual(missing,[]);assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'checks.json'),JSON.stringify({cards:97,glints:{grid:6,detail:7},protectedPixelChanges:pixels,missing,errors},null,2));
-  console.log('PASS: 97 cards, 3 colors, HD sources, unchanged photos/icons/tatreez, textured JPEG sharing, map popups, sort/group controls, entrance landing, desktop/phone layout, creator surface, no script errors or missing local assets.');
+  fs.writeFileSync(path.join(out,'checks.json'),JSON.stringify({cards:expectedCount,glints:{grid:6,detail:7},protectedPixelChanges:pixels,missing,errors},null,2));
+  console.log('PASS: all published cards, 3 colors, HD sources, unchanged photos/icons/tatreez, textured JPEG sharing, map popups, sort/group controls, entrance landing, desktop/phone layout, creator surface, no script errors or missing local assets.');
 }finally{await browser?.close();server.close();}
