@@ -133,5 +133,32 @@
     ],
     "lat": 38.2601784,
     "lng": 25.922988600000004
+  },
+  {
+    "id": 105,
+    "key": "le-colonial",
+    "name": "Le Colonial",
+    "city": "Naples",
+    "badge": "Naples",
+    "hp": 235,
+    "type": "food",
+    "creator": {
+      "kind": "friend",
+      "name": "Mama"
+    },
+    "stats": [
+      80,
+      75,
+      80
+    ],
+    "boostPoints": 0,
+    "vibes": "Not many places in Naples are worth eating at... this being the exception: French-Vietnamese food (colonialism can be weird) that is elegant and thoughtful in all the right ways. Sit outside if it’s not too hot and enjoy Fifth",
+    "moves": [
+      "Sea Bass",
+      "House Salad",
+      "Green Curry"
+    ],
+    "lat": 26.1414062,
+    "lng": -81.8010192
   }
 ]

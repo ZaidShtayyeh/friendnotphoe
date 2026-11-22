@@ -6,9 +6,9 @@ const read=source=>{const c={window:{}};vm.runInNewContext(source,c);return JSON
 const data=read(fs.readFileSync(path.join(root,'assets/site-v3/data.js'),'utf8')).FNP_DATA;
 const search=read(fs.readFileSync(path.join(root,'assets/site-v3/search-data.js'),'utf8')).FNP_SEARCH;
 const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'friend-cards-2026-11-21.json'),'utf8'));
-test('publishing five approved friends preserves all 97 existing cards and stories exactly',()=>{
+test('publishing approved friends preserves all 97 original cards and stories exactly',()=>{
  const previous=read(cp.execFileSync('git',['show','2cde8d8:assets/site-v3/data.js'],{cwd:root,encoding:'utf8'})).FNP_DATA;
- assert.equal(previous.cards.length,97);assert.equal(data.cards.length,102);
+ assert.equal(previous.cards.length,97);assert.equal(data.cards.length,97+expected.length);
  assert.deepEqual(data.cards.slice(0,97),previous.cards);assert.deepEqual(data.posts,previous.posts);
 });
 test('friend names, final ratings, cities, and searchable copy match the approved cards',()=>{
@@ -26,11 +26,20 @@ test('friend names, final ratings, cities, and searchable copy match the approve
  assert.equal(expected.filter(c=>c.creator.name==='Cindy :)').length,3);
  assert.ok(!data.cards.some(c=>c.creator?.kind==='friend'&&/^(GT3|Oxomoco)$/i.test(c.name)));
 });
-test('creator filtering keeps all legacy cards and separates the five credited friends',()=>{
+test('creator filtering keeps all legacy cards and separates the credited friends',()=>{
  const source=fs.readFileSync(path.join(root,'assets/site-v3/app.js'),'utf8');
  const fn=source.slice(source.indexOf('function creatorMatches('),source.indexOf('function getFiltered('));
  const c={state:{creator:'all'}};vm.runInNewContext(fn+';this.matches=creatorMatches',c);
- assert.equal(data.cards.filter(c.matches).length,102);
- c.state.creator='friends';assert.equal(data.cards.filter(c.matches).length,5);
+ assert.equal(data.cards.filter(c.matches).length,97+expected.length);
+ c.state.creator='friends';assert.equal(data.cards.filter(c.matches).length,expected.length);
  c.state.creator='zaid';assert.equal(data.cards.filter(c.matches).length,97);
+});
+test('adding Mama preserves all 102 previously published cards and their searchable copy',()=>{
+ const previous=read(cp.execFileSync('git',['show','f8c1a4d:assets/site-v3/data.js'],{cwd:root,encoding:'utf8'})).FNP_DATA;
+ const previousSearch=read(cp.execFileSync('git',['show','f8c1a4d:assets/site-v3/search-data.js'],{cwd:root,encoding:'utf8'})).FNP_SEARCH;
+ assert.equal(previous.cards.length,102);
+ assert.deepEqual(data.cards.slice(0,102),previous.cards);
+ for(const card of previous.cards)assert.deepEqual(search[card.id],previousSearch[card.id]);
+ const mama=data.cards.filter(c=>c.creator?.name==='Mama');
+ assert.equal(mama.length,1);assert.equal(mama[0].hp,235);assert.equal(mama[0].city,'Naples');
 });
