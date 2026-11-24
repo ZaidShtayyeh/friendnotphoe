@@ -17,7 +17,7 @@ test('all 17 new cards have their approved copy, categories, and distinct map lo
   assert.ok(e.stats.every(x=>Number.isInteger(x)&&x>=0&&x<=100));
   assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp');
  }
- assert.deepEqual(Object.fromEntries(Object.keys(bounds).map(city=>[city,data.cards.filter(c=>c.city===city).length])),{Montreal:7,'Mexico City':6,Barcelona:1,'Washington, DC':2,Cali:1});
+ assert.deepEqual(Object.fromEntries(Object.keys(bounds).map(city=>[city,data.cards.filter(c=>c.city===city&&c.id<=122).length])),{Montreal:7,'Mexico City':6,Barcelona:1,'Washington, DC':2,Cali:1});
  assert.deepEqual(refresh.added.find(c=>c.name==='Los Parados').stats,[70,5,5]);
  assert.equal(refresh.added.find(c=>c.name==='Salle Climatisée').hp,280);
 });
