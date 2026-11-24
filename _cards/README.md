@@ -14,6 +14,14 @@ Validation: run `node --test _site-checks/*.test.cjs` and `node _site-checks/car
 
 Rollback: revert the release commit, then publish normally. No source photos or card records need restoration.
 
+## Vibes punctuation
+
+Approved 23 November 2026: declarative sentences in Vibes, including the final
+sentence, end with a period. Preserve existing question marks, exclamation marks
+and intentional ellipses. Do not duplicate punctuation or change the wording.
+Apply approved copy consistently to the card artwork, search metadata, share
+pages and print files. Original submission records remain a historical record.
+
 ## Card sharing
 
 After adding or editing a card, run `node _cards/build-shares.mjs` before publishing. It builds `/cards/<slug>/` pages with per-card Open Graph metadata, versioned preview images and opaque 1500 × 2100 JPEG attachments. The website shares these URLs; old `#card/` viewer links still work. Bots receive static metadata, while visitors open the existing card viewer. The builder reuses unchanged images and refreshes the manifest cache key automatically. Keep generated pages, JPEGs, the manifest and `index.html` in the same release.
