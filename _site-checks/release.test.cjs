@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),cp=require('node:child_process');
 const root=path.resolve(__dirname,'..');
-const {refresh,approvedExisting}=require('./approved-refresh.cjs');
+const {refresh,approvedExisting,approvedURL}=require('./approved-refresh.cjs');
 const before=cp.execFileSync('git',['show','2e2b3a0:index.html'],{cwd:root,encoding:'utf8'});
 const original=name=>JSON.parse(JSON.stringify(vm.runInNewContext(before.match(new RegExp('const '+name+' = (\\[[\\s\\S]*?\\n        \\]);'))[1])));
 const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/site-v3/data.js'),'utf8'),context);
@@ -26,7 +26,7 @@ test('the twenty new tracker cards have unique links, correct categories and val
     const approved=approvedExisting({id:e.id,hp:e.hp,vibes:[e.type]});
     assert.deepEqual([c.name,c.city,c.hp,c.vibes[0]],[e.name,e.city,approved.hp,approved.vibes[0]]);
     const version=refresh.updated.some(x=>x.id===c.id)?'?v='+refresh.version:'';
-    assert.equal(c.image,'assets/cards-finish-v12/'+e.key+'.webp'+version);assert.equal(c.thumb,'assets/cards-finish-v12/'+e.key+'-750.webp'+version);
+    assert.equal(c.image,approvedURL(c.id,'assets/cards-finish-v12/'+e.key+'.webp'+version));assert.equal(c.thumb,approvedURL(c.id,'assets/cards-finish-v12/'+e.key+'-750.webp'+version));
     const [south,north,west,east]=bounds[c.city];assert.ok(c.lat>south&&c.lat<north&&c.lng>west&&c.lng<east,e.name);
     for(const field of ['area','vibes','moves'])assert.ok(ctx.window.FNP_SEARCH[c.id][field],e.name+' '+field);
   }
