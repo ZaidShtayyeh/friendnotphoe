@@ -162,5 +162,33 @@
     "lng": -81.8010192,
     "copyVerbatim": true,
     "assetVersion": "20261121-mama2"
+  },
+  {
+    "id": 123,
+    "key": "bar-canete",
+    "name": "Bar Cañete",
+    "city": "Barcelona",
+    "badge": "BCN",
+    "hp": 193,
+    "type": "food",
+    "creator": {
+      "kind": "friend",
+      "name": "Kage"
+    },
+    "stats": [
+      86,
+      46,
+      61
+    ],
+    "boostPoints": 0,
+    "vibes": "Enjoy the vibes & incredible food. Make sure you sit at the counter. Staff is super friendly & have been around for a long time. It's super busy so make a booking for dinner or just walk in for lunch like I did twice. Great solo spot rather than dinner date.",
+    "moves": [
+      "Fried squid sandwich",
+      "Croquetas",
+      "Todos 💃💃"
+    ],
+    "lat": 41.3791405,
+    "lng": 2.173138,
+    "copyVerbatim": true
   }
 ]
