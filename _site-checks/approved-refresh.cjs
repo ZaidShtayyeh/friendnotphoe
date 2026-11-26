@@ -3,12 +3,14 @@ const punctuation=require('./vibes-periods-2026-11-23.json');
 const types={blue:'drink',green:'food',gold:'special'};
 function approvedURL(id,url){
  if(!url)return url;
+ if(id===105)return url.split('?')[0]+'?v=20261126-colonialism';
  if(punctuation.ids.includes(id))return url.split('?')[0]+'?v='+punctuation.version;
  if(id===45)return url.split('?')[0]+'?v=20261123-print';
  return url;
 }
 function approvedReview(id,record){
- const text=punctuation.previousCopyCorrections[id]??record.vibes;
+ let text=punctuation.previousCopyCorrections[id]??record.vibes;
+ if(id===105)text=text.replace(/\bcolonism\b/g,'colonialism');
  return {...record,vibes:/[.!?…]$/.test(text)?text:text+'.'};
 }
 function approvedExisting(card){
